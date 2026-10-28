@@ -2,12 +2,13 @@
 // Configure in RevenueCat: Integrations → Webhooks, Authorization header = REVENUECAT_WEBHOOK_SECRET.
 // App user id in RevenueCat must be the Supabase user id (Purchases.logIn(uid)).
 import { admin, json } from '../_shared/clients.ts';
+import { secretMatches } from '../_shared/secret.ts';
 
 const ENTITLEMENT_TIER: Record<string, 'plus' | 'premium'> = { plus: 'plus', premium: 'premium' };
 
 Deno.serve(async (req) => {
   const secret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
-  if (!secret || req.headers.get('Authorization') !== `Bearer ${secret}`) return json({ error: 'unauthorized' }, 401);
+  if (!secret || !secretMatches(req.headers.get('Authorization'), `Bearer ${secret}`)) return json({ error: 'unauthorized' }, 401);
   const { event } = await req.json().catch(() => ({ event: null }));
   if (!event?.type) return json({ error: 'bad_event' }, 400);
   const db = admin();

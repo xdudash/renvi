@@ -1,11 +1,18 @@
 // Database Webhook target (messages, matches, dates INSERT/UPDATE). Sends a push WITHOUT names or message text.
 // Configure: Database → Webhooks → HTTP request to this function with header x-push-secret = PUSH_WEBHOOK_SECRET.
 import { admin, json } from '../_shared/clients.ts';
+import { secretMatches } from '../_shared/secret.ts';
 
 type Payload = { type: 'INSERT' | 'UPDATE'; table: string; record: Record<string, any>; old_record?: Record<string, any> };
 
 Deno.serve(async (req) => {
-  if (req.headers.get('x-push-secret') !== Deno.env.get('PUSH_WEBHOOK_SECRET')) return json({ error: 'unauthorized' }, 401);
+  const secret = Deno.env.get('PUSH_WEBHOOK_SECRET');
+  // Misconfiguration must never open the endpoint: without a secret every request is refused.
+  if (!secret) {
+    console.error('PUSH_WEBHOOK_SECRET is not set; refusing all requests');
+    return json({ error: 'unauthorized' }, 401);
+  }
+  if (!secretMatches(req.headers.get('x-push-secret'), secret)) return json({ error: 'unauthorized' }, 401);
   const p = (await req.json()) as Payload;
   const db = admin();
   const partnerOf = async (matchId: string, me: string) => {
