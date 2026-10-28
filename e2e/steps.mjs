@@ -19,6 +19,8 @@ export function createRunner({ label = 'e2e', onFail, stopOnFail = false } = {})
       const message = String(e?.message ?? e).split('\n')[0];
       failed.push({ name, message });
       console.log('FAIL', name, message);
+      // In GitHub Actions, surface each real failure as an annotation (visible on the PR page and via the API).
+      if (process.env.GITHUB_ACTIONS) console.log(`::error title=E2E ${label}::${name}: ${message.replace(/[\r\n%]/g, ' ')}`);
       if (stopOnFail) stopped = true;
       try { await onFail?.(name, e); } catch { /* artifact capture must never hide the failure */ }
       return false;
@@ -33,6 +35,8 @@ export function createRunner({ label = 'e2e', onFail, stopOnFail = false } = {})
   // Prints the summary, runs cleanup (e.g. closing the browser), then exits 1 if any step failed.
   async function finish(cleanup) {
     console.log(summary());
+    const skipped = failed.filter((f) => f.message.startsWith('skipped:')).length;
+    if (process.env.GITHUB_ACTIONS && failed.length) console.log(`::notice title=E2E ${label}::${passed.length} passed, ${failed.length - skipped} failed, ${skipped} skipped after a required failure`);
     try { await cleanup?.(); } catch (e) { console.log('cleanup error:', e?.message); }
     process.exit(failed.length ? 1 : 0);
   }

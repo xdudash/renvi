@@ -7,11 +7,14 @@
 # if ANY script exited non-zero (each script exits 1 when any of its steps failed).
 set -euo pipefail
 cd "$(dirname "$0")"
+# Setup failures are annotated too (visible on the PR page).
+trap 'echo "::error title=E2E setup::failed: $BASH_COMMAND (line $LINENO)"' ERR
 mkdir -p out/flow out/app out/ref out/sheets
 node reset.mjs >/dev/null
 psql "$DATABASE_URL" -qc "delete from public.admins a using auth.users u where u.id = a.user_id and u.email like '%@renvi.test'"
 node seed.mjs
 
+trap - ERR
 failed_scripts=()
 for script in signup main extra invite; do
   if ! node "$script.e2e.mjs"; then
