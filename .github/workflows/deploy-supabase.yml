@@ -11,11 +11,7 @@ on:
         description: Deploy all Edge Functions
         type: boolean
         default: true
-  # Optional auto-deploy: delete this block to make the workflow manual-only.
-  push:
-    branches: [main]
-    paths:
-      - "supabase/**"
+  # Manual only on purpose: production migrations are applied by a person pressing "Run workflow".
 
 concurrency:
   group: deploy-supabase
