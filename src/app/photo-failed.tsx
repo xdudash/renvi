@@ -15,7 +15,7 @@ export default function PhotoFailed() {
   const toast = useToast();
   const chat = useChat(match, session?.user.id);
   const [pending, setPending] = useState<{ client_id: string; photo_path: string | null } | null>(null);
-  useEffect(() => { failedFor(match).then((l) => setPending(l.find((p) => p.photo_path) ?? null)); }, [match]);
+  useEffect(() => { failedFor(session?.user.id, match).then((l) => setPending(l.find((p) => p.photo_path) ?? null), () => setPending(null)); }, [match, session?.user.id]);
   const name = pending?.photo_path?.split('/').pop() ?? 'photo.jpg';
   return (
     <Screen tabs="chats">

@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
+import { logError } from '@/lib/errorLog';
 
 export type MyMedia = { id: string; kind: 'photo' | 'video'; storage_path: string; position: number; url?: string };
 
@@ -46,27 +47,40 @@ export function useMyPhotos() {
       setBusy(false);
     }
   };
-  const remove = async (id: string) => {
-    const row = items.find((i) => i.id === id);
-    await supabase.from('profile_photos').delete().eq('id', id);
-    if (row) await supabase.storage.from('profile-media').remove([row.storage_path]);
-    await load();
+  // Each write is checked: an error, or an RLS-filtered write that touched no row, counts as a failure.
+  const setPosition = async (id: string, position: number): Promise<boolean> => {
+    const { data, error } = await supabase.from('profile_photos').update({ position }).eq('id', id).select('id');
+    return !error && (data?.length ?? 0) === 1;
   };
-  const move = async (id: string, dir: -1 | 1) => {
+  // The Storage file is deleted only after the row delete succeeded; returns 'error' when the photo is still there.
+  const remove = async (id: string): Promise<'ok' | 'error'> => {
+    const row = items.find((i) => i.id === id);
+    const { data, error } = await supabase.from('profile_photos').delete().eq('id', id).select('id');
+    if (error || (data?.length ?? 0) === 0) { await load(); return 'error'; }
+    if (row) {
+      const { error: fileErr } = await supabase.storage.from('profile-media').remove([row.storage_path]);
+      if (fileErr) logError('photos', `storage remove failed: ${fileErr.message}`); // the profile no longer references it
+    }
+    await load();
+    return 'ok';
+  };
+  const move = async (id: string, dir: -1 | 1): Promise<'ok' | 'error'> => {
     const idx = items.findIndex((i) => i.id === id);
     const j = idx + dir;
-    if (idx < 0 || j < 0 || j >= items.length) return;
+    if (idx < 0 || j < 0 || j >= items.length) return 'ok';
     const a = items[idx], b = items[j];
-    await supabase.from('profile_photos').update({ position: b.position }).eq('id', a.id);
-    await supabase.from('profile_photos').update({ position: a.position }).eq('id', b.id);
+    const first = await setPosition(a.id, b.position);
+    const second = first && (await setPosition(b.id, a.position));
     await load();
+    return first && second ? 'ok' : 'error';
   };
-  const makeCover = async (id: string) => {
+  const makeCover = async (id: string): Promise<'ok' | 'error'> => {
     const idx = items.findIndex((i) => i.id === id);
-    if (idx <= 0) return;
+    if (idx <= 0) return 'ok';
     const ordered = [items[idx], ...items.filter((_, j) => j !== idx)];
-    await Promise.all(ordered.map((it, pos) => supabase.from('profile_photos').update({ position: pos }).eq('id', it.id)));
+    const results = await Promise.all(ordered.map((it, pos) => setPosition(it.id, pos)));
     await load();
+    return results.every(Boolean) ? 'ok' : 'error';
   };
   return { items, add, remove, move, makeCover, busy, reload: load };
 }

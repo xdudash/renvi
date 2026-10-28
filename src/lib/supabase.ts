@@ -13,6 +13,8 @@ export const supabase = createClient(url ?? 'http://localhost:54321', anonKey ??
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
+    // Off on purpose (also on web): the password-recovery screen (/reset-password, lib/recoveryAuth.ts) consumes the
+    // code / tokens itself, so there is exactly one consumer and no race with the router.
     detectSessionInUrl: false,
   },
 });

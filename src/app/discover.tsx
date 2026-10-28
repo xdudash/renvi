@@ -43,7 +43,7 @@ export default function Discover() {
   };
 
   let body: React.ReactNode;
-  if (d.loading && !card) body = <LoadingCards />;
+  if (d.pending && !card) body = <LoadingCards />;
   else if (d.error?.kind === 'offline') body = <OfflineState onRetry={d.load} />;
   else if (d.error) body = <ErrorRetryState onRetry={d.load} />;
   else if (!card) body = (
