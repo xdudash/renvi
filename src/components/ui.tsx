@@ -45,7 +45,7 @@ export type TabKey = 'discover' | 'likes' | 'chats' | 'me';
 // Same rule as the prototype: no tab bar on the first launch, account and onboarding screens.
 const NO_TABS = ['/', '/language', '/signin', '/signup', '/forgot', '/captcha', '/confirmation'];
 const ME_SCREENS = ['/me', '/edit-', '/opening-moves', '/privacy', '/settings', '/support-help', '/notification-settings', '/legal', '/data-export', '/delete-', '/blocked', '/plans', '/purchase-', '/referral', '/share-sheet', '/verification-', '/account-', '/report', '/appeal', '/community-rules'];
-const CHAT_SCREENS = ['/chat', '/icebreakers', '/push-prompt', '/photo-', '/message-', '/archive', '/muted', '/unmatch', '/support-share', '/date-'];
+const CHAT_SCREENS = ['/chat', '/icebreakers', '/push-prompt', '/photo-', '/message-', '/archive', '/muted', '/unmatch', '/support-share', '/date-', '/video-call'];
 function tabFor(path: string): TabKey {
   if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'likes';
   if (CHAT_SCREENS.some((p) => path.startsWith(p))) return 'chats';

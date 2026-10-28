@@ -24,13 +24,15 @@
 4. **CAPTCHA** (по желанию): Authentication → Bot and Abuse Protection → hCaptcha + `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без ключа шаг CAPTCHA в регистрации пропускается.
 5. **Edge Functions**:
    ```bash
-   npx supabase functions deploy delete-account export-data revenuecat-webhook push weekly-digest
+   npx supabase functions deploy delete-account export-data revenuecat-webhook push weekly-digest video-call
    npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=... PUSH_WEBHOOK_SECRET=...
+   # необязательно — видеозвонок перед встречей (раздел 4a):
+   npx supabase secrets set DAILY_API_KEY=...
    # необязательно — письмо со ссылкой на выгрузку данных:
    npx supabase secrets set RESEND_API_KEY=... EXPORT_FROM_EMAIL="RENVI <no-reply@ваш-домен>"
    ```
-6. **Database → Webhooks** (для push): три вебхука на функцию `push`, метод POST, заголовок `x-push-secret: <PUSH_WEBHOOK_SECRET>`:
-   `messages` (INSERT), `matches` (INSERT), `dates` (INSERT, UPDATE). Тексты пушей без имён и сообщений.
+6. **Database → Webhooks** (для push): вебхуки на функцию `push`, метод POST, заголовок `x-push-secret: <PUSH_WEBHOOK_SECRET>`:
+   `messages` (INSERT), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
 7. **Администраторы**: SQL Editor →
    `insert into public.admins (user_id) select id from auth.users where email = 'founder@...';`
    Админка открывается в веб-версии по адресу `/admin`.
@@ -78,6 +80,27 @@
 3. Настройка времени: в админке «Тарифы и настройки» ключ `digest` → `{"enabled": true, "weekday": 0, "hour_utc": 17}` (`weekday`: 0 — воскресенье … 6 — суббота, время UTC; `enabled: false` выключает рассылку).
 4. Проверка вручную (отправит сразу, игнорируя день и час, но с учётом журнала): `curl -X POST "https://<ref>.supabase.co/functions/v1/weekly-digest?force=1" -H "x-digest-secret: $DIGEST_CRON_SECRET"`.
 5. Тексты пушей/писем лежат в `supabase/functions/weekly-digest/text.ts` (карта по языку профиля, запасной — русский).
+
+## 4a. Видеозвонок перед встречей (Daily.co, необязательно)
+
+Короткий видеозвонок двух людей из одного матча до встречи. Без ключа Daily функция отвечает `503 video_unavailable`, и приложение просто не показывает кнопку «Видеозвонок» — всё остальное работает.
+
+Как устроено: один предлагает звонок, второй соглашается (`request_video_call` / `respond_video_call`, миграция `0018_video_calls.sql`). Только после согласия обоих Edge Function `video-call` проверяет доступ (`video_call_join`: активный матч, нет блокировки, сессия не истекла, лимит частоты), создаёт **закрытую** комнату Daily на эту сессию (максимум 2 участника, закрывается вместе с сессией, не дольше 30 минут) и выдаёт токен только этому пользователю. Приглашение действует 10 минут. Звонок открывается в приложении (WebView с Daily Prebuilt); RENVI его не записывает.
+
+1. Зарегистрируйтесь на [daily.co](https://www.daily.co/) и создайте домен (например `renvi.daily.co`). Регион данных и тариф — по решению команды (бесплатного тарифа хватает для теста).
+2. Dashboard → **Developers** → скопируйте **API key**. Это секрет: только в Supabase, не в `.env` приложения и не в репозиторий.
+3. В настройках домена Daily проверьте, что **запись (recording) выключена**, — комнаты RENVI её не включают.
+4. Ключ и функция:
+   ```bash
+   npx supabase secrets set DAILY_API_KEY=<ключ Daily>
+   npx supabase functions deploy video-call
+   ```
+5. Вебхук `video_calls` (INSERT, UPDATE) на функцию `push` — см. шаг 2.6 (пуш «Запрос на видеозвонок» / «Видеозвонок принят», учитывает переключатель «Свидания» в настройках уведомлений).
+6. Лимиты частоты — в `app_config.rate_limits` (админка → «Тарифы и настройки»): `video_call` — новых приглашений в час на пользователя (по умолчанию 6), `video_call_join` — запросов комнаты/токена в час (30).
+7. Нужна **новая сборка** приложения (dev/production): в `app.json` добавлены разрешения камеры и микрофона (iOS `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`; Android `CAMERA`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`; `RECORD_AUDIO` больше не в `blockedPermissions`). Без новой сборки звонок на телефоне не получит камеру и микрофон.
+8. Выключить функцию: `npx supabase secrets unset DAILY_API_KEY` — кнопка пропадёт у всех после перезапуска приложения.
+
+Проверка после настройки: два тестовых аккаунта с матчем → в чате «Видеозвонок» → «Предложить» → со второго телефона «Согласиться» → «Начать звонок» на обоих.
 
 ## 5. Сборки
 
