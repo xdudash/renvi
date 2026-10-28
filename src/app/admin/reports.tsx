@@ -6,6 +6,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { supabase } from '@/lib/supabase';
 import { daysFromNowIso } from '@/lib/time';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type R = { id: string; reason: string; details: string | null; message_snapshot: string | null; target_profile_id: string | null; status: string; created_at: string };
 
@@ -31,7 +32,7 @@ export default function AdminReports() {
       </View>
       {loading ? <Loading /> : (
         <Tbl head={[t('admin.reports.colWhen'), t('admin.reports.colReason'), t('admin.reports.colDetails'), t('admin.reports.colMessage'), t('admin.reports.colProfile'), t('admin.reports.colDecision')]} rows={(data ?? []).map((r) => [
-          new Date(r.created_at).toLocaleString('ru-RU'), r.reason, r.details ?? '—', r.message_snapshot ?? '—', r.target_profile_id?.slice(0, 8) ?? '—',
+          new Date(r.created_at).toLocaleString(localeOf()), r.reason, r.details ?? '—', r.message_snapshot ?? '—', r.target_profile_id?.slice(0, 8) ?? '—',
           r.status === 'open' ? (
             <View key="act">
               <Act label={t('admin.reports.warn')} onPress={() => decide(r.id, 'actioned', 'warning')} />

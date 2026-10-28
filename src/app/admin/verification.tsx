@@ -5,6 +5,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type V = { id: string; user_id: string; storage_path: string; status: string; created_at: string };
 
@@ -35,7 +36,7 @@ export default function AdminVerification() {
     <AdminPage title={t('admin.verification.title')}>
       {loading ? <Loading /> : (
         <Tbl head={[t('admin.verification.colWhen'), t('admin.verification.colSelfie'), t('admin.verification.colCover'), t('admin.verification.colDecision')]} rows={(data ?? []).map((v) => [
-          new Date(v.created_at).toLocaleString('ru-RU'), <Selfie key="s" path={v.storage_path} />, <Cover key="c" uid={v.user_id} />,
+          new Date(v.created_at).toLocaleString(localeOf()), <Selfie key="s" path={v.storage_path} />, <Cover key="c" uid={v.user_id} />,
           <View key="d"><Act label={t('admin.verification.approve')} tone="green" onPress={() => decide(v, 'approved')} /><Act label={t('admin.verification.reject')} tone="red" onPress={() => decide(v, 'rejected')} /></View>,
         ])} />
       )}

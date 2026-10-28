@@ -12,3 +12,5 @@ out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/demo_bots.sql 2>&1) || 
 echo "$out" | grep -c "ok -" | xargs -I{} echo "{} demo-bot checks passed"
 out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/security.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
 echo "$out" | grep -c "ok -" | xargs -I{} echo "{} security-audit checks passed"
+out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/profile_language.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
+echo "$out" | grep -c "ok -" | xargs -I{} echo "{} profile-language checks passed"
