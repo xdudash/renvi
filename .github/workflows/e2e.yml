@@ -1,0 +1,107 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    name: Playwright end-to-end (local Supabase + web build)
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    timeout-minutes: 30
+    env:
+      APP_URL: http://127.0.0.1:8081
+      # Not a repository secret: a throw-away value for the local, CI-only stack.
+      REVENUECAT_WEBHOOK_SECRET: ci-local-revenuecat-webhook-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # `supabase start` applies supabase/migrations on first boot. Keys are the
+      # generated local ones printed by the CLI, never repository secrets.
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Export local stack settings
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "DATABASE_URL=$DB_URL"
+          } >> "$GITHUB_ENV"
+          echo "::add-mask::$ANON_KEY"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+
+      - name: Serve edge functions
+        run: |
+          echo "REVENUECAT_WEBHOOK_SECRET=$REVENUECAT_WEBHOOK_SECRET" > "$RUNNER_TEMP/functions.env"
+          echo "PUSH_WEBHOOK_SECRET=ci-local-push-secret" >> "$RUNNER_TEMP/functions.env"
+          nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" > "$RUNNER_TEMP/functions.log" 2>&1 &
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/revenuecat-webhook" || true)
+            if [ "$code" != "000" ] && [ "$code" != "502" ] && [ "$code" != "503" ]; then exit 0; fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/functions.log"
+          exit 1
+
+      - name: Build web app
+        run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_APP_URL: http://127.0.0.1:8081
+
+      - name: Serve web build
+        run: |
+          nohup npx --yes serve@14.2.4 -s dist -l 8081 > "$RUNNER_TEMP/serve.log" 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf "$APP_URL" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/serve.log"
+          exit 1
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        run: npm run test:e2e
+
+      - name: Upload e2e artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-out
+          path: e2e/out
+          if-no-files-found: ignore
+
+      - name: Upload service logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-service-logs
+          path: |
+            ${{ runner.temp }}/functions.log
+            ${{ runner.temp }}/serve.log
+          if-no-files-found: ignore
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup
