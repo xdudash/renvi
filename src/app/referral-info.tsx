@@ -1,17 +1,19 @@
 import { Text } from 'react-native';
 import { router } from 'expo-router';
 import { BackLink, Btn, Card, Screen, Title } from '@/components/ui';
+import { useLang } from '@/lib/lang';
 
 // 83 · Условия приглашения
 export default function ReferralInfo() {
+  const { t } = useLang();
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="ПРИГЛАШЕНИЯ" heading="Как работает программа" sub="Никакого доступа к контактам без вашего действия." />
+      <Title kicker={t('screens.referralInfo.priglasheniya')} heading={t('screens.referralInfo.kakRabotaetProgramma')} sub={t('screens.referralInfo.nikakogoDostupaKKontaktam')} />
       <Card>
-        <Text style={{ fontSize: 13, lineHeight: 20 }}>{'1. Вы отправляете личную ссылку человеку.\n\n2. Он устанавливает приложение и проходит регистрацию.\n\n3. После подтверждения профиля прогресс обновится.\n\n4. Награда показывается в приложении с условиями и датой начисления.'}</Text>
+        <Text style={{ fontSize: 13, lineHeight: 20 }}>{t('screens.referralInfo.n1VyOtpravlyaeteLichnuyu')}</Text>
       </Card>
-      <Btn label="Понятно" onPress={() => router.back()} />
+      <Btn label={t('screens.referralInfo.ponyatno')} onPress={() => router.back()} />
     </Screen>
   );
 }

@@ -341,14 +341,15 @@ export function Sheet({ visible, onClose, children }: { visible: boolean; onClos
 
 // ---------- profile building blocks ----------
 export function PromptCard({ question, answer, onReply }: { question: string; answer: string; onReply?: () => void }) {
+  const { t } = useLang();
   return (
     <View style={styles.promptCard}>
-      <Eyebrow>ОТВЕТ В АНКЕТЕ</Eyebrow>
+      <Eyebrow>{t('components.ui.otvetVAnkete')}</Eyebrow>
       <Text style={styles.promptQ}>{question}</Text>
       <Text style={styles.promptA}>{answer}</Text>
       {onReply ? (
         <Pressable accessibilityRole="button" onPress={onReply} style={styles.promptReact}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><UiIcon name="comment" size={13} /><Text style={styles.promptReactText}>Ответить</Text></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><UiIcon name="comment" size={13} /><Text style={styles.promptReactText}>{t('components.ui.otvetit')}</Text></View>
         </Pressable>
       ) : null}
     </View>
@@ -366,12 +367,13 @@ export function Avatar({ uri, size = 49 }: { uri?: string | null; size?: number 
 export function ActionSet({ onPass, onComment, onSpark, onProfile, sparkDisabled }: {
   onPass: () => void; onComment: () => void; onSpark: (completed: () => void) => void; onProfile?: () => void; sparkDisabled?: boolean;
 }) {
+  const { t } = useLang();
   return (
     <View style={styles.actionSet}>
-      <ActionBtn label="Пропустить" icon="close" size={21} onPress={onPass} />
-      <ActionBtn label="С сообщением" icon="comment" size={22} onPress={onComment} />
+      <ActionBtn label={t('components.ui.propustit')} icon="close" size={21} onPress={onPass} />
+      <ActionBtn label={t('components.ui.sSoobscheniem')} icon="comment" size={22} onPress={onComment} />
       <SparkButton onComplete={onSpark} disabled={sparkDisabled} />
-      {onProfile ? <ActionBtn label="Профиль" icon="arrow" size={21} onPress={onProfile} /> : null}
+      {onProfile ? <ActionBtn label={t('components.ui.profil')} icon="arrow" size={21} onPress={onProfile} /> : null}
     </View>
   );
 }
@@ -386,6 +388,7 @@ export function ActionBtn({ label, icon, size = 21, onPress }: { label: string; 
 
 // Hold to send a spark: ~460 ms; ring fills while held (prototype behaviour).
 export function SparkButton({ onComplete, disabled }: { onComplete: (completed: () => void) => void; disabled?: boolean }) {
+  const { t } = useLang();
   const [progress, setProgress] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
   const raf = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -420,8 +423,8 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Удержать искру"
-      accessibilityHint="Удерживайте, чтобы отправить искру"
+      accessibilityLabel={t('components.ui.uderzhatIskru')}
+      accessibilityHint={t('components.ui.uderzhivayteChtobyOtpravit')}
       onPressIn={start}
       onPressOut={end}
       onPress={() => { /* hold only; tap explains the gesture */ }}
@@ -438,13 +441,14 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
         </Svg>
         <View style={styles.sparkInner}><BrandMark color="#fff" size={27} /></View>
       </View>
-      <Text style={styles.actionLabel}>{reduceMotion ? 'Удержать искру' : 'Удержать искру'}</Text>
+      <Text style={styles.actionLabel}>{reduceMotion ? t('components.ui.uderzhatIskru') : t('components.ui.uderzhatIskru')}</Text>
     </Pressable>
   );
 }
 
 // Full-width primary button that fires only after a ~0.45 s hold ("Удерживать для взаимной искры").
 export function HoldButton({ label, onComplete }: { label: string; onComplete: () => void }) {
+  const { t } = useLang();
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const fired = useRef(false);
@@ -461,10 +465,10 @@ export function HoldButton({ label, onComplete }: { label: string; onComplete: (
   };
   const end = () => {
     if (timer.current) clearInterval(timer.current);
-    if (!fired.current) { setProgress(0); toast('Удерживайте, пока не заполнится круг'); }
+    if (!fired.current) { setProgress(0); toast(t('components.ui.uderzhivaytePokaNeZapolnit')); }
   };
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint="Удерживайте, чтобы отправить искру" onPressIn={start} onPressOut={end} style={[styles.btn, { backgroundColor: colors.red, overflow: 'hidden' }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={t('components.ui.uderzhivayteChtobyOtpravit')} onPressIn={start} onPressOut={end} style={[styles.btn, { backgroundColor: colors.red, overflow: 'hidden' }]}>
       <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${progress * 100}%`, backgroundColor: colors.redDark }} />
       <Text style={[styles.btnText, { color: '#fff' }]}>{label}</Text>
     </Pressable>

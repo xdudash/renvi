@@ -6,9 +6,11 @@ import { OnbHeader, useStepSave } from '@/components/Onboarding';
 import { startSelfieVerification } from '@/lib/verification';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 19 · Селфи-проверка
 export default function ObVerify() {
+  const { t } = useLang();
   const toast = useToast();
   const { session, refresh } = useSession();
   const { save } = useStepSave('ob-verify');
@@ -18,21 +20,21 @@ export default function ObVerify() {
     setBusy(true);
     const r = await startSelfieVerification(session.user.id);
     setBusy(false);
-    if (r === 'denied') { toast('Разрешите доступ к камере в настройках'); return; }
-    if (r === 'error') { toast('Не удалось отправить селфи. Повторите попытку.'); return; }
+    if (r === 'denied') { toast(t('screens.obVerify.razreshiteDostupKKamere')); return; }
+    if (r === 'error') { toast(t('screens.obVerify.neUdalosOtpravitSelfi')); return; }
     if (r === 'cancel') return;
     await refresh();
     save({});
   };
   return (
     <Screen>
-      <OnbHeader step={9} kicker="ПОДТВЕРЖДЕНИЕ" heading="Покажите, что вы — это вы" sub="Селфи сверит модератор. Значок подтверждения помогает другим сделать информированный выбор, но не гарантирует безопасность." />
+      <OnbHeader step={9} kicker={t('screens.obVerify.podtverzhdenie')} heading={t('screens.obVerify.pokazhiteChtoVyEto')} sub={t('screens.obVerify.selfiSveritModeratorZnacho')} />
       <View style={{ borderRadius: 20, backgroundColor: colors.blush, height: 150, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: 53, color: '#b74e43' }}>◉</Text>
       </View>
-      <Card tight><Bold>Понадобится камера</Bold><Tiny>Фото не станет частью анкеты. Проверка проходит вручную.</Tiny></Card>
-      <Btn label="Начать проверку" busy={busy} onPress={start} />
-      <Btn kind="ghost" label="Почему это важно?" onPress={() => router.push('/safety')} />
+      <Card tight><Bold>{t('screens.obVerify.ponadobitsyaKamera')}</Bold><Tiny>{t('screens.obVerify.fotoNeStanetChastyu')}</Tiny></Card>
+      <Btn label={t('screens.obVerify.nachatProverku')} busy={busy} onPress={start} />
+      <Btn kind="ghost" label={t('screens.obVerify.pochemuEtoVazhno')} onPress={() => router.push('/safety')} />
     </Screen>
   );
 }

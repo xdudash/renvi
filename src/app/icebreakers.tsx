@@ -5,9 +5,11 @@ import { BackLink, Card, Eyebrow, Field, LinkBtn, Loading, Pill, Screen, Tiny, T
 import { useAsync } from '@/hooks/useAsync';
 import { api } from '@/lib/api';
 import { setDraft } from '@/lib/drafts';
+import { useLang } from '@/lib/lang';
 
 // 42 · Сценарии начала разговора
 export default function Icebreakers() {
+  const { t } = useLang();
   const { match } = useLocalSearchParams<{ match: string }>();
   const ctx = useAsync(() => api.matchContext(match), [match]);
   const [own, setOwn] = useState('');
@@ -15,32 +17,32 @@ export default function Icebreakers() {
   if (ctx.loading) return <Screen tabs="chats"><BackLink /><Loading /></Screen>;
   const p = ctx.data?.their_prompts[0];
   const interest = ctx.data?.their_interests[0];
-  const topic = p ? `«${p.question} ${p.answer}» — расскажешь подробнее?` : interest ? `Ты упомянул(а) ${interest.toLowerCase()} — с чего у тебя это началось?` : null;
+  const topic = p ? t('screens.icebreakers.questionAnswerRasskazheshP', { question: p.question, answer: p.answer }) : interest ? t('screens.icebreakers.tyUpomyanulAV', { interest: interest.toLowerCase() }) : null;
   return (
     <Screen tabs="chats">
       <BackLink />
-      <Title kicker="ПЕРВЫЙ ШАГ" heading="Выберите свой способ начать" sub="Подсказки помогают, но текст остаётся вашим. Никаких автоматических сообщений." />
+      <Title kicker={t('screens.icebreakers.pervyyShag')} heading={t('screens.icebreakers.vyberiteSvoySposobNachat')} sub={t('screens.icebreakers.podskazkiPomogayutNoTekst')} />
       {topic ? (
         <Card>
-          <Eyebrow>1 · ОТКЛИКНУТЬСЯ НА АНКЕТУ</Eyebrow>
+          <Eyebrow>{t('screens.icebreakers.n1OtkliknutsyaNaAnketu')}</Eyebrow>
           <Text style={{ fontSize: 13, lineHeight: 19 }}>{topic}</Text>
-          <LinkBtn label="Использовать тему　›" onPress={() => use(topic)} />
+          <LinkBtn label={t('screens.icebreakers.ispolzovatTemu')} onPress={() => use(topic)} />
         </Card>
       ) : null}
       <Card>
-        <Eyebrow>{topic ? '2' : '1'} · ЛЁГКИЙ ВОПРОС</Eyebrow>
+        <Eyebrow>{t('screens.icebreakers.vLegkiyVopros', { n: topic ? '2' : '1' })}</Eyebrow>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          <Pill label="Кофе или прогулка?" onPress={() => use('Кофе или прогулка у воды?')} />
-          <Pill label="Город, куда вернуться?" onPress={() => use('Какой город хочется увидеть снова?')} />
+          <Pill label={t('screens.icebreakers.kofeIliProgulka')} onPress={() => use(t('screens.icebreakers.kofeIliProgulkaU'))} />
+          <Pill label={t('screens.icebreakers.gorodKudaVernutsya')} onPress={() => use(t('screens.icebreakers.kakoyGorodHochetsyaUvidet'))} />
         </View>
       </Card>
       <Card>
-        <Eyebrow>{topic ? '3' : '2'} · СВОЯ ТЕМА</Eyebrow>
-        <Field value={own} onChangeText={setOwn} multiline style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder="Напишите так, как сказали бы сами" />
-        {own.trim() ? <LinkBtn label="Перенести в сообщение　›" onPress={() => use(own.trim())} /> : null}
-        <LinkBtn label="Настроить свои темы для новых совпадений" onPress={() => router.push('/opening-moves')} />
+        <Eyebrow>{t('screens.icebreakers.vSvoyaTema', { n: topic ? '3' : '2' })}</Eyebrow>
+        <Field value={own} onChangeText={setOwn} multiline style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder={t('screens.icebreakers.napishiteTakKakSkazali')} />
+        {own.trim() ? <LinkBtn label={t('screens.icebreakers.perenestiVSoobschenie')} onPress={() => use(own.trim())} /> : null}
+        <LinkBtn label={t('screens.icebreakers.nastroitSvoiTemyDlya')} onPress={() => router.push('/opening-moves')} />
       </Card>
-      <Tiny>Подсказки можно отключить в любое время.</Tiny>
+      <Tiny>{t('screens.icebreakers.podskazkiMozhnoOtklyuchitV')}</Tiny>
     </Screen>
   );
 }

@@ -3,29 +3,31 @@ import { BackLink, Card, SafeBanner, Screen, Tiny, Title, useToast } from '@/com
 import { Row } from '@/components/Row';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { useLang } from '@/lib/lang';
 
 // 85 · Центр безопасности
 export default function Safety() {
+  const { t } = useLang();
   const { profile: target, match } = useLocalSearchParams<{ profile?: string; match?: string }>();
   const { session } = useSession();
   const toast = useToast();
   const block = async () => {
     if (!target) { router.push('/blocked'); return; }
-    try { await api.block(target); toast('Профиль заблокирован'); router.replace('/blocked'); } catch { toast('Не удалось заблокировать'); }
+    try { await api.block(target); toast(t('screens.safety.profilZablokirovan')); router.replace('/blocked'); } catch { toast(t('screens.safety.neUdalosZablokirovat')); }
   };
   return (
     <Screen tabs={session ? 'discover' : undefined}>
       <BackLink />
-      <Title kicker="БЕЗОПАСНОСТЬ" heading="Вы управляете границами" sub="Не нужно объяснять отказ. Можно прекратить контакт в любой момент." />
-      <SafeBanner>Для первой встречи: выбирайте публичное место, сообщите близкому, держите под контролем свой транспорт и не отправляйте деньги.</SafeBanner>
+      <Title kicker={t('screens.safety.bezopasnost')} heading={t('screens.safety.vyUpravlyaeteGranitsami')} sub={t('screens.safety.neNuzhnoObyasnyatOtkaz')} />
+      <SafeBanner>{t('screens.safety.dlyaPervoyVstrechiVybirayt')}</SafeBanner>
       <Card tight>
-        <Row label="Заблокировать профиль" sub="Вы больше не увидите друг друга" onPress={block} />
-        <Row label="Пожаловаться на профиль или контент" sub="Мы покажем ход рассмотрения" onPress={() => router.push({ pathname: '/report', params: { profile: target ?? '' } })} />
-        <Row label="Сообщить о незаконном контенте" sub="Отдельный простой канал для заметки" onPress={() => router.push({ pathname: '/report', params: { profile: target ?? '', reason: 'illegal' } })} />
-        <Row label="Отправить историю чата поддержке" sub="Только после вашего просмотра состава" onPress={() => router.push({ pathname: '/support-share', params: { match: match ?? '' } })} />
-        <Row label="Правила сообщества" sub="Прозрачные правила и границы" onPress={() => router.push('/community-rules')} />
+        <Row label={t('screens.safety.zablokirovatProfil')} sub={t('screens.safety.vyBolsheNeUvidite')} onPress={block} />
+        <Row label={t('screens.safety.pozhalovatsyaNaProfilIli')} sub={t('screens.safety.myPokazhemHodRassmotreniya')} onPress={() => router.push({ pathname: '/report', params: { profile: target ?? '' } })} />
+        <Row label={t('screens.safety.soobschitONezakonnomKonten')} sub={t('screens.safety.otdelnyyProstoyKanalDlya')} onPress={() => router.push({ pathname: '/report', params: { profile: target ?? '', reason: 'illegal' } })} />
+        <Row label={t('screens.safety.otpravitIstoriyuChataPodde')} sub={t('screens.safety.tolkoPosleVashegoProsmotra')} onPress={() => router.push({ pathname: '/support-share', params: { match: match ?? '' } })} />
+        <Row label={t('screens.safety.pravilaSoobschestva')} sub={t('screens.safety.prozrachnyePravilaIGranits')} onPress={() => router.push('/community-rules')} />
       </Card>
-      <Tiny>Подтверждение фото помогает оценить профиль, но не гарантирует, что информация полностью достоверна.</Tiny>
+      <Tiny>{t('screens.safety.podtverzhdenieFotoPomogaet')}</Tiny>
     </Screen>
   );
 }

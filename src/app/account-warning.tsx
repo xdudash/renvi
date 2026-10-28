@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { Screen, StateBlock } from '@/components/ui';
+import { useLang } from '@/lib/lang';
 
 // 92 · Предупреждение аккаунта
 export default function AccountWarning() {
+  const { t } = useLang();
   return (
     <Screen>
-      <StateBlock icon="!" title="Обратите внимание" copy="Мы заметили событие, требующее внимания. Причина и дальнейшие действия объясняются простым языком." label="Открыть уведомление" onPress={() => router.replace('/report-status')} />
+      <StateBlock icon="!" title={t('screens.accountWarning.obratiteVnimanie')} copy={t('screens.accountWarning.myZametiliSobytieTrebuyusc')} label={t('screens.accountWarning.otkrytUvedomlenie')} onPress={() => router.replace('/report-status')} />
     </Screen>
   );
 }

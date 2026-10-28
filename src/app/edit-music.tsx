@@ -6,45 +6,47 @@ import { api } from '@/lib/api';
 import { resolveSpotify } from '@/lib/account';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 68 · Музыка в профиле
 export default function EditMusic() {
+  const { t } = useLang();
   const toast = useToast();
   const { profile, refresh } = useSession();
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const save = async () => {
     const v = input.trim();
-    if (!v) { toast('Вставьте ссылку Spotify или название трека'); return; }
+    if (!v) { toast(t('screens.editMusic.vstavteSsylkuSpotifyIli')); return; }
     setBusy(true);
     try {
       const isLink = v.startsWith('https://');
       const title = isLink ? await resolveSpotify(v) : v;
-      if (isLink && !title) { toast('Не удалось распознать ссылку Spotify'); return; }
+      if (isLink && !title) { toast(t('screens.editMusic.neUdalosRaspoznatSsylku')); return; }
       await api.saveOnboarding({ music_title: title, music_url: isLink ? v : '' });
-      await refresh(); setInput(''); toast('Изменения сохранены'); router.navigate('/me');
-    } catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+      await refresh(); setInput(''); toast(t('screens.editMusic.izmeneniyaSohraneny')); router.navigate('/me');
+    } catch { toast(t('screens.editMusic.neUdalosSohranit')); } finally { setBusy(false); }
   };
   const removeTrack = async () => {
-    try { await api.saveOnboarding({ music_title: '', music_url: '' }); await refresh(); toast('Трек убран'); } catch { toast('Не удалось убрать трек'); }
+    try { await api.saveOnboarding({ music_title: '', music_url: '' }); await refresh(); toast(t('screens.editMusic.trekUbran')); } catch { toast(t('screens.editMusic.neUdalosUbratTrek')); }
   };
   const has = !!profile?.music_title;
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="МУЗЫКА" heading="Трек — быстрый общий язык" sub="Добавьте одну песню из Spotify. В анкете открывается официальный предпросмотр." />
-      <Field label="ССЫЛКА ИЛИ НАЗВАНИЕ" value={input} onChangeText={setInput} autoCapitalize="none" placeholder="Spotify link или название трека" />
+      <Title kicker={t('screens.editMusic.muzyka')} heading={t('screens.editMusic.trekBystryyObschiyYazyk')} sub={t('screens.editMusic.dobavteOdnuPesnyuIz')} />
+      <Field label={t('screens.editMusic.ssylkaIliNazvanie')} value={input} onChangeText={setInput} autoCapitalize="none" placeholder={t('screens.editMusic.spotifyLinkIliNazvanie')} />
       {has ? (
         <Card>
           <Row>
             <Text style={{ fontSize: 28, color: colors.red }}>♫</Text>
-            <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{profile?.music_title}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>Добавлен в профиль</Text></View>
-            <IconButton label="Предпросмотр" text="▶" onPress={() => (profile?.music_url ? Linking.openURL(profile.music_url) : toast('Предпросмотр доступен для ссылок Spotify'))} />
+            <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{profile?.music_title}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.editMusic.dobavlenVProfil')}</Text></View>
+            <IconButton label={t('screens.editMusic.predprosmotr')} text="▶" onPress={() => (profile?.music_url ? Linking.openURL(profile.music_url) : toast(t('screens.editMusic.predprosmotrDostupenDlyaSs')))} />
           </Row>
         </Card>
       ) : null}
-      <Btn label="Сохранить музыку" busy={busy} onPress={save} />
-      {has ? <Btn kind="ghost" label="Убрать трек" onPress={removeTrack} /> : null}
+      <Btn label={t('screens.editMusic.sohranitMuzyku')} busy={busy} onPress={save} />
+      {has ? <Btn kind="ghost" label={t('screens.editMusic.ubratTrek')} onPress={removeTrack} /> : null}
     </Screen>
   );
 }

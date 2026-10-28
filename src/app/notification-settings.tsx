@@ -4,32 +4,34 @@ import { usePrefs } from '@/hooks/usePrefs';
 import { useTierLimits } from '@/lib/session';
 import type { Prefs } from '@/lib/account';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 73 · Уведомления
 export default function NotificationSettings() {
+  const { t } = useLang();
   const toast = useToast();
   const { prefs, set } = usePrefs();
   const { limits } = useTierLimits();
   const canLikes = !!limits?.see_incoming;
   const rows: [keyof Prefs, string, string, boolean][] = [
-    ['messages', 'Сообщения', 'Когда приходит новое сообщение', true],
-    ['matches', 'Совпадения', 'Когда искра взаимна', true],
-    ['dates', 'Предложение встречи', 'Ответ на приглашение', true],
-    ['likes', 'Новые симпатии', 'Только если доступны вашему плану', canLikes],
-    ['news', 'Подборки и новости', 'Не чаще пары раз в месяц', true],
+    ['messages', t('screens.notificationSettings.soobscheniya'), t('screens.notificationSettings.kogdaPrihoditNovoeSoobsche'), true],
+    ['matches', t('screens.notificationSettings.sovpadeniya'), t('screens.notificationSettings.kogdaIskraVzaimna'), true],
+    ['dates', t('screens.notificationSettings.predlozhenieVstrechi'), t('screens.notificationSettings.otvetNaPriglashenie'), true],
+    ['likes', t('screens.notificationSettings.novyeSimpatii'), t('screens.notificationSettings.tolkoEsliDostupnyVashemu'), canLikes],
+    ['news', t('screens.notificationSettings.podborkiINovosti'), t('screens.notificationSettings.neChascheParyRaz'), true],
   ];
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="УВЕДОМЛЕНИЯ" heading="Оставьте только важное" sub="Системные уведомления можно отключить в настройках iOS." />
+      <Title kicker={t('screens.notificationSettings.uvedomleniya')} heading={t('screens.notificationSettings.ostavteTolkoVazhnoe')} sub={t('screens.notificationSettings.sistemnyeUvedomleniyaMozhn')} />
       <Card tight>
         {rows.map(([k, a, b, enabled]) => (
-          <CheckRow key={k} disabled={!enabled} on={enabled && prefs[k]} onPress={() => set(k, !prefs[k]).catch(() => toast('Не удалось сохранить'))}>
+          <CheckRow key={k} disabled={!enabled} on={enabled && prefs[k]} onPress={() => set(k, !prefs[k]).catch(() => toast(t('screens.notificationSettings.neUdalosSohranit')))}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: enabled ? colors.ink : '#aaa' }}>{a}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{b}</Text>
           </CheckRow>
         ))}
       </Card>
-      <Btn kind="ghost" label="Открыть настройки iOS" onPress={() => Linking.openSettings().catch(() => toast('Откройте настройки телефона вручную'))} />
+      <Btn kind="ghost" label={t('screens.notificationSettings.otkrytNastroykiIos')} onPress={() => Linking.openSettings().catch(() => toast(t('screens.notificationSettings.otkroyteNastroykiTelefonaV')))} />
     </Screen>
   );
 }
