@@ -6,9 +6,11 @@ import { ErrorRetryState } from '@/components/States';
 import { useAsync } from '@/hooks/useAsync';
 import { inviteUrl, myReferral } from '@/lib/referral';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 82 · Пригласить друга
 export default function Referral() {
+  const { t } = useLang();
   const toast = useToast();
   const { data, loading, error, reload } = useAsync(() => myReferral(), []);
   if (loading) return <Screen tabs="me"><BackLink /><Loading /></Screen>;
@@ -18,22 +20,22 @@ export default function Referral() {
   return (
     <Screen tabs="me">
       <BackLink onPress={() => router.navigate('/me')} />
-      <Title kicker="ПРИГЛАСИТЕ ДРУГА" heading={'Знакомиться\nлучше вместе.'} sub="Поделитесь личной ссылкой. Награда днями Plus зависит от подтверждённых приглашений." />
+      <Title kicker={t('screens.referral.kicker')} heading={t('screens.referral.heading')} sub={t('screens.referral.sub')} />
       <Card style={{ backgroundColor: colors.blush, borderColor: colors.blush }}>
-        <Eyebrow>ВАША ССЫЛКА</Eyebrow>
+        <Eyebrow>{t('screens.referral.yourLink')}</Eyebrow>
         <Text style={{ fontSize: 22, fontWeight: '800', letterSpacing: -0.8, marginVertical: 8 }} selectable>{pretty}</Text>
         <Between>
-          <Tiny>Персональный код · копировать или поделиться</Tiny>
-          <LinkBtn label="Копировать" onPress={async () => { await Clipboard.setStringAsync(url); toast('Ссылка скопирована'); }} />
+          <Tiny>{t('screens.referral.codeNote')}</Tiny>
+          <LinkBtn label={t('screens.referral.copy')} onPress={async () => { await Clipboard.setStringAsync(url); toast(t('screens.referral.copied')); }} />
         </Between>
       </Card>
       <Card>
-        <Between><Bold>Прогресс приглашений</Bold><Chip label={`${data.verified} из ${data.goal}`} /></Between>
+        <Between><Bold>{t('screens.referral.progress')}</Bold><Chip label={t('screens.referral.progressChip', { verified: data.verified, goal: data.goal })} /></Between>
         <View style={{ marginVertical: 10 }}><Meter value={(data.verified / Math.max(1, data.goal)) * 100} /></View>
-        <Tiny>После регистрации и проверки приглашённого обновится статус и начисление дней RENVI Plus.</Tiny>
+        <Tiny>{t('screens.referral.progressNote')}</Tiny>
       </Card>
-      <Btn label="Поделиться приглашением" onPress={() => router.push({ pathname: '/share-sheet', params: { url } })} />
-      <Btn kind="ghost" label="Как начисляется награда?" onPress={() => router.push('/referral-info')} />
+      <Btn label={t('screens.referral.share')} onPress={() => router.push({ pathname: '/share-sheet', params: { url } })} />
+      <Btn kind="ghost" label={t('screens.referral.howReward')} onPress={() => router.push('/referral-info')} />
     </Screen>
   );
 }

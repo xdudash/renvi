@@ -6,9 +6,11 @@ import { useDraft } from '@/hooks/useDraft';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 69 · Скрытый профиль / инкогнито
 export default function PrivacyVisibility() {
+  const { t } = useLang();
   const toast = useToast();
   const { profile, tier, refresh } = useSession();
   const [paused, setPaused] = useDraft<boolean>(!!profile?.paused);
@@ -18,18 +20,18 @@ export default function PrivacyVisibility() {
   const premium = tier === 'premium';
   const save = async () => {
     setBusy(true);
-    try { await api.saveOnboarding({ paused, show_active: active, incognito: premium && incognito }); await refresh(); toast('Изменения сохранены'); router.navigate('/me'); }
-    catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+    try { await api.saveOnboarding({ paused, show_active: active, incognito: premium && incognito }); await refresh(); toast(t('screens.privacyVisibility.saved')); router.navigate('/me'); }
+    catch { toast(t('screens.privacyVisibility.saveFailed')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="ВИДИМОСТЬ" heading="Как вас находят" sub="Скрытие профиля можно отменить в один шаг." />
-      <Toggle title="Пауза анкеты" sub="Не показывать вас новым людям" on={paused} set={setPaused} />
-      <Toggle title="Показывать «активен(на)»" sub="Скрывайте последнее время активности" on={active} set={setActive} />
-      <Toggle title="Режим инкогнито" sub={premium ? 'Только люди, которым вы поставили лайк' : 'Доступен в RENVI Premium'} on={incognito} set={setIncognito} disabled={!premium} />
-      {!premium ? <Btn kind="tertiary" label="Посмотреть Premium" onPress={() => router.push('/plans')} /> : null}
-      <Btn label="Сохранить настройки" busy={busy} onPress={save} />
+      <Title kicker={t('screens.privacyVisibility.kicker')} heading={t('screens.privacyVisibility.heading')} sub={t('screens.privacyVisibility.sub')} />
+      <Toggle title={t('screens.privacyVisibility.pauseTitle')} sub={t('screens.privacyVisibility.pauseSub')} on={paused} set={setPaused} />
+      <Toggle title={t('screens.privacyVisibility.activeTitle')} sub={t('screens.privacyVisibility.activeSub')} on={active} set={setActive} />
+      <Toggle title={t('screens.privacyVisibility.incognitoTitle')} sub={premium ? t('screens.privacyVisibility.incognitoSub') : t('screens.privacyVisibility.incognitoLocked')} on={incognito} set={setIncognito} disabled={!premium} />
+      {!premium ? <Btn kind="tertiary" label={t('screens.privacyVisibility.viewPremium')} onPress={() => router.push('/plans')} /> : null}
+      <Btn label={t('screens.privacyVisibility.save')} busy={busy} onPress={save} />
     </Screen>
   );
 }

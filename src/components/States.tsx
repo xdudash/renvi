@@ -1,27 +1,31 @@
 import { router } from 'expo-router';
 import { Btn, SafeBanner, StateBlock } from './ui';
+import { useLang } from '@/lib/lang';
 
 export function EmptyDiscover() {
+  const { t } = useLang();
   return (
     <>
-      <StateBlock icon="⌕" title="Пока рядом никого" copy="Увеличьте расстояние или попробуйте позже. Мы покажем только анкеты, которые подходят по вашим настройкам." label="Изменить фильтры" onPress={() => router.push('/filters')} />
-      <SafeBanner>Локация остаётся приблизительной. Вы можете выбирать город без доступа к GPS.</SafeBanner>
+      <StateBlock icon="⌕" title={t('components.states.emptyTitle')} copy={t('components.states.emptyCopy')} label={t('components.states.changeFilters')} onPress={() => router.push('/filters')} />
+      <SafeBanner>{t('components.states.approxLocation')}</SafeBanner>
     </>
   );
 }
 export function OfflineState({ onRetry }: { onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <>
-      <StateBlock icon="⌁" title="Похоже, нет интернета" copy="Уже просмотренные экраны останутся доступны. Сообщения можно будет повторить после подключения." label="Проверить снова" onPress={onRetry} />
-      <Btn kind="ghost" label="Вернуться назад" onPress={() => (router.canGoBack() ? router.back() : router.replace('/discover'))} />
+      <StateBlock icon="⌁" title={t('components.states.offlineTitle')} copy={t('components.states.offlineCopy')} label={t('components.states.checkAgain')} onPress={onRetry} />
+      <Btn kind="ghost" label={t('components.states.goBack')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/discover'))} />
     </>
   );
 }
 export function ErrorRetryState({ onRetry }: { onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <>
-      <StateBlock icon="↻" title="Не удалось загрузить" copy="Проверьте соединение и повторите попытку. Ваши данные не потерялись." label="Повторить" onPress={onRetry} />
-      <Btn kind="ghost" label="Связаться с поддержкой" onPress={() => router.push('/support-share')} />
+      <StateBlock icon="↻" title={t('common.loadFailed')} copy={t('components.states.errorCopy')} label={t('common.retry')} onPress={onRetry} />
+      <Btn kind="ghost" label={t('components.states.contactSupport')} onPress={() => router.push('/support-share')} />
     </>
   );
 }

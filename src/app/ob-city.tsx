@@ -6,9 +6,11 @@ import { OnbHeader, useStepSave } from '@/components/Onboarding';
 import { CountryPicker } from '@/components/CountryPicker';
 import { CITIES, COUNTRY_NAME } from '@/lib/catalog';
 import { useSession } from '@/lib/session';
+import { useLang } from '@/lib/lang';
 
 // 14 · Страна и город
 export default function ObCity() {
+  const { t } = useLang();
   const { profile } = useSession();
   const toast = useToast();
   const [country, setCountry] = useDraft<string>(profile?.country ?? 'SK');
@@ -22,10 +24,10 @@ export default function ObCity() {
   );
   return (
     <Screen>
-      <OnbHeader step={4} kicker="ВАШ ГОРОД" heading="Где вас искать?" sub="Для старта выберите страну и город вручную. Точные координаты не нужны." />
+      <OnbHeader step={4} kicker={t('screens.obCity.kicker')} heading={t('screens.obCity.heading')} sub={t('screens.obCity.sub')} />
       <CountryPicker value={country} onChange={(c) => { setCountry(c); setCity(''); }} />
-      <Eyebrow style={{ marginTop: 10 }}>ГОРОД</Eyebrow>
-      <Field value={city} onChangeText={setCity} placeholder="Начните вводить город" />
+      <Eyebrow style={{ marginTop: 10 }}>{t('screens.obCity.city')}</Eyebrow>
+      <Field value={city} onChangeText={setCity} placeholder={t('screens.obCity.placeholder')} />
       {suggestions.map(([n, r]) => (
         <Pressable key={n} accessibilityRole="button" onPress={() => setCity(n)} style={{ paddingVertical: 8 }}>
           <Text style={{ fontSize: 12 }}>{n} <Text style={{ color: '#8f8c84' }}>· {r}</Text></Text>
@@ -34,8 +36,8 @@ export default function ObCity() {
       {match ? (
         <Card tight><Bold>{match[0]}</Bold><Tiny>{match[1]} · {COUNTRY_NAME[country]}</Tiny></Card>
       ) : null}
-      <Tiny>В макете открыт весь ЕС; доступность географии зависит от запуска сервиса в конкретной стране.</Tiny>
-      <Btn label="Продолжить" busy={busy} onPress={() => (match ? save({ country, city: match[0] }) : toast('Выберите город из списка'))} />
+      <Tiny>{t('screens.obCity.note')}</Tiny>
+      <Btn label={t('screens.obCity.continue')} busy={busy} onPress={() => (match ? save({ country, city: match[0] }) : toast(t('screens.obCity.pickFromList')))} />
     </Screen>
   );
 }

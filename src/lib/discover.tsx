@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useState } from 'react';
 import { router } from 'expo-router';
 import { api, type DiscoverCard, type SparkResult } from './api';
 import { AppError, toAppError } from './errors';
+import { useLang } from '@/lib/lang';
 
 export type SparkTarget = { kind: 'profile' | 'photo' | 'prompt'; ref: string | null; label: string };
 export type MatchInfo = { match_id: string; partner: { id: string; name: string; age: number; photo?: string | null } };
@@ -28,12 +29,13 @@ type Ctx = {
 const C = createContext<Ctx | null>(null);
 
 export function DiscoverProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useLang();
   const [cards, setCards] = useState<DiscoverCard[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [likesUsed, setLikesUsed] = useState(0);
-  const [target, setTarget] = useState<SparkTarget>({ kind: 'profile', ref: null, label: 'Фото из анкеты' });
+  const [target, setTarget] = useState<SparkTarget>({ kind: 'profile', ref: null, label: t('lib.discover.photoFromProfile') });
   const [lastMatch, setLastMatch] = useState<MatchInfo | null>(null);
 
   const load = useCallback(async () => {

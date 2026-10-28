@@ -5,9 +5,11 @@ import { BackLink, Btn, Eyebrow, Field, Pill, Screen, Segmented, Title, useToast
 import { DATE_TIMES, dayParts, getDateDraft, iso, setDateDraft, weekDays } from '@/lib/dateDraft';
 import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 57 · Дата и время
 export default function DateTime() {
+  const { t } = useLang();
   const { match } = useLocalSearchParams<{ match: string }>();
   const toast = useToast();
   const d0 = getDateDraft();
@@ -18,20 +20,20 @@ export default function DateTime() {
   const [busy, setBusy] = useState(false);
   const days = weekDays(week);
   const send = async () => {
-    if (!day) { toast('Выберите день'); return; }
+    if (!day) { toast(t('screens.dateTime.pickDay')); return; }
     setDateDraft({ day, time, note });
     const d = getDateDraft();
     setBusy(true);
     try {
       const row = await api.proposeDate(match, d.place, d.place === 'custom' ? d.custom : null, day, time, note.trim() || null);
       router.replace({ pathname: '/date-pending', params: { match, date: row.id } });
-    } catch { toast('Не удалось отправить приглашение'); } finally { setBusy(false); }
+    } catch { toast(t('screens.dateTime.sendFailed')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="chats">
       <BackLink />
-      <Title kicker="ДЕНЬ И ВРЕМЯ" heading="Когда вам удобно?" sub="Приглашение можно изменить или отменить до ответа." />
-      <Segmented items={[{ key: 'this', label: 'Эта неделя' }, { key: 'next', label: 'Следующая' }]} value={week} onChange={(k) => setWeek(k as 'this' | 'next')} />
+      <Title kicker={t('screens.dateTime.kicker')} heading={t('screens.dateTime.heading')} sub={t('screens.dateTime.sub')} />
+      <Segmented items={[{ key: 'this', label: t('screens.dateTime.thisWeek') }, { key: 'next', label: t('screens.dateTime.nextWeek') }]} value={week} onChange={(k) => setWeek(k as 'this' | 'next')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
         {days.map((dt) => {
           const key = iso(dt), p = dayParts(dt), on = key === day;
@@ -43,13 +45,13 @@ export default function DateTime() {
           );
         })}
       </View>
-      <Eyebrow style={{ marginTop: 15 }}>ВРЕМЯ</Eyebrow>
+      <Eyebrow style={{ marginTop: 15 }}>{t('screens.dateTime.time')}</Eyebrow>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {DATE_TIMES.map((t) => <Pill key={t} label={t} active={time === t} onPress={() => setTime(t)} />)}
+        {DATE_TIMES.map((tm) => <Pill key={tm} label={tm} active={time === tm} onPress={() => setTime(tm)} />)}
       </View>
-      <Field value={note} onChangeText={setNote} multiline maxLength={200} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder="Добавьте пару слов · необязательно" />
-      <Btn label="Отправить приглашение" busy={busy} onPress={send} />
-      <Btn kind="ghost" label="Назад к месту" onPress={() => router.push({ pathname: '/date-place', params: { match } })} />
+      <Field value={note} onChangeText={setNote} multiline maxLength={200} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder={t('screens.dateTime.notePlaceholder')} />
+      <Btn label={t('screens.dateTime.send')} busy={busy} onPress={send} />
+      <Btn kind="ghost" label={t('screens.dateTime.backToPlace')} onPress={() => router.push({ pathname: '/date-place', params: { match } })} />
     </Screen>
   );
 }

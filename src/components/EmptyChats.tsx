@@ -1,6 +1,8 @@
 import { router } from 'expo-router';
 import { StateBlock } from './ui';
+import { useLang } from '@/lib/lang';
 
 export function EmptyChats() {
-  return <StateBlock icon="▤" title="Здесь будут ваши диалоги" copy="Совпадение появится после взаимной искры. Чтобы легче начать, можно ответить на вопрос в анкете." label="Посмотреть анкеты" onPress={() => router.navigate('/discover')} />;
+  const { t } = useLang();
+  return <StateBlock icon="▤" title={t('components.emptyChats.title')} copy={t('components.emptyChats.copy')} label={t('components.emptyChats.label')} onPress={() => router.navigate('/discover')} />;
 }

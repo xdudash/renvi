@@ -8,9 +8,12 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { api, type IncomingSpark } from '@/lib/api';
 import { useSession, useTierLimits } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import type { TFunction } from '@/i18n';
+import { useLang } from '@/lib/lang';
 
 // 35–37 · Входящие · Free / Plus / Premium (one screen; the server decides what the plan may see)
 export default function Likes() {
+  const { t } = useLang();
   const { tier } = useSession();
   const { limits } = useTierLimits();
   const [seg, setSeg] = useState('new');
@@ -24,23 +27,23 @@ export default function Likes() {
   if (tier === 'free') {
     return (
       <Screen tabs="likes">
-        <Title kicker="ВАШИ ИСКРЫ" heading="Кому вы понравились" sub="Новые симпатии появляются здесь. В Free вы увидите число, а открыть список можно в Plus." />
+        <Title kicker={t('screens.likes.kickerFree')} heading={t('screens.likes.headingFree')} sub={t('screens.likes.subFree')} />
         <View style={{ backgroundColor: colors.redWash, borderRadius: 16, padding: 13 }}>
-          <Between><Bold>{count} {plural(count)}</Bold><Chip label="скрыты в Free" tone="red" /></Between>
-          <Tiny>Откройте входящие и решите сами, с кем совпасть.</Tiny>
-          <Btn label="Посмотреть входящие" onPress={() => router.push('/plans')} />
+          <Between><Bold>{t('screens.likes.count', { count, noun: plural(count, t) })}</Bold><Chip label={t('screens.likes.hiddenInFree')} tone="red" /></Between>
+          <Tiny>{t('screens.likes.openIncoming')}</Tiny>
+          <Btn label={t('screens.likes.viewIncoming')} onPress={() => router.push('/plans')} />
         </View>
         {count > 0 ? (
           <Card>
             {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-              <View key={i} style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 11, opacity: 0.35 }} accessibilityLabel="Скрытая симпатия">
+              <View key={i} style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 11, opacity: 0.35 }} accessibilityLabel={t('screens.likes.hiddenCrush')}>
                 <Avatar />
-                <View><Bold>Новая симпатия</Bold><Text style={{ fontSize: 10, color: colors.sub }}>Близко · совпадают интересы</Text></View>
+                <View><Bold>{t('screens.likes.newCrush')}</Bold><Text style={{ fontSize: 10, color: colors.sub }}>{t('screens.likes.nearby')}</Text></View>
               </View>
             ))}
           </Card>
         ) : null}
-        <Tiny>Free: {limits?.daily_likes ?? 20} лайков в день · расширенные фильтры и входящие искры — в RENVI Plus.</Tiny>
+        <Tiny>{t('screens.likes.freeNote', { n: limits?.daily_likes ?? 20 })}</Tiny>
       </Screen>
     );
   }
@@ -48,21 +51,21 @@ export default function Likes() {
   const items = data?.items ?? [];
   return (
     <Screen tabs="likes">
-      <Title kicker="ВХОДЯЩИЕ ИСКРЫ" heading={tier === 'plus' ? 'Уже выбрали вас' : 'Новые симпатии рядом'} sub="Просмотрите анкету, ответьте на её фото или пропустите." />
-      <Segmented items={[{ key: 'new', label: `Новые · ${count}` }, { key: 'matches', label: 'Совпадения' }]} value={seg} onChange={setSeg} />
+      <Title kicker={t('screens.likes.kickerPaid')} heading={tier === 'plus' ? t('screens.likes.headingPlus') : t('screens.likes.headingPremium')} sub={t('screens.likes.subPaid')} />
+      <Segmented items={[{ key: 'new', label: t('screens.likes.segNew', { count }) }, { key: 'matches', label: t('screens.likes.segMatches') }]} value={seg} onChange={setSeg} />
       <Card>
         {seg === 'new'
-          ? items.length ? items.map((it) => <IncomingRow key={it.profile_id} it={it} />) : <Tiny>Пока новых искр нет.</Tiny>
+          ? items.length ? items.map((it) => <IncomingRow key={it.profile_id} it={it} />) : <Tiny>{t('screens.likes.noNew')}</Tiny>
           : (matches.data ?? []).length ? (matches.data ?? []).map((m) => (
               <Pressable key={m.match_id} accessibilityRole="button" onPress={() => router.push({ pathname: '/chat', params: { match: m.match_id } })} style={{ paddingVertical: 11, flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Bold>{m.partner_name}, {m.partner_age}</Bold><Text style={{ color: '#aaa' }}>›</Text>
               </Pressable>
-            )) : <Tiny>Совпадений пока нет.</Tiny>}
+            )) : <Tiny>{t('screens.likes.noMatches')}</Tiny>}
       </Card>
       <Card tight>
         <Between>
-          <View><Bold>{tier === 'plus' ? 'RENVI Plus' : 'RENVI Premium'}</Bold><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{tier === 'plus' ? `${limits?.daily_likes ?? 100} лайков в день` : `${limits?.daily_likes ?? 300} лайков и режим инкогнито`}</Text></View>
-          <LinkBtn label="Условия" onPress={() => router.push('/plans')} />
+          <View><Bold>{tier === 'plus' ? 'RENVI Plus' : 'RENVI Premium'}</Bold><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{tier === 'plus' ? t('screens.likes.plusPerDay', { n: limits?.daily_likes ?? 100 }) : t('screens.likes.premiumPerDay', { n: limits?.daily_likes ?? 300 })}</Text></View>
+          <LinkBtn label={t('screens.likes.terms')} onPress={() => router.push('/plans')} />
         </Between>
       </Card>
     </Screen>
@@ -70,9 +73,10 @@ export default function Likes() {
 }
 
 function IncomingRow({ it }: { it: IncomingSpark }) {
+  const { t } = useLang();
   const card = useAsync(() => api.profileCard(it.profile_id), [it.profile_id]);
   const url = useSignedUrl(card.data?.photos[0]?.path);
-  const what = it.target_kind === 'prompt' ? 'отправил(а) искру на ответ' : it.target_kind === 'photo' ? 'отправил(а) искру на фото' : 'отправил(а) искру';
+  const what = it.target_kind === 'prompt' ? t('screens.likes.sparkOnPrompt') : it.target_kind === 'photo' ? t('screens.likes.sparkOnPhoto') : t('screens.likes.spark');
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/incoming-profile', params: { id: it.profile_id } })} style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.line }}>
       <Avatar uri={url} />
@@ -85,9 +89,9 @@ function IncomingRow({ it }: { it: IncomingSpark }) {
   );
 }
 
-function plural(n: number) {
+function plural(n: number, t: TFunction) {
   const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return 'новая искра';
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'новые искры';
-  return 'новых искр';
+  if (m10 === 1 && m100 !== 11) return t('screens.likes.pluralOne');
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return t('screens.likes.pluralFew');
+  return t('screens.likes.pluralMany');
 }

@@ -8,9 +8,11 @@ import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
 import { api } from '@/lib/api';
 import { INTENTS } from '@/lib/catalog';
+import { useLang } from '@/lib/lang';
 
 // 64 · Редактировать анкету
 export default function EditProfile() {
+  const { t } = useLang();
   const toast = useToast();
   const { profile, refresh } = useSession();
   const { items } = useMyPhotos();
@@ -22,33 +24,33 @@ export default function EditProfile() {
   const [busy, setBusy] = useState(false);
   const videos = items.filter((i) => i.kind === 'video').length;
   const save = async () => {
-    if (!name.trim()) { toast('Введите имя'); return; }
+    if (!name.trim()) { toast(t('screens.editProfile.enterName')); return; }
     setBusy(true);
-    try { await api.saveOnboarding({ display_name: name.trim(), bio: bio.trim(), intent }); await refresh(); toast('Изменения сохранены'); router.navigate('/me'); }
-    catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+    try { await api.saveOnboarding({ display_name: name.trim(), bio: bio.trim(), intent }); await refresh(); toast(t('screens.editProfile.saved')); router.navigate('/me'); }
+    catch { toast(t('screens.editProfile.saveFailed')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="me">
       <BackLink onPress={() => router.navigate('/me')} />
-      <Title kicker="МОЯ АНКЕТА" heading="Добавьте немного себя" sub="Всё можно изменить. До публикации вы увидите предпросмотр." />
-      <Eyebrow>ИМЯ · ВОЗРАСТ</Eyebrow>
+      <Title kicker={t('screens.editProfile.kicker')} heading={t('screens.editProfile.heading')} sub={t('screens.editProfile.sub')} />
+      <Eyebrow>{t('screens.editProfile.nameAge')}</Eyebrow>
       <View style={{ flexDirection: 'row', gap: 9 }}>
-        <View style={{ flex: 1 }}><Field value={name} onChangeText={setName} accessibilityLabel="Имя" /></View>
-        <View style={{ flex: 1 }}><Field value={String(profile?.age ?? '')} editable={false} accessibilityLabel="Возраст" /></View>
+        <View style={{ flex: 1 }}><Field value={name} onChangeText={setName} accessibilityLabel={t('screens.editProfile.name')} /></View>
+        <View style={{ flex: 1 }}><Field value={String(profile?.age ?? '')} editable={false} accessibilityLabel={t('screens.editProfile.age')} /></View>
       </View>
-      <Field label="О СЕБЕ" value={bio} onChangeText={setBio} multiline maxLength={500} style={{ minHeight: 83, textAlignVertical: 'top' }} />
-      <Eyebrow>НАМЕРЕНИЕ</Eyebrow>
-      <Choice selected onPress={() => setOpen(true)}><Text style={{ fontSize: 12 }}>{INTENTS.find((i) => i.key === intent)?.chip}</Text><Text>⌄</Text></Choice>
-      <Card tight><Between><Bold>Фото и видео</Bold><LinkBtn label="Управлять" onPress={() => router.push('/edit-media')} /></Between><Tiny>{items.length} из 6 медиа · {videos} {videos === 1 ? 'короткое видео' : 'коротких видео'}</Tiny></Card>
-      <Card tight><Between><Bold>Ответы в анкете</Bold><LinkBtn label="Редактировать" onPress={() => router.push('/edit-prompts')} /></Between><Tiny>{prompts.length} {prompts.length === 1 ? 'ответ' : 'ответа'} · можно добавить до трёх</Tiny></Card>
-      <Card tight><Between><Bold>Музыка</Bold><LinkBtn label="Изменить" onPress={() => router.push('/edit-music')} /></Between><Tiny>{profile?.music_title ?? 'Трек не добавлен'}</Tiny></Card>
-      <Card tight><Between><Bold>Темы для первого шага</Bold><LinkBtn label="Настроить" onPress={() => router.push('/opening-moves')} /></Between><Tiny>До трёх тем для новых совпадений</Tiny></Card>
-      <Btn label="Сохранить изменения" busy={busy} onPress={save} />
-      <Btn kind="ghost" label="Предпросмотр профиля" onPress={() => router.push('/profile?self=1')} />
+      <Field label={t('screens.editProfile.about')} value={bio} onChangeText={setBio} multiline maxLength={500} style={{ minHeight: 83, textAlignVertical: 'top' }} />
+      <Eyebrow>{t('screens.editProfile.intent')}</Eyebrow>
+      <Choice selected onPress={() => setOpen(true)}><Text style={{ fontSize: 12 }}>{(() => { const cur = INTENTS.find((i) => i.key === intent); return cur ? t(cur.chipKey) : null; })()}</Text><Text>⌄</Text></Choice>
+      <Card tight><Between><Bold>{t('screens.editProfile.photosVideos')}</Bold><LinkBtn label={t('screens.editProfile.manage')} onPress={() => router.push('/edit-media')} /></Between><Tiny>{t('screens.editProfile.mediaSummary', { count: items.length, videos, videoWord: videos === 1 ? t('screens.editProfile.videoOne') : t('screens.editProfile.videoMany') })}</Tiny></Card>
+      <Card tight><Between><Bold>{t('screens.editProfile.answers')}</Bold><LinkBtn label={t('screens.editProfile.edit')} onPress={() => router.push('/edit-prompts')} /></Between><Tiny>{t('screens.editProfile.answersSummary', { count: prompts.length, word: prompts.length === 1 ? t('screens.editProfile.answerOne') : t('screens.editProfile.answerMany') })}</Tiny></Card>
+      <Card tight><Between><Bold>{t('screens.editProfile.music')}</Bold><LinkBtn label={t('screens.editProfile.change')} onPress={() => router.push('/edit-music')} /></Between><Tiny>{profile?.music_title ?? t('screens.editProfile.noTrack')}</Tiny></Card>
+      <Card tight><Between><Bold>{t('screens.editProfile.openingMoves')}</Bold><LinkBtn label={t('screens.editProfile.configure')} onPress={() => router.push('/opening-moves')} /></Between><Tiny>{t('screens.editProfile.openingMovesNote')}</Tiny></Card>
+      <Btn label={t('screens.editProfile.saveChanges')} busy={busy} onPress={save} />
+      <Btn kind="ghost" label={t('screens.editProfile.preview')} onPress={() => router.push('/profile?self=1')} />
       <Sheet visible={open} onClose={() => setOpen(false)}>
         {INTENTS.map((i) => (
           <Choice key={i.key} selected={intent === i.key} onPress={() => { setIntent(i.key); setOpen(false); }}>
-            <Text style={{ fontSize: 12 }}>{i.chip}</Text><Text>{intent === i.key ? '✓' : ''}</Text>
+            <Text style={{ fontSize: 12 }}>{t(i.chipKey)}</Text><Text>{intent === i.key ? '✓' : ''}</Text>
           </Choice>
         ))}
       </Sheet>
