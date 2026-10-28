@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Lang } from './api';
 import { makeT, type TFunction } from '@/i18n';
+import { setCurrentLang } from '@/i18n/current';
 import { parseLang } from './langCode';
 
 export const LANGUAGE_NAMES: Record<Lang, string> = {
@@ -33,11 +34,13 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem(KEY, l).catch(() => {});
   }, []);
   const applyProfileLang = useCallback((v: unknown) => {
+    if (v == null) return; // profile language is NULL until the user explicitly saves one
     const l = parseLang(v);
     if (!l || chosen.current) return;
     setLangState(l);
     AsyncStorage.setItem(KEY, l).catch(() => {});
   }, []);
+  setCurrentLang(lang); // keep non-React code (errors, validation, date formats) in sync before children render
   const value = useMemo(
     () => ({ lang, setLang, t: makeT(lang), applyProfileLang }),
     [lang, setLang, applyProfileLang],

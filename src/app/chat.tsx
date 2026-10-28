@@ -15,6 +15,7 @@ import { placeLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 import type { TFunction } from '@/i18n';
+import { localeOf } from '@/i18n/current';
 
 const DEFAULT_STARTERS = [['screens.chat.starter1Label', 'screens.chat.starter1Text'], ['screens.chat.starter2Label', 'screens.chat.starter2Text']] as const;
 
@@ -203,13 +204,13 @@ function ChatActionsSheet({ visible, onClose, c, reload }: { visible: boolean; o
   );
 }
 
-export const time = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+export const time = (iso: string) => new Date(iso).toLocaleTimeString(localeOf(), { hour: '2-digit', minute: '2-digit' });
 const dayLabel = (iso: string, t: TFunction) => {
   const d = new Date(iso), today = new Date();
   const y = new Date(); y.setDate(today.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return t('screens.chat.today');
   if (d.toDateString() === y.toDateString()) return t('screens.chat.yesterday');
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }).toUpperCase();
+  return d.toLocaleDateString(localeOf(), { day: 'numeric', month: 'long' }).toUpperCase();
 };
 
 const s = StyleSheet.create({

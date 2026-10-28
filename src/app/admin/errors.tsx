@@ -3,6 +3,7 @@ import { Loading } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type E = { id: string; area: string; message: string; created_at: string; user_id: string | null };
 
@@ -16,7 +17,7 @@ export default function AdminErrors() {
   return (
     <AdminPage title={t('screens.adminErrors.zhurnalOshibok')}>
       {loading ? <Loading /> : (
-        <Tbl head={[t('screens.adminErrors.kogda'), t('screens.adminErrors.razdel'), t('screens.adminErrors.oshibka'), t('screens.adminErrors.polzovatel')]} rows={(data ?? []).map((e) => [new Date(e.created_at).toLocaleString('ru-RU'), e.area, e.message, e.user_id?.slice(0, 8) ?? '—'])} />
+        <Tbl head={[t('screens.adminErrors.kogda'), t('screens.adminErrors.razdel'), t('screens.adminErrors.oshibka'), t('screens.adminErrors.polzovatel')]} rows={(data ?? []).map((e) => [new Date(e.created_at).toLocaleString(localeOf()), e.area, e.message, e.user_id?.slice(0, 8) ?? '—'])} />
       )}
     </AdminPage>
   );

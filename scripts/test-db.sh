@@ -6,13 +6,26 @@ DB=${TEST_DB:-renvi_test}
 psql -qc "drop database if exists $DB" -c "create database $DB"
 psql -d "$DB" -v ON_ERROR_STOP=1 -q -f supabase/tests/bootstrap.sql
 for f in supabase/migrations/*.sql; do psql -d "$DB" -v ON_ERROR_STOP=1 -q -f "$f"; done
-out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
-echo "$out" | grep -c "ok -" | xargs -I{} echo "{} database checks passed"
-out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/demo_bots.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
-echo "$out" | grep -c "ok -" | xargs -I{} echo "{} demo-bot checks passed"
-out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/security.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
-echo "$out" | grep -c "ok -" | xargs -I{} echo "{} security-audit checks passed"
-out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rate_limits.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
-echo "$out" | grep -c "ok -" | xargs -I{} echo "{} rate-limit / push-token checks passed"
-# Edge Function secret checks (pure TypeScript, no network).
-if command -v bun >/dev/null; then bun test supabase/tests/functions_secret.test.ts; else echo "bun not found: Edge Function secret tests skipped"; fi
+
+# SQL suites, in a fixed order. A suite listed here but not present on this branch is skipped.
+run_sql() {
+  local file=$1 label=$2
+  [ -f "$file" ] || return 0
+  out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f "$file" 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
+  echo "$out" | grep -c "ok -" | xargs -I{} echo "{} $label checks passed"
+}
+run_sql supabase/tests/rls.sql "database"
+run_sql supabase/tests/demo_bots.sql "demo-bot"
+run_sql supabase/tests/security.sql "security-audit"
+run_sql supabase/tests/rate_limits.sql "rate-limit / push-token"
+run_sql supabase/tests/profile_language.sql "profile-language"
+run_sql supabase/tests/digest.sql "weekly-digest"
+run_sql supabase/tests/video_calls.sql "video-call"
+run_sql supabase/tests/voice.sql "voice-message"
+
+# Edge Function unit tests (pure TypeScript, no network).
+shopt -s nullglob
+tests=(supabase/tests/*.test.ts)
+if [ ${#tests[@]} -gt 0 ]; then
+  if command -v bun >/dev/null; then bun test "${tests[@]}"; else echo "bun not found: Edge Function tests skipped"; fi
+fi

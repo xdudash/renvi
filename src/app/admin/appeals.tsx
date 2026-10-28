@@ -4,6 +4,7 @@ import { Loading, useToast } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type A = { id: string; report_id: string; user_id: string; details: string; status: string; created_at: string };
 
@@ -23,7 +24,7 @@ export default function AdminAppeals() {
     <AdminPage title={t('screens.adminAppeals.apellyatsii')}>
       {loading ? <Loading /> : (
         <Tbl head={[t('screens.adminAppeals.kogda'), t('screens.adminAppeals.zhaloba'), t('screens.adminAppeals.polzovatel'), t('screens.adminAppeals.tekst'), t('screens.adminAppeals.status'), '']} rows={(data ?? []).map((a) => [
-          new Date(a.created_at).toLocaleString('ru-RU'), a.report_id.slice(0, 8), a.user_id.slice(0, 8), a.details, a.status,
+          new Date(a.created_at).toLocaleString(localeOf()), a.report_id.slice(0, 8), a.user_id.slice(0, 8), a.details, a.status,
           a.status === 'open' ? <View key="act"><Act label={t('screens.adminAppeals.prinyat')} tone="green" onPress={() => decide(a.id, true)} /><Act label={t('screens.adminAppeals.otklonit')} tone="red" onPress={() => decide(a.id, false)} /></View> : '—',
         ])} />
       )}
