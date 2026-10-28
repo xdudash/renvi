@@ -5,9 +5,9 @@ import { useLang } from '@/lib/lang';
 
 // 3-column grid of 6 slots; filled slots show × to remove, empty slots show ＋.
 export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
-  const { t } = useLang();
   items: MyMedia[]; onAdd: () => void; onRemove: (id: string) => void; onCover?: (id: string) => void; busy?: boolean;
 }) {
+  const { t } = useLang();
   return (
     <View style={s.grid}>
       {Array.from({ length: 6 }).map((_, n) => {
