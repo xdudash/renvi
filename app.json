@@ -4,6 +4,7 @@
     "slug": "renvi",
     "scheme": "renvi",
     "version": "0.1.0",
+    "runtimeVersion": { "policy": "appVersion" },
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F7F5F2",

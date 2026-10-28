@@ -59,6 +59,34 @@ npx eas submit --platform ios
 ```
 Bundle id / package сейчас `com.renvi.app` — **решить до первой публикации** (бриф: название RENVI юридически не проверено, bundle id нельзя сменить после выхода).
 
+## Деплой и сборки через GitHub
+
+Workflow-файлы: `.github/workflows/deploy-supabase.yml` и `.github/workflows/eas-build.yml`. Значения хранятся только в GitHub (Settings → Secrets and variables → Actions), в репозиторий не попадают.
+
+**Secrets (Repository secrets):**
+
+| Секрет | Откуда |
+|---|---|
+| `EXPO_TOKEN` | expo.dev → Account settings → Access tokens |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens |
+| `SUPABASE_PROJECT_REF` | Supabase → Project Settings → General (Reference ID) |
+| `SUPABASE_DB_PASSWORD` | пароль БД, заданный при создании проекта (Database → Reset password) |
+
+**Variables (Repository variables, публичные значения, не секреты):**
+`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_REVENUECAT_IOS_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, `EXPO_PUBLIC_APP_URL`. Для облачной сборки workflow на лету копирует их в `env` выбранного профиля `eas.json` (в коммит это не попадает), потому что сборка идёт на серверах EAS и не видит окружение GitHub-раннера.
+
+**Environment `production`:** Settings → Environments → New environment → `production` → Required reviewers (владелец). Тогда деплой Supabase и production-сборки/обновления ждут ручного подтверждения. Environment `preview` создаётся автоматически без защиты.
+
+**Деплой Supabase** (Actions → Deploy Supabase → Run workflow; также срабатывает при push в `main`, если изменились файлы в `supabase/**`; чтобы оставить только ручной запуск, удалите блок `push:`): сначала `supabase db push --dry-run`, затем `db push` и `functions deploy` для каждой папки в `supabase/functions` (кроме `_shared`). Секреты функций CI **не** выставляет: один раз выполните локально `npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=... PUSH_WEBHOOK_SECRET=...` (и необязательные `RESEND_API_KEY`, `EXPORT_FROM_EMAIL`), см. раздел 2.5. Вебхуки базы (2.6) тоже настраиваются вручную.
+
+**Разовая подготовка EAS (локально, до первого запуска workflow):**
+1. `npx eas-cli@latest login`, затем `npx eas-cli@latest init` — создаст проект на expo.dev и впишет `extra.eas.projectId` в `app.json`. Мы его не придумываем: **пока `projectId` нет, workflow сборки намеренно падает** с сообщением. Закоммитьте изменённый `app.json`.
+2. Для OTA-обновлений: `npx expo install expo-updates` и `npx eas-cli@latest update:configure` (добавит `updates.url`); закоммитьте. Без этого job `update` падает. В `app.json` уже задан `runtimeVersion: { policy: "appVersion" }`: OTA получают только сборки с той же `version`; при смене нативного кода поднимайте `version`.
+3. Учётные данные магазинов: `npx eas-cli@latest credentials` (iOS: Apple Developer, сертификат и provisioning profile, ключ APNs; Android: keystore и FCM/google-services). Для iOS internal-сборок нужно зарегистрировать устройства: `npx eas-cli@latest device:create`. Первая сборка на каждую платформу удобнее интерактивно локально, чтобы EAS создал подписи; затем CI работает с `--non-interactive`.
+
+**Сборки** (Actions → EAS Build and Update → Run workflow): `job=build`, `platform` (all/ios/android), `profile` (development / preview / production). Запускается `eas build --non-interactive --no-wait`, результат смотрите на expo.dev. `preview`: Android APK и iOS internal distribution (ad-hoc); `production`: AAB / App Store, `autoIncrement`. Симулятор iOS: `npx eas-cli@latest build --profile development-simulator --platform ios` локально. Отправка в магазины: `npx eas-cli@latest submit` (в CI не включена).
+**OTA:** `job=update`, `channel` (preview/production), `platform`, `message` — публикует `eas update`.
+
 ## 6. Локальная проверка
 
 - База: `npm run test:db` (нужны `psql` и Postgres; переменные `PGHOST`, `PGPORT`, `PGUSER`).
