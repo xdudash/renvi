@@ -25,7 +25,7 @@ create or replace function pg_temp.uid(n int) returns uuid language sql as $$ se
 --  5 woman, blocked by 1        6 woman incognito            7 woman paused
 --  8 woman published 10d ago    9 woman seeks only women     10 woman, passed by 1
 --  11 woman suspended           12 woman ok new              13 woman age 17-> out of filter age (age 60, filter max 40)
-insert into auth.users (id, email) select pg_temp.uid(n), 'u' || n || '@test' from generate_series(1, 14) n;
+insert into auth.users (id, email, email_confirmed_at) select pg_temp.uid(n), 'u' || n || '@test', now() from generate_series(1, 14) n;
 insert into public.profiles (id, display_name, age, gender, seeking, intent, country, language, onboarding_done, filter_age_min, filter_age_max)
 select pg_temp.uid(n),
   'Name' || n, 30,
@@ -103,6 +103,10 @@ delete from public.notification_prefs where user_id = pg_temp.uid(2);
 
 -- E-mail opt-in brings the address along, even without push.
 update public.notification_prefs set digest_email = true where user_id = pg_temp.uid(1);
+update auth.users set email_confirmed_at = null where id = pg_temp.uid(1);
+select pg_temp.check(not exists (select 1 from public.weekly_digest_candidates() where user_id = pg_temp.uid(1)),
+  'unconfirmed e-mail is never used');
+update auth.users set email_confirmed_at = now() where id = pg_temp.uid(1);
 select pg_temp.check((select email from public.weekly_digest_candidates()) = 'u1@test' and not (select send_push from public.weekly_digest_candidates()),
   'e-mail opt-in returns the address; push stays off');
 update public.notification_prefs set digest_push = true where user_id = pg_temp.uid(1);

@@ -97,7 +97,7 @@ language sql stable security definer set search_path = public as $$
   with cand as (
     select me.id, me.language,
            coalesce(np.digest_push, true) and exists (select 1 from public.push_tokens t where t.user_id = me.id) as push_ok,
-           coalesce(np.digest_email, false) and u.email is not null as email_ok,
+           coalesce(np.digest_email, false) and u.email is not null and u.email_confirmed_at is not null as email_ok,
            u.email
     from public.profiles me
     join auth.users u on u.id = me.id
