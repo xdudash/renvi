@@ -5,6 +5,7 @@ import { Ticket } from '@/components/Ticket';
 import { useDateRow } from '@/hooks/useDate';
 import { api } from '@/lib/api';
 import { useLang } from '@/lib/lang';
+import { VideoCallButton } from '@/components/VideoCallButton';
 
 // 58 · Приглашение отправлено
 export default function DatePending() {
@@ -21,6 +22,7 @@ export default function DatePending() {
       {d.loading ? <Loading /> : <Ticket place={d.place} day={d.day} time={d.time} status={t('screens.datePending.status')} tone="amber" />}
       <Tiny>{t('screens.datePending.note')}</Tiny>
       <Btn kind="primary" label={t('screens.datePending.viewChat')} onPress={toChat} />
+      <VideoCallButton match={match} />
       <Btn kind="ghost" label={t('screens.datePending.cancel')} busy={busy} onPress={async () => {
         setBusy(true);
         try { await api.cancelDate(date); router.replace({ pathname: '/date-cancelled', params: { match } }); } catch { toast(t('screens.datePending.cancelFailed')); } finally { setBusy(false); }

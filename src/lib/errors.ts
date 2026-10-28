@@ -1,5 +1,7 @@
-// Maps database / network errors to user-facing states. Messages are Russian strings from the prototype.
-export type AppErrorKind = 'offline' | 'limit' | 'blocked' | 'not_found' | 'unauthorized' | 'server';
+// Maps database / network errors to user-facing states. Messages follow the current app language.
+import { tr } from '@/i18n/current';
+
+export type AppErrorKind = 'offline' | 'limit' | 'rate_limited' | 'blocked' | 'not_found' | 'unauthorized' | 'server';
 
 export class AppError extends Error {
   kind: AppErrorKind;
@@ -13,16 +15,18 @@ export function toAppError(e: unknown): AppError {
   const err = e as { message?: string; code?: string; status?: number } | null;
   const msg = err?.message ?? '';
   if (!navigator?.onLine && typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return new AppError('offline', 'Нет соединения');
+    return new AppError('offline', tr('lib.errors.offline'));
   }
   if (msg.includes('Network request failed') || msg.includes('Failed to fetch')) {
-    return new AppError('offline', 'Нет соединения');
+    return new AppError('offline', tr('lib.errors.offline'));
   }
-  if (err?.code === 'P0003' || msg.includes('daily limit')) return new AppError('limit', 'Лимит лайков на сегодня');
-  if (err?.code === 'P0002' || msg.includes('not available')) return new AppError('not_found', 'Профиль недоступен');
+  // Server-side hourly rate limit (report(), submit_appeal()): SQLSTATE P0429 'rate limited'.
+  if (err?.code === 'P0429' || msg.includes('rate limited')) return new AppError('rate_limited', tr('lib.errors.rateLimited'));
+  if (err?.code === 'P0003' || msg.includes('daily limit')) return new AppError('limit', tr('lib.errors.limit'));
+  if (err?.code === 'P0002' || msg.includes('not available')) return new AppError('not_found', tr('lib.errors.notFound'));
   if (err?.code === '42501' || msg.includes('blocked') || msg.includes('permission denied')) {
-    return new AppError('unauthorized', 'Нет доступа');
+    return new AppError('unauthorized', tr('lib.errors.unauthorized'));
   }
-  if (msg.includes('protected field')) return new AppError('unauthorized', 'Нет доступа');
-  return new AppError('server', 'Не удалось загрузить. Проверьте соединение и повторите.');
+  if (msg.includes('protected field')) return new AppError('unauthorized', tr('lib.errors.unauthorized'));
+  return new AppError('server', tr('lib.errors.server'));
 }

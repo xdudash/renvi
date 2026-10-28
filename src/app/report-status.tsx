@@ -4,6 +4,7 @@ import { BackLink, Btn, Card, Chip, Line, Loading, Screen, StateBlock, Title } f
 import { useAsync } from '@/hooks/useAsync';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type ReportRow = { id: string; status: 'open' | 'actioned' | 'dismissed'; decision: string | null; created_at: string; decided_at: string | null };
 
@@ -21,7 +22,7 @@ export default function ReportStatus() {
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
   if (!data) return <Screen><BackLink /><StateBlock icon="◎" title={t('screens.reportStatus.zhalobPokaNet')} copy={t('screens.reportStatus.zdesPoyavitsyaStatusKogda')} label={t('screens.reportStatus.tsentrBezopasnosti')} onPress={() => router.replace('/safety')} /></Screen>;
   const short = `#R-${data.id.slice(0, 4).toUpperCase()}`;
-  const when = (iso: string) => new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  const when = (iso: string) => new Date(iso).toLocaleString(localeOf(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   const chip = data.status === 'open' ? <Chip label={t('screens.reportStatus.naRassmotrenii')} tone="amber" /> : data.status === 'actioned' ? <Chip label={t('screens.reportStatus.meryPrinyaty')} tone="green" /> : <Chip label={t('screens.reportStatus.narusheniyNeNaydeno')} />;
   return (
     <Screen>

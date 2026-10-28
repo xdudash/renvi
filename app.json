@@ -12,7 +12,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.renvi.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Камера нужна для селфи-проверки и для видеозвонка перед встречей, если вы на него согласитесь. Селфи не становится частью анкеты.",
+        "NSMicrophoneUsageDescription": "Микрофон нужен только для видеозвонка перед встречей, на который вы согласились. RENVI не записывает звонки."
       }
     },
     "android": {
@@ -24,9 +26,13 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
       "blockedPermissions": [
         "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.RECORD_AUDIO",
         "android.permission.READ_CONTACTS"
       ]
     },
@@ -41,8 +47,8 @@
         "expo-image-picker",
         {
           "photosPermission": "RENVI использует фото, которые вы сами выбираете для анкеты и чата.",
-          "cameraPermission": "Камера нужна для селфи-проверки. Селфи не становится частью анкеты.",
-          "microphonePermission": false
+          "cameraPermission": "Камера нужна для селфи-проверки и для видеозвонка перед встречей, если вы на него согласитесь. Селфи не становится частью анкеты.",
+          "microphonePermission": "Микрофон нужен только для видеозвонка перед встречей, на который вы согласились. RENVI не записывает звонки."
         }
       ],
       [

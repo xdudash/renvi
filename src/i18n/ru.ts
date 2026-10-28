@@ -2,6 +2,9 @@
 // every key used by t() must exist here. Other languages may only contain a subset.
 import { ruA } from './strings-a.ts';
 import { ruB } from './strings-b.ts';
+import { ruLib } from './strings-lib.ts';
+import { ruDigest } from './strings-digest.ts';
+import { ruVideo } from './strings-video.ts';
 
 const ruBase = {
   'common.close': 'Закрыть',
@@ -19,8 +22,8 @@ const ruBase = {
   'tabs.me': 'Профиль',
 } as const;
 
-// Screen and component strings live in strings-a.ts / strings-b.ts (one file per half).
-export const ru = { ...ruBase, ...ruA, ...ruB } as const;
+// Screen and component strings live in strings-a.ts / strings-b.ts (one file per half); feature strings in strings-*.ts.
+export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;

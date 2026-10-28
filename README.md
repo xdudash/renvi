@@ -14,7 +14,7 @@ iOS и Android из одного кода (Expo / React Native + TypeScript), с
 | `src/theme/tokens.ts` | Цвета бренда: Signal `#DA302B`, Porcelain `#F7F5F2`, Ink `#201E1D`, Blush `#F0D6D0` и статусы |
 | `src/lib/` | Клиент Supabase, API-обёртки над RPC, сессия, чат с офлайн-очередью, покупки (RevenueCat), push |
 | `supabase/migrations/` | Схема базы, правила доступа (RLS), функции подбора, искр, чата, свиданий, модерации, рефералов, админки |
-| `supabase/functions/` | Edge Functions: удаление аккаунта, выгрузка данных, вебхук RevenueCat, push-уведомления |
+| `supabase/functions/` | Edge Functions: удаление аккаунта, выгрузка данных, вебхук RevenueCat, push-уведомления, видеозвонок перед встречей (Daily.co, необязательно) |
 | `supabase/tests/` | Поведенческие тесты базы (RLS и бизнес-правила) — 47 проверок |
 | `e2e/` | Сквозные тесты Playwright по всем главным сценариям и съёмка всех экранов |
 
@@ -25,7 +25,7 @@ npm ci
 cp .env.example .env            # впишите URL проекта Supabase и публичный anon key
 npx supabase link --project-ref <ref>
 npx supabase db push            # миграции
-npx supabase functions deploy delete-account export-data revenuecat-webhook push
+npx supabase functions deploy delete-account export-data revenuecat-webhook push video-call
 npm run web                     # веб-версия для проверки
 npx expo run:ios                # dev-сборка на iPhone / симуляторе (нужен Xcode)
 ```

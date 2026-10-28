@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { DATE_PLACES } from '@/lib/catalog';
 import { resetDateDraft } from '@/lib/dateDraft';
 import { useLang } from '@/lib/lang';
+import { VideoCallButton } from '@/components/VideoCallButton';
 
 // 59 · Входящее приглашение · ответ
 export default function DateIncoming() {
@@ -43,6 +44,7 @@ export default function DateIncoming() {
         router.replace({ pathname: '/date-create', params: { match } });
       }} />
       <Btn kind="ghost" label={t('screens.dateIncoming.vezhlivoOtkazatsya')} disabled={busy} onPress={() => respond('decline')} />
+      <VideoCallButton match={match} />
       <SafeBanner>{t('screens.dateIncoming.vyNeObyazanyObyasnyat')}</SafeBanner>
     </Screen>
   );

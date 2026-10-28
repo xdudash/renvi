@@ -14,7 +14,9 @@ import { getDraft, setDraft } from '@/lib/drafts';
 import { placeLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import { effectiveStatus, useVideoAvailable, useVideoCall } from '@/lib/video';
 import type { TFunction } from '@/i18n';
+import { localeOf } from '@/i18n/current';
 
 const DEFAULT_STARTERS = [['screens.chat.starter1Label', 'screens.chat.starter1Text'], ['screens.chat.starter2Label', 'screens.chat.starter2Text']] as const;
 
@@ -31,6 +33,8 @@ export default function Chat() {
   const [sheet, setSheet] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
   const c = ctx.data;
+  const videoOn = useVideoAvailable() === true;
+  const video = useVideoCall(match, videoOn);
 
   useEffect(() => { if (history) chat.loadOlder(); }, [history]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDraft(match, text); }, [match, text]);
@@ -72,7 +76,9 @@ export default function Chat() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView ref={scroll} contentContainerStyle={s.main} onContentSizeChange={() => !history && scroll.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled">
           <BackLink onPress={() => router.navigate('/chats')} />
-          <ChatHeader c={c} activeToday={!!activeToday} onDate={() => router.push({ pathname: '/date-create', params: { match } })} onMore={() => setSheet(true)} />
+          <ChatHeader c={c} activeToday={!!activeToday} onDate={() => router.push({ pathname: '/date-create', params: { match } })} onMore={() => setSheet(true)}
+            onVideo={videoOn ? () => router.push({ pathname: '/video-call', params: { match } }) : undefined} />
+          {videoOn ? <VideoCallCard c={c} status={effectiveStatus(video.call)} fromMe={video.call?.requested_by === me} /> : null}
           {c.spark?.prompt ? (
             <Card tight>
               <Eyebrow>{c.spark.from_me ? t('screens.chat.eyebrowFromMe') : t('screens.chat.eyebrowFromThem')}</Eyebrow>
@@ -128,7 +134,7 @@ function Wrap({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ChatHeader({ c, activeToday, onDate, onMore }: { c: MatchContext; activeToday: boolean; onDate: () => void; onMore: () => void }) {
+function ChatHeader({ c, activeToday, onDate, onMore, onVideo }: { c: MatchContext; activeToday: boolean; onDate: () => void; onMore: () => void; onVideo?: () => void }) {
   const { t } = useLang();
   const url = useSignedUrl(c.partner.photo);
   const status = c.muted ? t('screens.chat.notificationsOff') : activeToday ? t('screens.chat.activeToday') : '';
@@ -139,6 +145,7 @@ function ChatHeader({ c, activeToday, onDate, onMore }: { c: MatchContext; activ
         <Text style={{ fontWeight: '700', fontSize: 13 }}>{c.partner.name}, {c.partner.age}</Text>
         <Text style={s.sub}>{[status, c.partner.verified ? t('screens.chat.photoVerified') : ''].filter(Boolean).join(' · ')}</Text>
       </View>
+      {onVideo ? <Pressable accessibilityRole="button" accessibilityLabel={t('video.actionA11y')} onPress={onVideo} style={s.pillBtn}><Text style={{ fontSize: 11, fontWeight: '700' }} numberOfLines={1}>{t('video.action')}</Text></Pressable> : null}
       <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.proposeDateA11y')} onPress={onDate} style={s.icon}><Text>⌑</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.manageChat')} onPress={onMore} style={s.icon}><Text>···</Text></Pressable>
     </View>
@@ -156,6 +163,21 @@ function DateCard({ c, me }: { c: MatchContext; me?: string }) {
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 12, fontWeight: '700' }}>⌑ {placeLabel(d.place_key, d.place_custom, t)}</Text>
         <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{label} · {d.day} · {d.starts_at.slice(0, 5)}</Text>
+      </View>
+      <Text>›</Text>
+    </Choice>
+  );
+}
+
+// Incoming request or an agreed call is shown above the conversation until it is over.
+function VideoCallCard({ c, status, fromMe }: { c: MatchContext; status: string | null; fromMe: boolean }) {
+  const { t } = useLang();
+  if (!(status === 'accepted' || (status === 'requested' && !fromMe))) return null;
+  return (
+    <Choice onPress={() => router.push({ pathname: '/video-call', params: { match: c.match_id } })}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 12, fontWeight: '700' }}>{status === 'accepted' ? t('video.chatReady') : t('video.chatIncoming', { name: c.partner.name })}</Text>
+        <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('video.chatOpen')}</Text>
       </View>
       <Text>›</Text>
     </Choice>
@@ -203,19 +225,20 @@ function ChatActionsSheet({ visible, onClose, c, reload }: { visible: boolean; o
   );
 }
 
-export const time = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+export const time = (iso: string) => new Date(iso).toLocaleTimeString(localeOf(), { hour: '2-digit', minute: '2-digit' });
 const dayLabel = (iso: string, t: TFunction) => {
   const d = new Date(iso), today = new Date();
   const y = new Date(); y.setDate(today.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return t('screens.chat.today');
   if (d.toDateString() === y.toDateString()) return t('screens.chat.yesterday');
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }).toUpperCase();
+  return d.toLocaleDateString(localeOf(), { day: 'numeric', month: 'long' }).toUpperCase();
 };
 
 const s = StyleSheet.create({
   main: { paddingHorizontal: 18, paddingTop: 5 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingTop: 4, paddingBottom: 11, borderBottomWidth: 1, borderBottomColor: colors.line },
   sub: { fontSize: 10, color: colors.sub, marginTop: 3 },
+  pillBtn: { height: 44, paddingHorizontal: 11, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   icon: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   tiny: { fontSize: 10, color: colors.muted, marginVertical: 4 },
   bubble: { maxWidth: '82%', paddingHorizontal: 13, paddingVertical: 11, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomRightRadius: 16, borderBottomLeftRadius: 4, backgroundColor: '#EAE6E0', marginVertical: 7, alignSelf: 'flex-start' },

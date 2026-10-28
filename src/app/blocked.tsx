@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import { localeOf } from '@/i18n/current';
 
 type BlockedRow = { blocked_id: string; created_at: string };
 
@@ -39,7 +40,7 @@ function BlockedItem({ row, onUnblock }: { row: BlockedRow; onUnblock: () => voi
   const { t } = useLang();
   const card = useAsync(() => api.profileCard(row.blocked_id), [row.blocked_id]);
   const url = useSignedUrl(card.data?.photos[0]?.path);
-  const when = new Date(row.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const when = new Date(row.created_at).toLocaleDateString(localeOf(), { day: 'numeric', month: 'long' });
   return (
     <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line, paddingVertical: 6 }}>
       <Pressable style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 6 }}>
