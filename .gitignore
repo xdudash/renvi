@@ -53,3 +53,6 @@ design/
 
 # Local agent/tool state (worktrees, caches)
 .claude/
+
+# local demo-profile photos (consented or licensed only) — never commit
+scripts/demo-photos/
