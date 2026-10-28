@@ -50,3 +50,6 @@ e2e/out/
 
 # private design sources (brief, prototype) — never commit, the repository is public
 design/
+
+# Local agent/tool state (worktrees, caches)
+.claude/
