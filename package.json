@@ -13,7 +13,7 @@
     "test:db": "scripts/test-db.sh",
     "test:e2e": "e2e/run-all.sh",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "check": "tsc --noEmit && expo lint && node scripts/check-i18n.mjs"
+    "check": "tsc --noEmit && expo lint && node scripts/check-i18n.mjs && node scripts/check-client.mjs"
   },
   "dependencies": {
     "@expo/log-box": "~58.0.13",

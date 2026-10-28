@@ -5,10 +5,14 @@ import { planRecovery } from './recovery';
 
 /**
  * Where the recovery e-mail sends the user. Native: renvi://reset-password (Linking.createURL gives exp://… in
- * Expo Go, which must also be listed in Auth → Redirect URLs). Web: <origin>/reset-password.
+ * Expo Go, which must also be listed in Auth → Redirect URLs). Web: <origin><base path>/reset-password.
  */
 export function recoveryRedirectUrl(): string {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') return `${window.location.origin}/reset-password`;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    // The web build may live under a sub-path (GitHub Pages: /renvi), set by the deploy workflow.
+    const base = (process.env.EXPO_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
+    return `${window.location.origin}${base}/reset-password`;
+  }
   return Linking.createURL('/reset-password');
 }
 
