@@ -5,6 +5,7 @@ import { supabase, isBackendConfigured } from './supabase';
 import { api } from './api';
 import { initPurchases } from './purchases';
 import { useLang } from './lang';
+import { serverProduct, serverTier } from './billing';
 
 export type Tier = 'free' | 'plus' | 'premium';
 export type Profile = Record<string, any> | null;
@@ -15,30 +16,32 @@ type Ctx = {
   session: Session | null;
   profile: Profile;
   tier: Tier;
+  /** Store product of the active paid plan (server subscriptions.product_id), null when free or unknown. */
+  productId: string | null;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const SessionCtx = createContext<Ctx>({
-  ready: false, configured: isBackendConfigured, session: null, profile: null, tier: 'free',
+  ready: false, configured: isBackendConfigured, session: null, profile: null, tier: 'free', productId: null,
   refresh: async () => {}, signOut: async () => {},
 });
 
-type Snapshot = { session: Session | null; profile: Profile; tier: Tier };
+type Snapshot = { session: Session | null; profile: Profile; tier: Tier; productId: string | null };
 
 // Reads session, own profile and the server-side plan in one go.
 async function loadSnapshot(): Promise<Snapshot> {
   const { data } = await supabase.auth.getSession();
-  if (!data.session) return { session: null, profile: null, tier: 'free' };
+  if (!data.session) return { session: null, profile: null, tier: 'free', productId: null };
   initPurchases(data.session.user.id).catch(() => {});
   try {
     const profile = await api.myProfile();
     const sub = await api.subscription(data.session.user.id);
-    const active = !sub.expires_at || new Date(sub.expires_at) > new Date();
-    return { session: data.session, profile, tier: active ? (sub.tier as Tier) : 'free' };
+    const now = Date.now();
+    return { session: data.session, profile, tier: serverTier(sub, now), productId: serverProduct(sub, now) };
   } catch {
     // Keep the session; screens show their own error states.
-    return { session: data.session, profile: null, tier: 'free' };
+    return { session: data.session, profile: null, tier: 'free', productId: null };
   }
 }
 
@@ -47,11 +50,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile>(null);
   const [tier, setTier] = useState<Tier>('free');
+  const [productId, setProductId] = useState<string | null>(null);
 
   const { applyProfileLang } = useLang();
 
   const apply = useCallback((s: Snapshot) => {
-    setSession(s.session); setProfile(s.profile); setTier(s.tier);
+    setSession(s.session); setProfile(s.profile); setTier(s.tier); setProductId(s.productId);
     if (s.profile?.language) applyProfileLang(s.profile.language);
   }, [applyProfileLang]);
   const refresh = useCallback(async () => { apply(await loadSnapshot()); }, [apply]);
@@ -65,11 +69,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    setSession(null); setProfile(null); setTier('free');
+    setSession(null); setProfile(null); setTier('free'); setProductId(null);
   }, []);
 
   return (
-    <SessionCtx.Provider value={{ ready, configured: isBackendConfigured, session, profile, tier, refresh, signOut }}>
+    <SessionCtx.Provider value={{ ready, configured: isBackendConfigured, session, profile, tier, productId, refresh, signOut }}>
       {children}
     </SessionCtx.Provider>
   );

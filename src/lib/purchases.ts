@@ -23,7 +23,7 @@ export async function initPurchases(userId: string) {
   configuredFor = userId;
 }
 
-export type PlanOffer = { tier: 'plus' | 'premium'; period: 'month' | 'year'; pkg: PurchasesPackage; price: string };
+export type PlanOffer = { tier: 'plus' | 'premium'; period: 'month' | 'year'; pkg: PurchasesPackage; price: string; productId: string };
 
 // Packages are expected in the "default" offering with identifiers like plus_month, plus_year, premium_month, premium_year.
 export async function loadOffers(): Promise<PlanOffer[]> {
@@ -32,21 +32,33 @@ export async function loadOffers(): Promise<PlanOffer[]> {
   const pkgs = o.current?.availablePackages ?? [];
   return pkgs.flatMap((p) => {
     const m = /^(plus|premium)_(month|year)$/.exec(p.identifier);
-    return m ? [{ tier: m[1] as 'plus' | 'premium', period: m[2] as 'month' | 'year', pkg: p, price: p.product.priceString }] : [];
+    return m ? [{ tier: m[1] as 'plus' | 'premium', period: m[2] as 'month' | 'year', pkg: p, price: p.product.priceString, productId: p.product.identifier }] : [];
   });
 }
 
-export async function buy(offer: PlanOffer): Promise<'ok' | 'cancelled' | 'error'> {
+export type BuyResult = { status: 'ok' | 'cancelled' | 'error'; productId: string | null };
+
+// currentProductId: the store product of the plan the user has now (server subscriptions.product_id). On Google Play
+// a change of plan must name the subscription it replaces, otherwise Play starts a second, parallel subscription.
+export async function buy(offer: PlanOffer, currentProductId?: string | null): Promise<BuyResult> {
   try {
-    await Purchases.purchasePackage(offer.pkg);
-    return 'ok';
+    const change = Platform.OS === 'android' && currentProductId && currentProductId !== offer.productId
+      ? { oldProductIdentifier: currentProductId.split(':')[0] }
+      : null;
+    const r = await Purchases.purchasePackage(offer.pkg, null, change);
+    return { status: 'ok', productId: r?.productIdentifier ?? offer.productId };
   } catch (e: any) {
-    return e?.userCancelled ? 'cancelled' : 'error';
+    return { status: e?.userCancelled ? 'cancelled' : 'error', productId: null };
   }
 }
 
 export async function restore(): Promise<'ok' | 'error'> {
   try { await Purchases.restorePurchases(); return 'ok'; } catch { return 'error'; }
+}
+
+// Re-sends the store receipts to RevenueCat without the restore UI (used when the server has not caught up yet).
+export async function syncPurchases(): Promise<'ok' | 'error'> {
+  try { await Purchases.syncPurchases(); return 'ok'; } catch { return 'error'; }
 }
 
 export async function manageSubscriptions(): Promise<void> {
