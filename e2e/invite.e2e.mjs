@@ -1,12 +1,13 @@
 import { chromium } from 'playwright';
 import { APP, ASSETS, URL as API, rest, rpc, signIn, signUp } from './api.mjs';
 import { execSync } from 'node:child_process';
+import { createRunner } from './steps.mjs';
 const b = await chromium.launch();
 const mk = async (state) => b.newContext({ viewport: { width: 393, height: 852 }, ...(state ? { storageState: state } : {}) });
 let n = 80;
 const go = async (p, path) => { await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(900); };
 const shot = async (p, name) => { await p.waitForTimeout(600); await p.screenshot({ path: `out/flow/${++n}-${name}.png` }); };
-const step = async (name, fn) => { try { await fn(); console.log('ok', name); } catch (e) { console.log('FAIL', name, e.message.split('\n')[0]); } };
+const { step, finish } = createRunner({ label: 'invite' });
 const anna = await signIn('anna@renvi.test', 'renvi-test-1');
 const tomas = await signIn('tomas@renvi.test', 'renvi-test-1');
 const daniel = await signIn('daniel@renvi.test', 'renvi-test-1');
@@ -34,4 +35,4 @@ await step('invite link with a real code attaches the referral', async () => {
   if (psql(`select count(*) from auth.users where email='friend@renvi.test'`) !== '0') throw new Error('account still exists');
   await c.close();
 });
-await b.close();
+await finish(() => b.close());

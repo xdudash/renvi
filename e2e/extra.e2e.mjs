@@ -1,10 +1,11 @@
 import { chromium } from 'playwright';
 import { APP, ASSETS, URL as API, rest, rpc, signIn, signUp } from './api.mjs';
 import { execSync } from 'node:child_process';
+import { createRunner } from './steps.mjs';
 const b = await chromium.launch();
 const mk = async (state) => b.newContext({ viewport: { width: 393, height: 852 }, ...(state ? { storageState: state } : {}) });
 let n = 60;
-const step = async (name, fn) => { try { await fn(); console.log('ok', name); } catch (e) { console.log('FAIL', name, e.message.split('\n')[0]); } };
+const { step, finish } = createRunner({ label: 'extra' });
 const anna = await signIn('anna@renvi.test', 'renvi-test-1');
 const tomas = await signIn('tomas@renvi.test', 'renvi-test-1');
 const daniel = await signIn('daniel@renvi.test', 'renvi-test-1');
@@ -147,4 +148,4 @@ await step('invite link with a real code attaches the referral', async () => {
 });
 // restore default limits
 psql(`update public.app_config set value = jsonb_set(value, '{free,daily_likes}', '20') where key='tier_limits'`);
-await b.close();
+await finish(() => b.close());
