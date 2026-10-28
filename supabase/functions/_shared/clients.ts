@@ -28,7 +28,7 @@ export async function callerId(req: Request): Promise<string | null> {
 }
 
 export async function removeFolder(client: SupabaseClient, prefix: string) {
-  for (const sub of ['profile', 'verify', 'chat', 'export']) {
+  for (const sub of ['profile', 'verify', 'chat', 'voice', 'export']) {
     const { data } = await client.storage.from('profile-media').list(`${prefix}/${sub}`, { limit: 1000 });
     if (data?.length) await client.storage.from('profile-media').remove(data.map((f) => `${prefix}/${sub}/${f.name}`));
   }

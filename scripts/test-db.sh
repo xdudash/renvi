@@ -14,5 +14,7 @@ out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/security.sql 2>&1) || {
 echo "$out" | grep -c "ok -" | xargs -I{} echo "{} security-audit checks passed"
 out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rate_limits.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
 echo "$out" | grep -c "ok -" | xargs -I{} echo "{} rate-limit / push-token checks passed"
+out=$(psql -d "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/voice.sql 2>&1) || { echo "$out" | grep -E "ERROR|FAILED"; exit 1; }
+echo "$out" | grep -c "ok -" | xargs -I{} echo "{} voice-message checks passed"
 # Edge Function secret checks (pure TypeScript, no network).
 if command -v bun >/dev/null; then bun test supabase/tests/functions_secret.test.ts; else echo "bun not found: Edge Function secret tests skipped"; fi

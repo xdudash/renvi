@@ -61,6 +61,9 @@ export type MessageRow = {
   sender_id: string;
   body: string | null;
   photo_path: string | null;
+  // Voice message (0017): `<sender uid>/voice/<uuid>.m4a` and its length; both null for text/photo messages.
+  voice_path?: string | null;
+  voice_duration_ms?: number | null;
   deleted_at: string | null;
   created_at: string;
 };
@@ -83,6 +86,8 @@ export type MatchContext = {
   spark: { from_me: boolean; kind: 'profile' | 'photo' | 'prompt'; comment: string | null; prompt: { question: string; answer: string } | null } | null;
   my_photo_consent: boolean;
   their_photo_consent: boolean;
+  my_voice_consent: boolean;
+  their_voice_consent: boolean;
   muted: boolean;
   archived: boolean;
   their_read_at: string | null;
@@ -113,6 +118,10 @@ export const api = {
     rpc<void>('set_match_settings', { p_match: matchId, p_muted: patch.muted ?? null, p_archived: patch.archived ?? null }),
   photoConsent: (matchId: string, allowed: boolean) =>
     rpc<void>('set_photo_consent', { p_match: matchId, p_allowed: allowed }),
+  voiceConsent: (matchId: string, allowed: boolean) =>
+    rpc<void>('set_voice_consent', { p_match: matchId, p_allowed: allowed }),
+  sendVoice: (matchId: string, clientId: string, voicePath: string, durationMs: number) =>
+    rpc<MessageRow>('send_voice_message', { p_match: matchId, p_client_id: clientId, p_voice_path: voicePath, p_duration_ms: durationMs }),
   endMatch: (matchId: string) => rpc<void>('end_match', { p_match: matchId }),
   proposeDate: (matchId: string, place: string, custom: string | null, day: string, time: string, note: string | null) =>
     rpc<DateRow>('propose_date', { p_match: matchId, p_place: place, p_custom: custom, p_day: day, p_time: time, p_note: note }),
@@ -190,6 +199,16 @@ export const api = {
     const { error } = await supabase.storage.from('profile-media').upload(path, body, { contentType: mime });
     if (error) throw toAppError(error);
     return path;
+  },
+  // Uploads a local recording to a fixed path. A file left by an earlier attempt (same path) counts as uploaded,
+  // so an offline retry never needs a second copy (clients have no UPDATE on storage objects).
+  uploadVoice: async (path: string, uri: string): Promise<void> => {
+    const body = await (await fetch(uri)).arrayBuffer();
+    const { error } = await supabase.storage.from('profile-media').upload(path, body, { contentType: 'audio/mp4' });
+    if (!error) return;
+    const e = error as { statusCode?: string | number; message?: string };
+    if (String(e.statusCode) === '409' || /already exists|duplicate/i.test(e.message ?? '')) return;
+    throw toAppError(error);
   },
   signedUrl: async (path: string): Promise<string> => {
     const { data, error } = await supabase.storage.from('profile-media').createSignedUrl(path, 3600);

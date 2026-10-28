@@ -5,9 +5,20 @@ import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 import { api, type MessageRow } from './api';
 import { useLang } from './lang';
+import { AppError, type AppErrorKind } from './errors';
 
-export type ChatItem = MessageRow & { state: 'sent' | 'sending' | 'failed' };
-type Pending = { client_id: string; match_id: string; body: string | null; photo_path: string | null; created_at: string };
+// local_uri: the sender's own recording while a voice message is not on the server yet.
+export type ChatItem = MessageRow & { state: 'sent' | 'sending' | 'failed'; local_uri?: string | null };
+// A voice message waits in the outbox with its local file and a server path fixed up front, so a retry
+// re-uploads to the same path and re-sends with the same client_id (no duplicate file, no duplicate message).
+export type PendingVoice = { uri: string; path: string; duration_ms: number };
+type Pending = { client_id: string; match_id: string; body: string | null; photo_path: string | null; voice?: PendingVoice | null; created_at: string };
+
+const toItem = (p: Pending, sender: string, state: ChatItem['state']): ChatItem => ({
+  id: p.client_id, client_id: p.client_id, match_id: p.match_id, sender_id: sender, body: p.body, photo_path: p.photo_path,
+  voice_path: p.voice?.path ?? null, voice_duration_ms: p.voice?.duration_ms ?? null, local_uri: p.voice?.uri ?? null,
+  deleted_at: null, created_at: p.created_at, state,
+});
 
 const OUTBOX = 'renvi.outbox';
 async function readOutbox(): Promise<Pending[]> {
@@ -23,6 +34,7 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
   const [hasOlder, setHasOlder] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const itemsRef = useRef<ChatItem[]>([]);
+  const lastErr = useRef<AppErrorKind | null>(null);
   useEffect(() => { itemsRef.current = items; }, [items]);
 
   const merge = useCallback((rows: ChatItem[]) => {
@@ -44,7 +56,7 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
       older: rows.length >= 50,
       rows: [
         ...rows.map((r) => ({ ...r, state: 'sent' as const })),
-        ...pend.map((p) => ({ id: p.client_id, client_id: p.client_id, match_id: p.match_id, sender_id: myId ?? '', body: p.body, photo_path: p.photo_path, deleted_at: null, created_at: p.created_at, state: 'failed' as const })),
+        ...pend.map((p) => toItem(p, myId ?? '', 'failed')),
       ],
     };
   }, [matchId, myId]);
@@ -84,16 +96,24 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
   }, [matchId, hasOlder, loadingOlder, merge]);
 
   const deliver = useCallback(async (p: Pending) => {
-    merge([{ id: p.client_id, client_id: p.client_id, match_id: p.match_id, sender_id: myId ?? '', body: p.body, photo_path: p.photo_path, deleted_at: null, created_at: p.created_at, state: 'sending' }]);
+    merge([toItem(p, myId ?? '', 'sending')]);
     try {
-      const row = await api.sendMessage(p.match_id, p.client_id, p.body, p.photo_path);
+      let row: MessageRow;
+      if (p.voice) {
+        await api.uploadVoice(p.voice.path, p.voice.uri);
+        row = await api.sendVoice(p.match_id, p.client_id, p.voice.path, p.voice.duration_ms);
+      } else {
+        row = await api.sendMessage(p.match_id, p.client_id, p.body, p.photo_path);
+      }
       merge([{ ...row, state: 'sent' }]);
       await writeOutbox((await readOutbox()).filter((x) => x.client_id !== p.client_id));
+      lastErr.current = null;
       return true;
-    } catch {
+    } catch (e) {
+      lastErr.current = e instanceof AppError ? e.kind : 'server';
       const box = await readOutbox();
       if (!box.some((x) => x.client_id === p.client_id)) await writeOutbox([...box, p]);
-      merge([{ id: p.client_id, client_id: p.client_id, match_id: p.match_id, sender_id: myId ?? '', body: p.body, photo_path: p.photo_path, deleted_at: null, created_at: p.created_at, state: 'failed' }]);
+      merge([toItem(p, myId ?? '', 'failed')]);
       return false;
     }
   }, [merge, myId]);
@@ -103,6 +123,14 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
     const p: Pending = { client_id: Crypto.randomUUID(), match_id: matchId, body, photo_path: photoPath, created_at: new Date().toISOString() };
     return deliver(p);
   }, [matchId, deliver]);
+
+  // Voice: the recording is uploaded to <me>/voice/<uuid>.m4a, then sent via send_voice_message.
+  const sendVoice = useCallback(async (uri: string, durationMs: number) => {
+    if (!matchId || !myId) return false;
+    const voice: PendingVoice = { uri, path: `${myId}/voice/${Crypto.randomUUID().toLowerCase()}.m4a`, duration_ms: Math.max(1, Math.min(120000, Math.round(durationMs))) };
+    const p: Pending = { client_id: Crypto.randomUUID(), match_id: matchId, body: null, photo_path: null, voice, created_at: new Date().toISOString() };
+    return deliver(p);
+  }, [matchId, myId, deliver]);
 
   const retry = useCallback(async (clientId: string) => {
     const p = (await readOutbox()).find((x) => x.client_id === clientId);
@@ -117,11 +145,13 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
 
   const remove = useCallback(async (id: string) => {
     await api.deleteMessage(id);
-    setItems((cur) => cur.map((m) => (m.id === id ? { ...m, body: null, photo_path: null, deleted_at: new Date().toISOString() } : m)));
+    setItems((cur) => cur.map((m) => (m.id === id ? { ...m, body: null, photo_path: null, voice_path: null, voice_duration_ms: null, local_uri: null, deleted_at: new Date().toISOString() } : m)));
   }, []);
 
   const reload = useCallback(() => { setLoading(true); setError(null); load(); }, [load]);
-  return { items, loading, error, reload, loadOlder, hasOlder, loadingOlder, send, retry, discard, remove };
+  return { items, loading, error, reload, loadOlder, hasOlder, loadingOlder, send, sendVoice, retry, discard, remove,
+    /** Kind of the last delivery error (e.g. 'rate_limited'), null after a success. */
+    lastErrorKind: () => lastErr.current };
 }
 
 export async function failedFor(matchId: string): Promise<Pending[]> {

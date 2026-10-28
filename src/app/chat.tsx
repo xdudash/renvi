@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Avatar, BackLink, Between, Card, Choice, Eyebrow, LinkBtn, Loading, Pill, SafeBanner, Sheet, TabBar, TopBar, useToast } from '@/components/ui';
 import { ErrorRetryState } from '@/components/States';
+import { formatVoiceTime, RecordingIndicator, useVoiceRecorder, VoiceHoldButton, VoiceMessage, VoicePreview } from '@/components/Voice';
 import { useChat, type ChatItem } from '@/lib/chat';
 import { api, type MatchContext } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -31,6 +32,15 @@ export default function Chat() {
   const [sheet, setSheet] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
   const c = ctx.data;
+  const voiceOk = !!(c?.my_voice_consent && c?.their_voice_consent);
+  // Recording on web would produce WebM, but the server accepts only .m4a: voice is recorded on iOS/Android only.
+  const canRecord = Platform.OS !== 'web';
+  const voice = useVoiceRecorder({
+    onTooShort: () => toast(t('voice.tooShort')),
+    onPermissionDenied: () => toast(t('voice.permissionDenied')),
+    onError: () => toast(t('voice.recordFailed')),
+    onMaxReached: () => toast(t('voice.maxReached')),
+  });
 
   useEffect(() => { if (history) chat.loadOlder(); }, [history]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDraft(match, text); }, [match, text]);
@@ -44,6 +54,18 @@ export default function Chat() {
     setText(''); setDraft(match, '');
     const ok = await chat.send(v);
     if (!ok) toast(t('screens.chat.sendFailed'));
+    setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50);
+  };
+  const holdVoice = () => {
+    if (!voiceOk) { router.push({ pathname: '/voice-consent', params: { match } }); return; }
+    voice.start();
+  };
+  const sendVoice = async () => {
+    const p = voice.preview;
+    if (!p) return;
+    voice.clearPreview();
+    const ok = await chat.sendVoice(p.uri, p.durationMs);
+    if (!ok) toast(chat.lastErrorKind() === 'rate_limited' ? t('voice.rateLimited') : t('voice.sendFailed'));
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50);
   };
   const attach = async () => {
@@ -86,12 +108,15 @@ export default function Chat() {
             {chat.loadingOlder ? <View style={[s.bubble, s.note]}><Text style={{ fontSize: 10, color: '#7d7971' }}>{t('screens.chat.loadingHistory')}</Text></View> : null}
             {chat.loading ? <Loading label={t('screens.chat.loadingMessages')} /> : null}
             {chat.error ? <ErrorRetryState onRetry={chat.reload} /> : null}
-            {chat.items.map((m, i) => (
+            {chat.items.map((m, i) => {
+              const label = m.body ?? (m.voice_duration_ms ? t('voice.message', { time: formatVoiceTime(m.voice_duration_ms) }) : '');
+              return (
               <Bubble key={m.client_id + m.sender_id} m={m} mine={m.sender_id === me} showDay={i === 0 || new Date(chat.items[i - 1].created_at).toDateString() !== new Date(m.created_at).toDateString()}
                 onLong={() => router.push({ pathname: '/message-actions', params: { match, id: m.id, mine: m.sender_id === me ? '1' : '0', body: m.body ?? '' } })}
-                onRetry={() => router.push({ pathname: '/message-failed', params: { match, client: m.client_id, body: m.body ?? '' } })}
+                onRetry={() => router.push({ pathname: '/message-failed', params: { match, client: m.client_id, body: label } })}
               />
-            ))}
+              );
+            })}
             {read && lastMine ? <Text style={[s.tiny, { textAlign: 'right' }]}>{t('screens.chat.read', { time: time(c.their_read_at!) })}</Text> : null}
           </View>
           <Card tight>
@@ -102,11 +127,28 @@ export default function Chat() {
             </View>
           </Card>
           {!(c.my_photo_consent && c.their_photo_consent) ? <SafeBanner>{t('screens.chat.photoConsentBanner')}</SafeBanner> : null}
+          {c.their_voice_consent && !c.my_voice_consent ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/voice-consent', params: { match } })}>
+              <SafeBanner>{t('voice.partnerAllowed')}</SafeBanner>
+            </Pressable>
+          ) : null}
         </ScrollView>
         <View style={s.composer}>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.attachPhoto')} onPress={attach} style={s.plus}><Text style={{ fontSize: 17 }}>＋</Text></Pressable>
-          <TextInput value={text} onChangeText={setText} placeholder={t('screens.chat.placeholder')} placeholderTextColor="#aaa" style={s.input} multiline maxLength={2000} accessibilityLabel={t('screens.chat.message')} />
-          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.send')} onPress={send} style={s.send}><Text style={{ color: '#fff', fontSize: 17 }}>↑</Text></Pressable>
+          {voice.preview ? (
+            <VoicePreview uri={voice.preview.uri} durationMs={voice.preview.durationMs} onDiscard={voice.clearPreview} onSend={sendVoice} />
+          ) : (
+            <>
+              <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.attachPhoto')} onPress={attach} disabled={voice.recording} style={s.plus}><Text style={{ fontSize: 17 }}>＋</Text></Pressable>
+              {voice.recording ? <RecordingIndicator elapsedMs={voice.elapsedMs} /> : (
+                <TextInput value={text} onChangeText={setText} placeholder={t('screens.chat.placeholder')} placeholderTextColor="#aaa" style={s.input} multiline maxLength={2000} accessibilityLabel={t('screens.chat.message')} />
+              )}
+              {canRecord && !text.trim() ? (
+                <VoiceHoldButton recording={voice.recording} onPressIn={holdVoice} onPressOut={() => { voice.stop(); }} />
+              ) : (
+                <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.send')} onPress={send} style={s.send}><Text style={{ color: '#fff', fontSize: 17 }}>↑</Text></Pressable>
+              )}
+            </>
+          )}
         </View>
         <View style={[s.main, { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 0, paddingBottom: 4 }]}>
           <LinkBtn label={t('screens.chat.proposeDate')} onPress={() => router.push({ pathname: '/date-create', params: { match } })} />
@@ -177,6 +219,9 @@ function Bubble({ m, mine, showDay, onLong, onRetry }: { m: ChatItem; mine: bool
         style={[s.bubble, mine && s.mine, deleted && s.note]}
       >
         {deleted ? <Text style={{ fontSize: 10, color: '#7d7971' }}>{mine ? t('screens.chat.youDeleted') : t('screens.chat.deleted')}</Text> : null}
+        {!deleted && m.voice_path && m.voice_duration_ms ? (
+          <VoiceMessage path={m.voice_path} localUri={m.state === 'sent' ? null : m.local_uri} durationMs={m.voice_duration_ms} mine={mine} />
+        ) : null}
         {!deleted && photo ? <Image source={{ uri: photo }} style={{ width: 200, height: 200, borderRadius: 12 }} accessibilityLabel={t('screens.chat.photoInChat')} /> : null}
         {!deleted && m.body ? <Text style={[s.bubbleText, mine && { color: '#fff' }]}>{m.body}</Text> : null}
         {mine && !deleted && m.state !== 'sent' ? (
@@ -196,6 +241,7 @@ function ChatActionsSheet({ visible, onClose, c, reload }: { visible: boolean; o
       <Text style={{ fontSize: 25, fontWeight: '800', letterSpacing: -1, marginBottom: 8 }}>{t('screens.chat.manageChat')}</Text>
       <Choice onPress={async () => { onClose(); try { await api.matchSettings(c.match_id, { archived: true }); router.navigate('/archive'); } catch { toast(t('screens.chat.archiveFailed')); } }}><Text style={{ fontSize: 12 }}>{t('screens.chat.archiveAction')}</Text><Text>›</Text></Choice>
       <Choice onPress={async () => { onClose(); try { await api.matchSettings(c.match_id, { muted: !c.muted }); toast(!c.muted ? t('screens.chat.notificationsOff') : t('screens.chat.notificationsOn')); reload(); if (!c.muted) router.push({ pathname: '/muted', params: { match: c.match_id } }); } catch { toast(t('screens.chat.changeFailed')); } }}><Text style={{ fontSize: 12 }}>{c.muted ? t('screens.chat.unmuteAction') : t('screens.chat.muteAction')}</Text><Text>›</Text></Choice>
+      <Choice onPress={() => go('/voice-consent')}><Text style={{ fontSize: 12 }}>{t('voice.consentAction')}</Text><Text>›</Text></Choice>
       <Choice onPress={() => go('/unmatch')}><Text style={{ fontSize: 12 }}>{t('screens.chat.endMatch')}</Text><Text>›</Text></Choice>
       <Choice onPress={() => go('/safety', { profile: c.partner.id })}><Text style={{ fontSize: 12 }}>{t('screens.chat.safetyAndReport')}</Text><Text>›</Text></Choice>
       <Choice onPress={() => go('/support-share')}><Text style={{ fontSize: 12 }}>{t('screens.chat.writeSupport')}</Text><Text>›</Text></Choice>
