@@ -1,0 +1,14 @@
+# Supabase CLI project config (used by `supabase link`, `db push`, `functions deploy`).
+project_id = "renvi"
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.push]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.export-data]
+verify_jwt = true

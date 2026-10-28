@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "RENVI",
+    "slug": "renvi",
+    "scheme": "renvi",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F5F2",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.renvi.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.renvi.app",
+      "predictiveBackGestureEnabled": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F5F2",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "blockedPermissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "RENVI использует фото, которые вы сами выбираете для анкеты и чата.",
+          "cameraPermission": "Камера нужна для селфи-проверки. Селфи не становится частью анкеты.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Местоположение нужно только для примерного расстояния. Координаты округляются примерно до 1 км и никому не показываются."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#DA302B"
+        }
+      ],
+      "expo-video",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F5F2"
+    }
+  }
+}
