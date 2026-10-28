@@ -93,7 +93,7 @@ select pg_temp.check((public.send_message((select id from public.matches limit 1
   'first message is stored');
 select pg_temp.check((select count(*) from public.messages) = 1
   , 'resending the same client_id does not duplicate');
-select pg_temp.expect_error($q$select public.send_message((select id from public.matches limit 1), '22222222-2222-2222-2222-222222222222', 'x', 'a/1.jpg')$q$,
+select pg_temp.expect_error($q$select public.send_message((select id from public.matches limit 1), '22222222-2222-2222-2222-222222222222', 'x', '00000000-0000-0000-0000-000000000001/chat/1.jpg')$q$,
   'photo needs mutual consent');
 select pg_temp.check((public.send_message((select id from public.matches limit 1), '33333333-3333-3333-3333-333333333333', 'Ahoj kundo', null)).body = 'Ahoj kundo',
   'message is stored with text');
@@ -105,11 +105,11 @@ select pg_temp.check((select deleted_at from public.messages where client_id = '
 -- Photo consent: both sides must allow it before a photo can be sent.
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select public.set_photo_consent((select id from public.matches limit 1), true);
-select pg_temp.expect_error($q$select public.send_message((select id from public.matches limit 1), '44444444-4444-4444-4444-444444444444', null, 'a/1.jpg')$q$, 'photo blocked until partner allows');
+select pg_temp.expect_error($q$select public.send_message((select id from public.matches limit 1), '44444444-4444-4444-4444-444444444444', null, '00000000-0000-0000-0000-000000000001/chat/1.jpg')$q$, 'photo blocked until partner allows');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select public.set_photo_consent((select id from public.matches limit 1), true);
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
-select pg_temp.check((public.send_message((select id from public.matches limit 1), '55555555-5555-5555-5555-555555555555', null, 'a/1.jpg')).photo_path = 'a/1.jpg', 'photo sent after mutual consent');
+select pg_temp.check((public.send_message((select id from public.matches limit 1), '55555555-5555-5555-5555-555555555555', null, '00000000-0000-0000-0000-000000000001/chat/1.jpg')).photo_path = '00000000-0000-0000-0000-000000000001/chat/1.jpg', 'photo sent after mutual consent');
 
 -- ---------- dates ----------
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
