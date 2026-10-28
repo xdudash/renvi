@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase, isBackendConfigured } from './supabase';
 import { api } from './api';
 import { initPurchases } from './purchases';
+import { useLang } from './lang';
 
 export type Tier = 'free' | 'plus' | 'premium';
 export type Profile = Record<string, any> | null;
@@ -47,9 +48,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile>(null);
   const [tier, setTier] = useState<Tier>('free');
 
+  const { applyProfileLang } = useLang();
+
   const apply = useCallback((s: Snapshot) => {
     setSession(s.session); setProfile(s.profile); setTier(s.tier);
-  }, []);
+    if (s.profile?.language) applyProfileLang(s.profile.language);
+  }, [applyProfileLang]);
   const refresh = useCallback(async () => { apply(await loadSnapshot()); }, [apply]);
 
   useEffect(() => {
