@@ -1,4 +1,4 @@
-// Database Webhook target (messages, matches, dates INSERT/UPDATE). Sends a push WITHOUT names or message text.
+// Database Webhook target (messages, matches, dates, video_calls INSERT/UPDATE). Sends a push WITHOUT names or message text.
 // Configure: Database → Webhooks → HTTP request to this function with header x-push-secret = PUSH_WEBHOOK_SECRET.
 import { admin, json } from '../_shared/clients.ts';
 import { secretMatches } from '../_shared/secret.ts';
@@ -45,6 +45,18 @@ Deno.serve(async (req) => {
     } else if (p.old_record?.status !== p.record.status && ['accepted', 'declined'].includes(p.record.status)) {
       to = [p.record.proposer_id];
       title = 'Ответ на приглашение';
+    }
+  } else if (p.table === 'video_calls') {
+    // Pre-date video call: same preference switch as date invitations.
+    pref = 'dates';
+    route = `/video-call?match=${p.record.match_id}`;
+    if (p.type === 'INSERT') {
+      const r = await partnerOf(p.record.match_id, p.record.requested_by);
+      if (r) to = [r];
+      title = 'Запрос на видеозвонок';
+    } else if (p.old_record?.status !== p.record.status && p.record.status === 'accepted') {
+      to = [p.record.requested_by];
+      title = 'Видеозвонок принят';
     }
   }
   if (!to.length) return json({ ok: true, sent: 0 });

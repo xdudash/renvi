@@ -5,6 +5,7 @@ import { useDateRow } from '@/hooks/useDate';
 import { api } from '@/lib/api';
 import { resetDateDraft } from '@/lib/dateDraft';
 import { useLang } from '@/lib/lang';
+import { VideoCallButton } from '@/components/VideoCallButton';
 
 // 60 · Принято
 export default function DateAccepted() {
@@ -20,6 +21,7 @@ export default function DateAccepted() {
       {d.loading ? <Loading /> : <Ticket place={d.place} day={d.day} time={d.time} status={t('screens.dateAccepted.prinyato')} tone="green" />}
       <SafeBanner>{t('screens.dateAccepted.soobschiteBlizkomuGdeI')}</SafeBanner>
       <Btn label={t('screens.dateAccepted.vernutsyaVChat')} onPress={toChat} />
+      <VideoCallButton match={match} />
       <Btn kind="ghost" label={t('screens.dateAccepted.izmenitPlan')} onPress={async () => {
         try { await api.cancelDate(date); } catch { toast(t('screens.dateAccepted.neUdalosIzmenitPlan')); return; }
         resetDateDraft(match);
