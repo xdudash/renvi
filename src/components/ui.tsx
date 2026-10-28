@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/theme/tokens';
 import { BrandMark } from './BrandMark';
 import { useLang } from '@/lib/lang';
+import type { TranslationKey } from '@/i18n';
 import { UiIcon, type IconName } from './UiIcon';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -74,6 +75,7 @@ export function Screen({ children, scroll = true, tabs, style }: {
 }
 
 export function TopBar({ compact = false }: { compact?: boolean }) {
+  const { t } = useLang();
   return (
     <View style={[styles.appbar, compact && { justifyContent: 'flex-end' }]}>
       {compact ? null : (
@@ -85,7 +87,7 @@ export function TopBar({ compact = false }: { compact?: boolean }) {
       <View style={styles.barActions}>
         <LangButton />
         {compact ? null : (
-          <Pressable accessibilityRole="button" accessibilityLabel="Центр безопасности" onPress={() => router.push('/safety')} style={styles.iconBtn} hitSlop={6}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.safetyCenter')} onPress={() => router.push('/safety')} style={styles.iconBtn} hitSlop={6}>
             <UiIcon name="shield" size={20} />
           </Pressable>
         )}
@@ -95,8 +97,8 @@ export function TopBar({ compact = false }: { compact?: boolean }) {
 }
 
 function LangButton() {
-  const { lang } = useLang();
-  return <IconButton label="Выбрать язык" onPress={() => router.push('/language')} text={lang} />;
+  const { lang, t } = useLang();
+  return <IconButton label={t('common.chooseLanguage')} onPress={() => router.push('/language')} text={lang} />;
 }
 
 export function IconButton({ label, onPress, text }: { label: string; onPress: () => void; text: string }) {
@@ -107,11 +109,11 @@ export function IconButton({ label, onPress, text }: { label: string; onPress: (
   );
 }
 
-const TABS: { href: string; label: string; key: 'discover' | 'likes' | 'chats' | 'me'; icon: IconName }[] = [
-  { href: '/discover', label: 'Знакомства', key: 'discover', icon: 'discover' },
-  { href: '/likes', label: 'Искры', key: 'likes', icon: 'spark' },
-  { href: '/chats', label: 'Чаты', key: 'chats', icon: 'chat' },
-  { href: '/me', label: 'Профиль', key: 'me', icon: 'profile' },
+const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' | 'chats' | 'me'; icon: IconName }[] = [
+  { href: '/discover', labelKey: 'tabs.discover', key: 'discover', icon: 'discover' },
+  { href: '/likes', labelKey: 'tabs.likes', key: 'likes', icon: 'spark' },
+  { href: '/chats', labelKey: 'tabs.chats', key: 'chats', icon: 'chat' },
+  { href: '/me', labelKey: 'tabs.me', key: 'me', icon: 'profile' },
 ];
 
 // Number of new incoming sparks for the tab badge (visible on every plan; the list itself is plan-gated).
@@ -127,22 +129,23 @@ function useIncomingCount() {
 }
 
 export function TabBar({ active }: { active?: string }) {
+  const { t } = useLang();
   const incoming = useIncomingCount();
   return (
     <View style={styles.tabs} accessibilityRole="tablist">
-      {TABS.map((t) => {
-        const on = active === t.key;
+      {TABS.map((tab) => {
+        const on = active === tab.key;
         return (
           <Pressable
-            key={t.key}
+            key={tab.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
-            onPress={() => router.navigate(t.href as never)}
+            onPress={() => router.navigate(tab.href as never)}
             style={styles.tab}
           >
-            <View style={styles.tabIcon}><UiIcon name={t.icon} size={22} color={on ? colors.red : colors.tabInactive} /></View>
-            <Text style={[styles.tabLabel, on && { color: colors.red, fontWeight: '700' }]}>{t.label}</Text>
-            {t.key === 'likes' && incoming > 0 ? <View style={styles.tabBadge}><Text style={styles.tabBadgeText}>{incoming}</Text></View> : null}
+            <View style={styles.tabIcon}><UiIcon name={tab.icon} size={22} color={on ? colors.red : colors.tabInactive} /></View>
+            <Text style={[styles.tabLabel, on && { color: colors.red, fontWeight: '700' }]}>{t(tab.labelKey)}</Text>
+            {tab.key === 'likes' && incoming > 0 ? <View style={styles.tabBadge}><Text style={styles.tabBadgeText}>{incoming}</Text></View> : null}
           </Pressable>
         );
       })}
@@ -281,25 +284,28 @@ export function SafeBanner({ children }: { children: React.ReactNode }) {
   return <View style={styles.safeBanner}><Text style={styles.safeBannerText}>{children}</Text></View>;
 }
 export function ErrorBlock({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useLang();
   return (
-    <StateBlock icon="↻" title="Не удалось загрузить" copy={message} label={onRetry ? 'Повторить' : undefined} onPress={onRetry} />
+    <StateBlock icon="↻" title={t('common.loadFailed')} copy={message} label={onRetry ? t('common.retry') : undefined} onPress={onRetry} />
   );
 }
-export function Loading({ label = 'Загружаем…' }: { label?: string }) {
+export function Loading({ label }: { label?: string }) {
+  const { t } = useLang();
   return (
     <View style={styles.loading} accessibilityLiveRegion="polite">
       <ActivityIndicator color={colors.red} />
-      <Tiny center>{label}</Tiny>
+      <Tiny center>{label ?? t('common.loading')}</Tiny>
     </View>
   );
 }
 export function StateBlock({ icon, title, copy, label, onPress, secondary }: {
   icon: string; title: string; copy: string; label?: string; onPress?: () => void; secondary?: React.ReactNode;
 }) {
+  const { t } = useLang();
   return (
     <View style={styles.stateBlock}>
       <Text style={styles.stateIcon}>{icon}</Text>
-      <Eyebrow>RENVI · СТАТУС</Eyebrow>
+      <Eyebrow>{t('common.statusEyebrow')}</Eyebrow>
       <Text style={styles.stateTitle} accessibilityRole="header">{title}</Text>
       <Lede>{copy}</Lede>
       {label && onPress ? <View style={{ alignSelf: 'stretch' }}><Btn label={label} onPress={onPress} /></View> : null}
@@ -307,10 +313,11 @@ export function StateBlock({ icon, title, copy, label, onPress, secondary }: {
     </View>
   );
 }
-export function BackLink({ label = '‹ Назад', onPress }: { label?: string; onPress?: () => void }) {
+export function BackLink({ label, onPress }: { label?: string; onPress?: () => void }) {
+  const { t } = useLang();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Назад" onPress={onPress ?? (() => router.back())} style={styles.back} hitSlop={8}>
-      <Text style={styles.backText}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onPress ?? (() => router.back())} style={styles.back} hitSlop={8}>
+      <Text style={styles.backText}>{label ?? t('common.backLink')}</Text>
     </Pressable>
   );
 }
@@ -318,13 +325,14 @@ export function Meter({ value }: { value: number }) {
   return <View style={styles.meter}><View style={[styles.meterFill, { width: `${Math.max(0, Math.min(100, value))}%` }]} /></View>;
 }
 export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: React.ReactNode }) {
+  const { t } = useLang();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Закрыть">
+      <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel={t('common.close')}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.grabber} />
           {children}
-          <Btn kind="ghost" label="Закрыть" onPress={onClose} />
+          <Btn kind="ghost" label={t('common.close')} onPress={onClose} />
         </Pressable>
       </Pressable>
     </Modal>
