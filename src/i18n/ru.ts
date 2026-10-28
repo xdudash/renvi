@@ -3,6 +3,7 @@
 import { ruA } from './strings-a.ts';
 import { ruB } from './strings-b.ts';
 import { ruLib } from './strings-lib.ts';
+import { ruDigest } from './strings-digest.ts';
 
 const ruBase = {
   'common.close': 'Закрыть',
@@ -21,7 +22,7 @@ const ruBase = {
 } as const;
 
 // Screen and component strings live in strings-a.ts / strings-b.ts (one file per half).
-export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib } as const;
+export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;
