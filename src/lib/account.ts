@@ -12,8 +12,8 @@ export async function deleteAccount(reason: string | null): Promise<void> {
   await supabase.auth.signOut();
 }
 
-export type Prefs = { messages: boolean; matches: boolean; dates: boolean; likes: boolean; news: boolean; reduce_motion: boolean; larger_text: boolean };
-export const DEFAULT_PREFS: Prefs = { messages: true, matches: true, dates: true, likes: true, news: false, reduce_motion: false, larger_text: false };
+export type Prefs = { messages: boolean; matches: boolean; dates: boolean; likes: boolean; news: boolean; digest_push: boolean; digest_email: boolean; reduce_motion: boolean; larger_text: boolean };
+export const DEFAULT_PREFS: Prefs = { messages: true, matches: true, dates: true, likes: true, news: false, digest_push: true, digest_email: false, reduce_motion: false, larger_text: false };
 
 export async function loadPrefs(uid: string): Promise<Prefs> {
   const { data } = await supabase.from('notification_prefs').select('*').eq('user_id', uid).maybeSingle();

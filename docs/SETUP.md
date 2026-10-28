@@ -24,7 +24,7 @@
 4. **CAPTCHA** (по желанию): Authentication → Bot and Abuse Protection → hCaptcha + `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без ключа шаг CAPTCHA в регистрации пропускается.
 5. **Edge Functions**:
    ```bash
-   npx supabase functions deploy delete-account export-data revenuecat-webhook push
+   npx supabase functions deploy delete-account export-data revenuecat-webhook push weekly-digest
    npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=... PUSH_WEBHOOK_SECRET=...
    # необязательно — письмо со ссылкой на выгрузку данных:
    npx supabase secrets set RESEND_API_KEY=... EXPORT_FROM_EMAIL="RENVI <no-reply@ваш-домен>"
@@ -49,6 +49,35 @@
 1. `npx eas init` (создаст projectId), `npx eas credentials` — ключ APNs для iOS, файл FCM (google-services) для Android.
 2. Токен устройства привязывается к аккаунту на экране «Уведомления после совпадения» (`register_push_token`).
 3. Отправку делает функция `push` по вебхукам из шага 2.6; удалённые приложения чистятся автоматически.
+
+### Еженедельная сводка «новые анкеты» (миграция 0019, функция `weekly-digest`)
+
+Раз в неделю каждому активному пользователю уходит пуш (и письмо, если он включил его в «Уведомлениях»): сколько новых анкет в его стране подходят под его «кого ищу» и фильтры. В тексте только число — без имён, фото и данных других людей. Не чаще одного раза в 7 дней на пользователя (таблица `digest_log`). Пуш включён по умолчанию, письмо выключено.
+
+1. Деплой и секреты:
+   ```bash
+   npx supabase functions deploy weekly-digest --no-verify-jwt
+   npx supabase secrets set DIGEST_CRON_SECRET=<длинная случайная строка>
+   # письма (необязательно; без RESEND_API_KEY уходит только пуш):
+   npx supabase secrets set RESEND_API_KEY=... DIGEST_FROM_EMAIL="RENVI <no-reply@ваш-домен>"   # иначе берётся EXPORT_FROM_EMAIL
+   ```
+   Пока `DIGEST_CRON_SECRET` не задан, функция отвечает 401 на любой запрос.
+2. Расписание: **Integrations → Cron** (или SQL Editor). Нужны расширения `pg_cron` и `pg_net`. Секрет и адрес проекта храните в Vault, а не в SQL:
+   ```sql
+   select vault.create_secret('<DIGEST_CRON_SECRET>', 'digest_cron_secret');
+   select vault.create_secret('https://<ref>.supabase.co', 'project_url');
+   select cron.schedule('weekly-digest', '5 * * * *', $$
+     select net.http_post(
+       url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/weekly-digest',
+       headers := jsonb_build_object('Content-Type', 'application/json',
+         'x-digest-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'digest_cron_secret')),
+       body := '{}'::jsonb);
+   $$);
+   ```
+   Задача запускается каждый час, а функция сама отправляет только в день недели и после часа из настройки (часовой запуск страхует от сбоя одного вызова; повторно никому не уйдёт — работает журнал за 7 дней). Если нужен один запуск в неделю, замените `'5 * * * *'` на `'5 17 * * 0'`.
+3. Настройка времени: в админке «Тарифы и настройки» ключ `digest` → `{"enabled": true, "weekday": 0, "hour_utc": 17}` (`weekday`: 0 — воскресенье … 6 — суббота, время UTC; `enabled: false` выключает рассылку).
+4. Проверка вручную (отправит сразу, игнорируя день и час, но с учётом журнала): `curl -X POST "https://<ref>.supabase.co/functions/v1/weekly-digest?force=1" -H "x-digest-secret: $DIGEST_CRON_SECRET"`.
+5. Тексты пушей/писем лежат в `supabase/functions/weekly-digest/text.ts` (карта по языку профиля, запасной — русский).
 
 ## 5. Сборки
 
