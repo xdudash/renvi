@@ -11,3 +11,10 @@ for (const l of ['sk', 'cs', 'en', 'ua']) {
 }
 if (bad) process.exit(1);
 console.log(`i18n ok (${Object.keys(ru).length} ru keys)`);
+
+// parseLang: profile/storage codes map to the app's LangCode values.
+const { parseLang } = await import(new URL('../src/lib/langCode.ts', import.meta.url).href);
+for (const [i, o] of [['SK', 'SK'], ['ua', 'UA'], [' RU ', 'RU'], ['xx', null], ['', null], [null, null], [5, null]]) {
+  if (parseLang(i) !== o) { console.error(`parseLang(${JSON.stringify(i)}) !== ${o}`); process.exit(1); }
+}
+console.log('parseLang ok');
