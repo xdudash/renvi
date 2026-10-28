@@ -5,9 +5,11 @@ import { BackLink, Btn, Card, Chip, Row, Screen, Title, useToast } from '@/compo
 import { failedFor, useChat } from '@/lib/chat';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 47 · Фото не отправилось
 export default function PhotoFailed() {
+  const { t } = useLang();
   const { match } = useLocalSearchParams<{ match: string }>();
   const { session } = useSession();
   const toast = useToast();
@@ -18,16 +20,16 @@ export default function PhotoFailed() {
   return (
     <Screen tabs="chats">
       <BackLink />
-      <Title kicker="СООБЩЕНИЕ" heading="Не удалось отправить фото" sub="Фото не отправится повторно без вашего действия." />
+      <Title kicker={t('screens.photoFailed.soobschenie')} heading={t('screens.photoFailed.neUdalosOtpravitFoto')} sub={t('screens.photoFailed.fotoNeOtpravitsyaPovtorno')} />
       <Card>
         <Row>
           <View style={{ width: 49, height: 49, borderRadius: 25, backgroundColor: colors.blush }} />
-          <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{name}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>Ошибка сети · не отправлено</Text></View>
-          <Chip label="Ошибка" tone="red" />
+          <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{name}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.photoFailed.oshibkaSetiNeOtpravleno')}</Text></View>
+          <Chip label={t('screens.photoFailed.oshibka')} tone="red" />
         </Row>
       </Card>
-      <Btn label="Повторить отправку" disabled={!pending} onPress={async () => { if (!pending) return; const ok = await chat.retry(pending.client_id); toast(ok ? 'Повторная отправка выполнена' : 'Снова не получилось'); if (ok) router.back(); }} />
-      <Btn kind="ghost" label="Удалить вложение" onPress={async () => { if (pending) await chat.discard(pending.client_id); router.back(); }} />
+      <Btn label={t('screens.photoFailed.povtoritOtpravku')} disabled={!pending} onPress={async () => { if (!pending) return; const ok = await chat.retry(pending.client_id); toast(ok ? t('screens.photoFailed.povtornayaOtpravkaVypolnen') : t('screens.photoFailed.snovaNePoluchilos')); if (ok) router.back(); }} />
+      <Btn kind="ghost" label={t('screens.photoFailed.udalitVlozhenie')} onPress={async () => { if (pending) await chat.discard(pending.client_id); router.back(); }} />
     </Screen>
   );
 }

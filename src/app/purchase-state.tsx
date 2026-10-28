@@ -5,9 +5,11 @@ import { Row } from '@/components/Row';
 import { buy, loadOffers, manageSubscriptions, purchasesAvailable, restore } from '@/lib/purchases';
 import { getPlanChoice } from '@/lib/planChoice';
 import { useSession } from '@/lib/session';
+import { useLang } from '@/lib/lang';
 
 // 80 · Состояние покупки / восстановление
 export default function PurchaseState() {
+  const { t } = useLang();
   const { action } = useLocalSearchParams<{ action?: 'buy' | 'restore' }>();
   const toast = useToast();
   const { refresh } = useSession();
@@ -29,11 +31,11 @@ export default function PurchaseState() {
   const purchaseFlow = async () => {
     const c = getPlanChoice();
     const offer = (await loadOffers().catch(() => [])).find((o) => o.tier === c.tier && o.period === c.period);
-    if (!offer) { setState('failed'); toast('Тариф пока недоступен в магазине'); return; }
+    if (!offer) { setState('failed'); toast(t('screens.purchaseState.unavailableOffer')); return; }
     const r = await buy(offer);
     if (r === 'ok') { await waitForServer(); router.replace('/purchase-success'); return; }
     setState(r === 'cancelled' ? 'idle' : 'failed');
-    if (r === 'cancelled') toast('Покупка отменена');
+    if (r === 'cancelled') toast(t('screens.purchaseState.cancelled'));
   };
   const runRestore = async () => {
     if (!purchasesAvailable()) { setState('unavailable'); return; }
@@ -44,7 +46,7 @@ export default function PurchaseState() {
     const r = await restore();
     await refresh();
     setState('idle');
-    toast(r === 'ok' ? 'Покупки проверены' : 'Не удалось восстановить покупки');
+    toast(r === 'ok' ? t('screens.purchaseState.restoreOk') : t('screens.purchaseState.restoreFailed'));
   };
 
   useEffect(() => {
@@ -58,18 +60,18 @@ export default function PurchaseState() {
   return (
     <Screen>
       <BackLink onPress={() => router.replace('/plans')} />
-      <Title kicker="ПОКУПКА APP STORE" heading="Подписка обрабатывается" sub="Экран подтверждения Apple покажет финальную цену, период и условия автоматического продления." />
+      <Title kicker={t('screens.purchaseState.kicker')} heading={t('screens.purchaseState.heading')} sub={t('screens.purchaseState.sub')} />
       {state === 'unavailable' ? (
-        <StateBlock icon="" title="Покупка доступна в приложении" copy="Оформить подписку можно в приложении RENVI на iPhone или Android через App Store или Google Play." />
+        <StateBlock icon="" title={t('screens.purchaseState.unavailableTitle')} copy={t('screens.purchaseState.unavailableCopy')} />
       ) : state === 'failed' ? (
-        <StateBlock icon="↻" title="Покупка не завершена" copy="Деньги не списаны, пока покупка не подтверждена магазином. Попробуйте ещё раз." label="Повторить" onPress={runBuy} />
+        <StateBlock icon="↻" title={t('screens.purchaseState.failedTitle')} copy={t('screens.purchaseState.failedCopy')} label={t('screens.purchaseState.retry')} onPress={runBuy} />
       ) : (
-        <StateBlock icon="" title="Подтвердите в системном окне" copy="Покупка не завершена, пока вы не подтвердили её в App Store." label={state === 'busy' ? 'Ожидаем подтверждения…' : 'Открыть окно оплаты'} onPress={state === 'busy' ? () => {} : runBuy} />
+        <StateBlock icon="" title={t('screens.purchaseState.confirmTitle')} copy={t('screens.purchaseState.confirmCopy')} label={state === 'busy' ? t('screens.purchaseState.waiting') : t('screens.purchaseState.openPayment')} onPress={state === 'busy' ? () => {} : runBuy} />
       )}
-      <Btn kind="ghost" label="Отменить и вернуться" onPress={() => router.replace('/plans')} />
+      <Btn kind="ghost" label={t('screens.purchaseState.cancelBack')} onPress={() => router.replace('/plans')} />
       <Card tight>
-        <Row label="Восстановить предыдущие покупки" onPress={runRestore} />
-        <Row label="Управлять подпиской в Apple ID" onPress={() => manageSubscriptions().catch(() => toast('Откройте настройки подписок в Apple ID'))} />
+        <Row label={t('screens.purchaseState.restorePrevious')} onPress={runRestore} />
+        <Row label={t('screens.purchaseState.manage')} onPress={() => manageSubscriptions().catch(() => toast(t('screens.purchaseState.openSettings')))} />
       </Card>
     </Screen>
   );

@@ -4,24 +4,27 @@ import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandMark } from './BrandMark';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
+import type { TranslationKey } from '@/i18n';
 
-const NAV: [string, string][] = [
-  ['/admin', 'Дашборд'], ['/admin/reports', 'Жалобы'], ['/admin/appeals', 'Апелляции'], ['/admin/verification', 'Проверка селфи'],
-  ['/admin/users', 'Пользователи'], ['/admin/config', 'Тарифы и настройки'], ['/admin/referrals', 'Рефералы'], ['/admin/errors', 'Журнал ошибок'],
+const NAV: [string, TranslationKey][] = [
+  ['/admin', 'components.AdminUI.dashbord'], ['/admin/reports', 'components.AdminUI.zhaloby'], ['/admin/appeals', 'components.AdminUI.apellyatsii'], ['/admin/verification', 'components.AdminUI.proverkaSelfi'],
+  ['/admin/users', 'components.AdminUI.polzovateli'], ['/admin/config', 'components.AdminUI.tarifyINastroyki'], ['/admin/referrals', 'components.AdminUI.referaly'], ['/admin/errors', 'components.AdminUI.zhurnalOshibok'],
 ];
 
 export function AdminPage({ title, children }: { title: string; children: React.ReactNode }) {
+  const { t } = useLang();
   const path = usePathname();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={s.bar}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><BrandMark size={24} /><Text style={s.word}>renvi · admin</Text></View>
-        <Pressable onPress={() => router.replace('/')}><Text style={s.link}>В приложение</Text></Pressable>
+        <Pressable onPress={() => router.replace('/')}><Text style={s.link}>{t('components.AdminUI.vPrilozhenie')}</Text></Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.nav}>
         {NAV.map(([href, label]) => (
           <Pressable key={href} accessibilityRole="tab" accessibilityState={{ selected: path === href }} onPress={() => router.replace(href as never)} style={[s.tab, path === href && s.tabOn]}>
-            <Text style={[s.tabText, path === href && { color: colors.paper }]}>{label}</Text>
+            <Text style={[s.tabText, path === href && { color: colors.paper }]}>{t(label)}</Text>
           </Pressable>
         ))}
       </ScrollView>

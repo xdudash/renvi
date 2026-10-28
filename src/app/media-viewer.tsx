@@ -6,9 +6,11 @@ import { useProfileCard } from '@/hooks/useProfileCard';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { colors } from '@/theme/tokens';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useLang } from '@/lib/lang';
 
 // 27 · Просмотр фото / видео
 export default function MediaViewer() {
+  const { t } = useLang();
   const { id, at } = useLocalSearchParams<{ id: string; at?: string }>();
   const { data: card, loading } = useProfileCard(id);
   const [i, setI] = useState(Number(at ?? 0));
@@ -26,22 +28,22 @@ export default function MediaViewer() {
         {cur?.kind === 'video' && url ? (
           <Clip url={url} muted={muted} />
         ) : url ? (
-          <Image source={{ uri: url }} style={s.photo} resizeMode="cover" accessibilityLabel={`Медиа ${i + 1} из ${n}`} />
+          <Image source={{ uri: url }} style={s.photo} resizeMode="cover" accessibilityLabel={t('screens.mediaViewer.mediaVIzN', { i: i + 1, n })} />
         ) : <View style={s.photo} />}
         <View style={s.top}>
-          <View style={s.pill}><Text style={{ fontSize: 10 }}>{i + 1} из {n}</Text></View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Закрыть" onPress={() => router.back()} style={s.icon}><Text>×</Text></Pressable>
+          <View style={s.pill}><Text style={{ fontSize: 10 }}>{t('screens.mediaViewer.vIzN', { i: i + 1, n })}</Text></View>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.close')} onPress={() => router.back()} style={s.icon}><Text>×</Text></Pressable>
         </View>
         {cur?.kind === 'video' ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={muted ? 'Включить звук' : 'Выключить звук'} onPress={() => { setMuted(!muted); toast(muted ? 'Звук включён' : 'Звук выключен'); }} style={[s.icon, { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.53)' }]}>
+          <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('screens.mediaViewer.vklyuchitZvuk') : t('screens.mediaViewer.vyklyuchitZvuk')} onPress={() => { setMuted(!muted); toast(muted ? t('screens.mediaViewer.zvukVklyuchen') : t('screens.mediaViewer.zvukVyklyuchen')); }} style={[s.icon, { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.53)' }]}>
             <Text style={{ color: '#fff' }}>◖</Text>
           </Pressable>
         ) : null}
-        <Pressable accessibilityRole="button" accessibilityLabel="Предыдущее" onPress={() => setI((i + n - 1) % n)} style={[s.icon, { position: 'absolute', top: '50%', left: 10 }]}><Text>‹</Text></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Следующее" onPress={() => setI((i + 1) % n)} style={[s.icon, { position: 'absolute', top: '50%', right: 10 }]}><Text>›</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('screens.mediaViewer.predyduschee')} onPress={() => setI((i + n - 1) % n)} style={[s.icon, { position: 'absolute', top: '50%', left: 10 }]}><Text>‹</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('screens.mediaViewer.sleduyuschee')} onPress={() => setI((i + 1) % n)} style={[s.icon, { position: 'absolute', top: '50%', right: 10 }]}><Text>›</Text></Pressable>
       </View>
-      <Tiny>До 6 медиа · видео до 15 секунд · видео запускается без звука</Tiny>
-      <Btn kind="tertiary" label="Открыть профиль" onPress={() => router.back()} />
+      <Tiny>{t('screens.mediaViewer.do6MediaVideo')}</Tiny>
+      <Btn kind="tertiary" label={t('screens.mediaViewer.otkrytProfil')} onPress={() => router.back()} />
     </Screen>
   );
 }

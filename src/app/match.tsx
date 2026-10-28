@@ -6,9 +6,11 @@ import { useDiscover } from '@/lib/discover';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 39 · Экран взаимности
 export default function Match() {
+  const { t } = useLang();
   const { lastMatch } = useDiscover();
   const theirs = useSignedUrl(lastMatch?.partner.photo);
   const { items } = useMyPhotos();
@@ -17,20 +19,20 @@ export default function Match() {
   return (
     <Screen tabs="likes">
       <View style={s.hero}>
-        <Eyebrow>ВЫ ОБА СДЕЛАЛИ ПЕРВЫЙ ШАГ</Eyebrow>
+        <Eyebrow>{t('screens.match.vyObaSdelaliPervyy')}</Eyebrow>
         <View style={s.faces}>
           {theirs ? <Image source={{ uri: theirs }} style={s.face} accessibilityLabel={lastMatch.partner.name} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}
-          {items[0]?.url ? <Image source={{ uri: items[0].url }} style={s.face} accessibilityLabel="Ваш профиль" /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}
+          {items[0]?.url ? <Image source={{ uri: items[0].url }} style={s.face} accessibilityLabel={t('screens.match.vashProfil')} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}
         </View>
         <BrandMark size={62} />
-        <Text style={s.title} accessibilityRole="header">Это взаимно.</Text>
-        <Text style={s.lede}>Вы и {lastMatch.partner.name} заинтересовали друг друга. Есть с чего начать.</Text>
+        <Text style={s.title} accessibilityRole="header">{t('screens.match.etoVzaimno')}</Text>
+        <Text style={s.lede}>{t('screens.match.vyINameZainteresovali', { name: lastMatch.partner.name })}</Text>
         <Text style={{ fontSize: 10, letterSpacing: 0.2, color: colors.sub, marginTop: 18, marginBottom: 8 }}>Make it mutual.</Text>
       </View>
-      <Btn label="Начать разговор" onPress={chat} />
-      <Btn kind="secondary" label="Предложить встречу" onPress={() => router.replace({ pathname: '/date-create', params: { match: lastMatch.match_id } })} />
-      <Btn kind="ghost" label="Продолжить знакомиться" onPress={() => router.replace('/discover')} />
-      <Btn kind="ghost" label="Уведомлять об ответах" onPress={() => router.push({ pathname: '/push-prompt', params: { match: lastMatch.match_id } })} />
+      <Btn label={t('screens.match.nachatRazgovor')} onPress={chat} />
+      <Btn kind="secondary" label={t('screens.match.predlozhitVstrechu')} onPress={() => router.replace({ pathname: '/date-create', params: { match: lastMatch.match_id } })} />
+      <Btn kind="ghost" label={t('screens.match.prodolzhitZnakomitsya')} onPress={() => router.replace('/discover')} />
+      <Btn kind="ghost" label={t('screens.match.uvedomlyatObOtvetah')} onPress={() => router.push({ pathname: '/push-prompt', params: { match: lastMatch.match_id } })} />
     </Screen>
   );
 }

@@ -7,7 +7,7 @@ import { api, type Lang } from '@/lib/api';
 
 // 02 · Выбрать язык
 export default function Language() {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   const { session } = useSession();
   const pick = (l: Lang) => {
     setLang(l);
@@ -16,7 +16,7 @@ export default function Language() {
   return (
     <Screen>
       <BackLink />
-      <Title kicker="ВАШ ЯЗЫК" heading={'Начнём на\nвашем языке'} sub="Язык можно изменить в профиле в любой момент." />
+      <Title kicker={t('screens.language.kicker')} heading={t('screens.language.heading')} sub={t('screens.language.sub')} />
       <View style={{ marginTop: 20 }}>
         {(Object.keys(LANGUAGE_NAMES) as Lang[]).map((k) => (
           <Choice key={k} selected={lang === k} onPress={() => pick(k)}>
@@ -25,7 +25,7 @@ export default function Language() {
           </Choice>
         ))}
       </View>
-      <Btn label="Продолжить" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <Btn label={t('screens.language.continue')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
     </Screen>
   );
 }

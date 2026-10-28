@@ -1,6 +1,9 @@
 // Base (complete) dictionary. Russian is the source of truth for the key set:
 // every key used by t() must exist here. Other languages may only contain a subset.
-export const ru = {
+import { ruA } from './strings-a.ts';
+import { ruB } from './strings-b.ts';
+
+const ruBase = {
   'common.close': 'Закрыть',
   'common.back': 'Назад',
   'common.backLink': '‹ Назад',
@@ -15,6 +18,9 @@ export const ru = {
   'tabs.chats': 'Чаты',
   'tabs.me': 'Профиль',
 } as const;
+
+// Screen and component strings live in strings-a.ts / strings-b.ts (one file per half).
+export const ru = { ...ruBase, ...ruA, ...ruB } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;

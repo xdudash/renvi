@@ -6,22 +6,25 @@ import { colors } from '@/theme/tokens';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { intentChip } from '@/lib/catalog';
 import { api, type DiscoverCard } from '@/lib/api';
+import { useLang } from '@/lib/lang';
 
 export function ProfileHero({ path, count, at = 0, verified, label, overlay }: {
   path?: string | null; count: number; at?: number; verified?: boolean; label: string; overlay?: string;
 }) {
+  const { t } = useLang();
   const url = useSignedUrl(path);
   const bars = Array.from({ length: Math.min(count, 6) }).map((_, i) => (i <= at ? '▰' : '▱')).join(' ');
   return (
     <View style={s.hero}>
       {url ? <Image source={{ uri: url }} style={s.photo} resizeMode="cover" accessibilityLabel={label} /> : <View style={[s.photo, { backgroundColor: '#ddd' }]} accessibilityLabel={label} />}
       <View style={s.count}><Text style={s.countText}>{overlay ?? `${bars}　${count ? at + 1 : 0} / ${count}`}</Text></View>
-      {verified ? <View style={s.verified}><Text style={s.verifiedText}>✓ Проверен</Text></View> : null}
+      {verified ? <View style={s.verified}><Text style={s.verifiedText}>{t('components.Profile.proveren')}</Text></View> : null}
     </View>
   );
 }
 
 export function ProfileMeta({ card }: { card: Pick<DiscoverCard, 'profile_id' | 'display_name' | 'age' | 'city' | 'distance' | 'verified' | 'intent' | 'interests'> }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const toast = useToast();
   return (
@@ -30,33 +33,34 @@ export function ProfileMeta({ card }: { card: Pick<DiscoverCard, 'profile_id' | 
         <View style={{ flex: 1 }}>
           <Text>
             <Text style={s.title}>{card.display_name}, {card.age}</Text>
-            {card.verified ? <Text accessibilityLabel="Подтверждённый профиль">{'  '}<Text style={s.check}> ✓ </Text></Text> : null}
+            {card.verified ? <Text accessibilityLabel={t('components.Profile.podtverzhdennyyProfil')}>{'  '}<Text style={s.check}> ✓ </Text></Text> : null}
           </Text>
           <Text style={s.meta}>{card.city} · {card.distance} <Text style={{ fontSize: 10, color: colors.muted }}>ⓘ</Text></Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Действия с профилем" onPress={() => setOpen(true)} style={s.more}><Text>···</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.deystviyaSProfilem')} onPress={() => setOpen(true)} style={s.more}><Text>···</Text></Pressable>
       </View>
       <View style={s.wrap}>
         <Chip label={intentChip(card.intent)} tone="red" />
-        {card.verified ? <Chip label="✓ Фото проверено" tone="green" /> : null}
+        {card.verified ? <Chip label={t('components.Profile.fotoProvereno')} tone="green" /> : null}
         {card.interests.slice(0, 2).map((x) => <Chip key={x} label={x} />)}
       </View>
       <Sheet visible={open} onClose={() => setOpen(false)}>
-        <Text style={s.sheetH}>Что сделать с профилем?</Text>
-        <Choice onPress={() => { setOpen(false); router.push({ pathname: '/report', params: { profile: card.profile_id } }); }}><Text style={{ fontSize: 12 }}>Пожаловаться на профиль</Text><Text>›</Text></Choice>
-        <Choice onPress={async () => { setOpen(false); try { await api.block(card.profile_id); toast('Профиль заблокирован'); router.navigate('/blocked'); } catch { toast('Не удалось заблокировать'); } }}><Text style={{ fontSize: 12 }}>Заблокировать</Text><Text>›</Text></Choice>
-        <Choice onPress={async () => { setOpen(false); try { await api.pass(card.profile_id); toast('Профиль скрыт'); router.navigate('/discover'); } catch { toast('Не удалось скрыть'); } }}><Text style={{ fontSize: 12 }}>Скрыть из подборки</Text><Text>›</Text></Choice>
+        <Text style={s.sheetH}>{t('components.Profile.chtoSdelatSProfilem')}</Text>
+        <Choice onPress={() => { setOpen(false); router.push({ pathname: '/report', params: { profile: card.profile_id } }); }}><Text style={{ fontSize: 12 }}>{t('components.Profile.pozhalovatsyaNaProfil')}</Text><Text>›</Text></Choice>
+        <Choice onPress={async () => { setOpen(false); try { await api.block(card.profile_id); toast(t('components.Profile.profilZablokirovan')); router.navigate('/blocked'); } catch { toast(t('components.Profile.neUdalosZablokirovat')); } }}><Text style={{ fontSize: 12 }}>{t('components.Profile.zablokirovat')}</Text><Text>›</Text></Choice>
+        <Choice onPress={async () => { setOpen(false); try { await api.pass(card.profile_id); toast(t('components.Profile.profilSkryt')); router.navigate('/discover'); } catch { toast(t('components.Profile.neUdalosSkryt')); } }}><Text style={{ fontSize: 12 }}>{t('components.Profile.skrytIzPodborki')}</Text><Text>›</Text></Choice>
       </Sheet>
     </View>
   );
 }
 
 export function MediaThumb({ path, onPress, video }: { path: string; onPress: () => void; video?: boolean }) {
+  const { t } = useLang();
   const url = useSignedUrl(path);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Фото профиля" onPress={onPress} style={s.thumb}>
+    <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.fotoProfilya')} onPress={onPress} style={s.thumb}>
       {url ? <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
-      {video ? <View style={s.thumbPill}><Text style={{ fontSize: 10 }}>▶ видео</Text></View> : null}
+      {video ? <View style={s.thumbPill}><Text style={{ fontSize: 10 }}>{t('components.Profile.video')}</Text></View> : null}
     </Pressable>
   );
 }

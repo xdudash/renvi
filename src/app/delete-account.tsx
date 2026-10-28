@@ -2,23 +2,25 @@ import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BackLink, Btn, Card, Screen, Title } from '@/components/ui';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 76 · Удалить аккаунт
 export default function DeleteAccount() {
+  const { t } = useLang();
   return (
     <Screen>
       <BackLink />
-      <Title kicker="УДАЛЕНИЕ АККАУНТА" heading="Вы уверены, что хотите уйти?" sub="Сначала можно скрыть анкету и сделать паузу. Удаление не используется как тёмный паттерн для удержания." />
+      <Title kicker={t('screens.deleteAccount.udalenieAkkaunta')} heading={t('screens.deleteAccount.vyUverenyChtoHotite')} sub={t('screens.deleteAccount.snachalaMozhnoSkrytAnketu')} />
       <Card>
-        <Text style={{ fontWeight: '700', fontSize: 13 }}>При удалении:</Text>
+        <Text style={{ fontWeight: '700', fontSize: 13 }}>{t('screens.deleteAccount.priUdalenii')}</Text>
         <View style={{ marginTop: 6, gap: 4 }}>
-          {['анкета перестанет показываться', 'покупка в App Store должна отменяться отдельно', 'сроки удаления данных указаны в политике приватности'].map((x) => (
+          {[t('screens.deleteAccount.anketaPerestanetPokazyvats'), t('screens.deleteAccount.pokupkaVAppStore'), t('screens.deleteAccount.srokiUdaleniyaDannyhUkazan')].map((x) => (
             <Text key={x} style={{ fontSize: 10, color: colors.muted }}>•  {x}</Text>
           ))}
         </View>
       </Card>
-      <Btn kind="tertiary" label="Сначала скрыть профиль" onPress={() => router.push('/privacy-visibility')} />
-      <Btn kind="warn" label="Продолжить удаление" onPress={() => router.push('/delete-confirm')} />
+      <Btn kind="tertiary" label={t('screens.deleteAccount.snachalaSkrytProfil')} onPress={() => router.push('/privacy-visibility')} />
+      <Btn kind="warn" label={t('screens.deleteAccount.prodolzhitUdalenie')} onPress={() => router.push('/delete-confirm')} />
     </Screen>
   );
 }

@@ -5,11 +5,13 @@ import { BackLink, Btn, Choice, LinkBtn, Screen, Tiny, Title, useToast } from '@
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
-const SUGGESTED = ['Куда бы вы сбежали на выходные?', 'Кофе, прогулка или музей?', 'Какое место стоит показать в вашем городе?'];
+const SUGGESTED = ['screens.openingMoves.kudaByVySbezhali', 'screens.openingMoves.kofeProgulkaIliMuzey', 'screens.openingMoves.kakoeMestoStoitPokazat'] as const;
 
 // 67 · Темы для первого шага
 export default function OpeningMoves() {
+  const { t } = useLang();
   const toast = useToast();
   const { session } = useSession();
   const uid = session?.user.id;
@@ -19,10 +21,10 @@ export default function OpeningMoves() {
   useEffect(() => {
     if (!uid) return;
     supabase.from('opening_moves').select('text, position').eq('profile_id', uid).order('position')
-      .then(({ data }) => setMoves(data?.length ? data.map((d) => d.text) : SUGGESTED));
+      .then(({ data }) => setMoves(data?.length ? data.map((d) => d.text) : SUGGESTED.map((k) => t(k))));
   }, [uid]);
   const add = () => {
-    if (moves.length >= 3) { toast('Можно добавить до трёх тем'); return; }
+    if (moves.length >= 3) { toast(t('screens.openingMoves.mozhnoDobavitDoTreh')); return; }
     setMoves([...moves, '']); setEditing(moves.length);
   };
   const save = async () => {
@@ -35,27 +37,27 @@ export default function OpeningMoves() {
         const { error } = await supabase.from('opening_moves').insert(clean.map((text, position) => ({ profile_id: uid, text, position })));
         if (error) throw error;
       }
-      toast('Изменения сохранены'); router.navigate('/me');
-    } catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+      toast(t('screens.openingMoves.izmeneniyaSohraneny')); router.navigate('/me');
+    } catch { toast(t('screens.openingMoves.neUdalosSohranit')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="ПЕРВЫЙ ШАГ" heading="Ваши темы для начала" sub="Подсказки снимают неловкость в чате. Можно добавить до трёх — ответить на них может любой из вас." />
+      <Title kicker={t('screens.openingMoves.pervyyShag')} heading={t('screens.openingMoves.vashiTemyDlyaNachala')} sub={t('screens.openingMoves.podskazkiSnimayutNelovkost')} />
       {moves.map((m, i) => (
         <Choice key={i}>
           <View style={{ flex: 1 }}>
             {editing === i ? (
-              <TextInput autoFocus value={m} onChangeText={(t) => setMoves(moves.map((x, j) => (j === i ? t : x)))} onBlur={() => setEditing(null)} maxLength={140} style={{ fontSize: 12, fontWeight: '700', color: colors.ink }} accessibilityLabel="Тема" />
-            ) : <Text style={{ fontSize: 12, fontWeight: '700' }}>{m || 'Новая тема'}</Text>}
-            <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{i === 0 ? 'Показывается в новых совпадениях' : 'Можно изменить в любое время'}</Text>
+              <TextInput autoFocus value={m} onChangeText={(txt) => setMoves(moves.map((x, j) => (j === i ? txt : x)))} onBlur={() => setEditing(null)} maxLength={140} style={{ fontSize: 12, fontWeight: '700', color: colors.ink }} accessibilityLabel={t('screens.openingMoves.tema')} />
+            ) : <Text style={{ fontSize: 12, fontWeight: '700' }}>{m || t('screens.openingMoves.novayaTema')}</Text>}
+            <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{i === 0 ? t('screens.openingMoves.pokazyvaetsyaVNovyhSovpade') : t('screens.openingMoves.mozhnoIzmenitVLyuboe')}</Text>
           </View>
-          <LinkBtn label={editing === i ? 'Готово' : 'Изм.'} onPress={() => setEditing(editing === i ? null : i)} />
+          <LinkBtn label={editing === i ? t('screens.openingMoves.gotovo') : t('screens.openingMoves.izm')} onPress={() => setEditing(editing === i ? null : i)} />
         </Choice>
       ))}
-      <Choice onPress={add}><Text style={{ fontSize: 12 }}>＋ Своя тема или фото с подписью</Text></Choice>
-      <Btn label="Сохранить темы" busy={busy} onPress={save} />
-      <Tiny>Начните с темы, которая вам интересна. Сообщение отправляете только вы.</Tiny>
+      <Choice onPress={add}><Text style={{ fontSize: 12 }}>{t('screens.openingMoves.svoyaTemaIliFoto')}</Text></Choice>
+      <Btn label={t('screens.openingMoves.sohranitTemy')} busy={busy} onPress={save} />
+      <Tiny>{t('screens.openingMoves.nachniteSTemyKotoraya')}</Tiny>
     </Screen>
   );
 }

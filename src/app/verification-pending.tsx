@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { BackLink, Screen, StateBlock } from '@/components/ui';
+import { useLang } from '@/lib/lang';
 
 // 21 · Проверка · ожидает
 export default function VerificationPending() {
+  const { t } = useLang();
   return (
     <Screen>
       <BackLink onPress={() => router.navigate('/me')} />
-      <StateBlock icon="◷" title="Проверка ожидает модератора" copy="После проверки статус появится здесь и в вашей анкете. Значок подтверждения не гарантирует безопасность или достоверность всех данных." label="Понятно" onPress={() => router.navigate('/me')} />
+      <StateBlock icon="◷" title={t('screens.verificationPending.title')} copy={t('screens.verificationPending.copy')} label={t('screens.verificationPending.ok')} onPress={() => router.navigate('/me')} />
     </Screen>
   );
 }

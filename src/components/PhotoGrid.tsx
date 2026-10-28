@@ -1,29 +1,31 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { MyMedia } from '@/hooks/usePhotos';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 3-column grid of 6 slots; filled slots show × to remove, empty slots show ＋.
 export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
   items: MyMedia[]; onAdd: () => void; onRemove: (id: string) => void; onCover?: (id: string) => void; busy?: boolean;
 }) {
+  const { t } = useLang();
   return (
     <View style={s.grid}>
       {Array.from({ length: 6 }).map((_, n) => {
         const it = items[n];
         if (!it) {
           return (
-            <Pressable key={n} accessibilityRole="button" accessibilityLabel="Добавить фото или видео" disabled={busy} onPress={onAdd} style={[s.slot, s.add]}>
+            <Pressable key={n} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.add')} disabled={busy} onPress={onAdd} style={[s.slot, s.add]}>
               <Text style={s.plus}>{busy && n === items.length ? '…' : '＋'}</Text>
             </Pressable>
           );
         }
         return (
           <View key={it.id} style={s.slot}>
-            {onCover && n > 0 ? <Pressable style={StyleSheet.absoluteFill} onPress={() => onCover(it.id)} accessibilityRole="button" accessibilityLabel="Сделать обложкой" /> : null}
-            {it.url ? <Image pointerEvents="none" source={{ uri: it.url }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={n === 0 ? 'Обложка профиля' : 'Фото профиля'} /> : null}
-            <Pressable accessibilityRole="button" accessibilityLabel="Удалить" onPress={() => onRemove(it.id)} style={s.x}><Text style={{ color: '#fff' }}>×</Text></Pressable>
-            {it.kind === 'video' ? <View style={s.video}><Text style={{ fontSize: 10 }}>▶ Видео</Text></View> : null}
-            {n === 0 && onCover ? <View style={[s.video, { right: 4, left: undefined }]}><Text style={{ fontSize: 10 }}>Обложка</Text></View> : null}
+            {onCover && n > 0 ? <Pressable style={StyleSheet.absoluteFill} onPress={() => onCover(it.id)} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.makeCover')} /> : null}
+            {it.url ? <Image pointerEvents="none" source={{ uri: it.url }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={n === 0 ? t('components.photoGrid.cover') : t('components.photoGrid.photo')} /> : null}
+            <Pressable accessibilityRole="button" accessibilityLabel={t('components.photoGrid.remove')} onPress={() => onRemove(it.id)} style={s.x}><Text style={{ color: '#fff' }}>×</Text></Pressable>
+            {it.kind === 'video' ? <View style={s.video}><Text style={{ fontSize: 10 }}>{t('components.photoGrid.video')}</Text></View> : null}
+            {n === 0 && onCover ? <View style={[s.video, { right: 4, left: undefined }]}><Text style={{ fontSize: 10 }}>{t('components.photoGrid.coverBadge')}</Text></View> : null}
           </View>
         );
       })}

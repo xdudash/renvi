@@ -6,6 +6,7 @@ import { colors } from '@/theme/tokens';
 import { api } from '@/lib/api';
 import { ONBOARDING, type OnbRoute } from '@/lib/onboarding';
 import { useSession } from '@/lib/session';
+import { useLang } from '@/lib/lang';
 
 export function OnbHeader({ step, kicker, heading, sub }: { step: number; kicker: string; heading: string; sub: string }) {
   return (
@@ -25,6 +26,7 @@ export function OnbHeader({ step, kicker, heading, sub }: { step: number; kicker
 
 // Saves the patch for this step and the progress pointer, then moves on. Progress survives app restarts.
 export function useStepSave(route: OnbRoute) {
+  const { t } = useLang();
   const toast = useToast();
   const { refresh } = useSession();
   const [busy, setBusy] = useState(false);
@@ -36,13 +38,13 @@ export function useStepSave(route: OnbRoute) {
       await refresh();
       router.push((nextOverride ?? `/${ONBOARDING[idx + 1]}`) as never);
     } catch (e: any) {
-      toast(e?.message === 'must be 18+' ? 'Участникам RENVI должно быть 18 лет или больше.' : 'Не удалось сохранить. Повторите попытку.');
+      toast(e?.message === 'must be 18+' ? t('components.Onboarding.uchastnikamRenviDolzhnoByt') : t('components.Onboarding.neUdalosSohranitPovtorite'));
     } finally {
       setBusy(false);
     }
   };
   const saveDraftAndExit = async (patch: Record<string, unknown>) => {
-    try { await api.saveOnboarding({ ...patch, onboarding_step: idx }); toast('Черновик анкеты сохранён'); } catch { toast('Не удалось сохранить черновик'); }
+    try { await api.saveOnboarding({ ...patch, onboarding_step: idx }); toast(t('components.Onboarding.chernovikAnketySohranen')); } catch { toast(t('components.Onboarding.neUdalosSohranitChernovik')); }
     router.replace('/');
   };
   return { save, busy, saveDraftAndExit };

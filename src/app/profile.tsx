@@ -8,9 +8,11 @@ import { useDiscover } from '@/lib/discover';
 import { useSession, useTierLimits } from '@/lib/session';
 import { intentChip } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 26 · Полная анкета
 export default function Profile() {
+  const { t } = useLang();
   const params = useLocalSearchParams<{ id?: string; self?: string }>();
   const { session } = useSession();
   const id = params.self ? session?.user.id : params.id;
@@ -22,14 +24,14 @@ export default function Profile() {
 
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
   if (error) return <Screen><BackLink /><ErrorRetryState onRetry={reload} /></Screen>;
-  if (!card) return <Screen><BackLink /><StateBlock icon="↗" title="Профиль недоступен" copy="Анкета скрыта или больше не показывается." label="К знакомствам" onPress={() => router.navigate('/discover')} /></Screen>;
+  if (!card) return <Screen><BackLink /><StateBlock icon="↗" title={t('screens.profile.profilNedostupen')} copy={t('screens.profile.anketaSkrytaIliBolshe')} label={t('screens.profile.kZnakomstvam')} onPress={() => router.navigate('/discover')} /></Screen>;
 
   const onSpark = async () => {
     if (d.likesUsed >= Number(limits?.daily_likes ?? 20)) { router.push('/like-limit'); return; }
     try {
-      const r = await d.spark(card, { kind: 'profile', ref: null, label: 'Фото из анкеты' }, null);
+      const r = await d.spark(card, { kind: 'profile', ref: null, label: t('screens.profile.fotoIzAnkety') }, null);
       if (!r) return;
-      toast('Искра отправлена');
+      toast(t('screens.profile.iskraOtpravlena'));
       router.replace(r.status === 'match' ? '/match' : '/discover');
     } catch { router.push('/error-retry'); }
   };
@@ -39,12 +41,12 @@ export default function Profile() {
   return (
     <Screen>
       <BackLink />
-      <ProfileHero path={card.photos[0]?.path} count={card.photos.length} verified={card.verified} label={`Фото профиля ${card.display_name}`} overlay={`Фото　1 / ${card.photos.length}　›`} />
+      <ProfileHero path={card.photos[0]?.path} count={card.photos.length} verified={card.verified} label={t('screens.profile.fotoProfilyaDisplayName', { display_name: card.display_name })} overlay={t('screens.profile.foto1Length', { length: card.photos.length })} />
       <ProfileMeta card={card} />
-      {card.bio ? (<View><Text style={st.section}>О человеке</Text><Text style={st.lede}>{card.bio}</Text></View>) : null}
+      {card.bio ? (<View><Text style={st.section}>{t('screens.profile.oCheloveke')}</Text><Text style={st.lede}>{card.bio}</Text></View>) : null}
       {card.interests.length ? (
         <View>
-          <Text style={st.section}>Общие интересы</Text>
+          <Text style={st.section}>{t('screens.profile.obschieInteresy')}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={x} tone="red" />)}</View>
         </View>
       ) : null}
@@ -53,29 +55,29 @@ export default function Profile() {
           {rest.map((p, i) => <MediaThumb key={p.id} path={p.path} video={p.kind === 'video'} onPress={() => router.push({ pathname: '/media-viewer', params: { id: card.profile_id, at: String(i + 1) } })} />)}
         </View>
       ) : null}
-      {prompt ? <PromptCard question={prompt.question} answer={prompt.answer} onReply={isSelf ? undefined : () => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: `Ответ: ${prompt.answer}` }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); }} /> : null}
+      {prompt ? <PromptCard question={prompt.question} answer={prompt.answer} onReply={isSelf ? undefined : () => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.profile.otvetAnswer', { answer: prompt.answer }) }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); }} /> : null}
       {card.music_title ? (
         <Card>
-          <Eyebrow>МУЗЫКА СЕЙЧАС</Eyebrow>
+          <Eyebrow>{t('screens.profile.muzykaSeychas')}</Eyebrow>
           <Row style={{ marginTop: 10 }}>
             <Text style={{ fontSize: 22, color: colors.red }}>♫</Text>
-            <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{card.music_title}</Text><Text style={st.sub}>Открыть фрагмент</Text></View>
-            <IconButton label="Открыть фрагмент" text="▶" onPress={() => card.music_url ? Linking.openURL(card.music_url) : toast('Ссылка на трек не добавлена')} />
+            <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13 }}>{card.music_title}</Text><Text style={st.sub}>{t('screens.profile.otkrytFragment')}</Text></View>
+            <IconButton label={t('screens.profile.otkrytFragment')} text="▶" onPress={() => card.music_url ? Linking.openURL(card.music_url) : toast(t('screens.profile.ssylkaNaTrekNe'))} />
           </Row>
         </Card>
       ) : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <View style={st.tile}><Eyebrow>ЦЕЛЬ</Eyebrow><Text style={st.bold}>{intentChip(card.intent)}</Text></View>
-        <View style={st.tile}><Eyebrow>ЛОКАЦИЯ</Eyebrow><Text style={st.bold}>{card.city} · {card.distance}</Text></View>
+        <View style={st.tile}><Eyebrow>{t('screens.profile.tsel')}</Eyebrow><Text style={st.bold}>{intentChip(card.intent)}</Text></View>
+        <View style={st.tile}><Eyebrow>{t('screens.profile.lokatsiya')}</Eyebrow><Text style={st.bold}>{card.city} · {card.distance}</Text></View>
       </View>
       {isSelf ? null : (
         <>
           <ActionSet
-            onPass={async () => { try { await d.pass(); } catch {} toast('Профиль пропущен'); router.replace('/discover'); }}
-            onComment={() => { d.setTarget({ kind: 'profile', ref: null, label: 'Фото из анкеты' }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); }}
+            onPass={async () => { try { await d.pass(); } catch {} toast(t('screens.profile.profilPropuschen')); router.replace('/discover'); }}
+            onComment={() => { d.setTarget({ kind: 'profile', ref: null, label: t('screens.profile.fotoIzAnkety') }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); }}
             onSpark={onSpark}
           />
-          <LinkBtn label="⋯ Пожаловаться или заблокировать" onPress={() => router.push({ pathname: '/safety', params: { profile: card.profile_id } })} />
+          <LinkBtn label={t('screens.profile.pozhalovatsyaIliZablokirov')} onPress={() => router.push({ pathname: '/safety', params: { profile: card.profile_id } })} />
         </>
       )}
     </Screen>

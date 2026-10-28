@@ -7,9 +7,11 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 46 · Фото · взаимное разрешение
 export default function PhotoConsent() {
+  const { t } = useLang();
   const { match } = useLocalSearchParams<{ match: string }>();
   const toast = useToast();
   const ctx = useAsync(() => api.matchContext(match), [match]);
@@ -23,21 +25,21 @@ export default function PhotoConsent() {
     try {
       await api.photoConsent(match, !mine);
       if (!mine && them) { router.replace({ pathname: '/chat', params: { match } }); return; }
-      toast(!mine ? 'Ждём взаимного согласия' : 'Ваше разрешение выключено');
+      toast(!mine ? t('screens.photoConsent.waiting') : t('screens.photoConsent.off'));
       ctx.reload();
-    } catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+    } catch { toast(t('screens.photoConsent.saveFailed')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="chats">
       <BackLink />
-      <Title kicker="ОБМЕН МЕДИА" heading="Фото — только по взаимному согласию" sub="Пока вы оба не разрешили обмен, фото нельзя отправить в чат." />
+      <Title kicker={t('screens.photoConsent.kicker')} heading={t('screens.photoConsent.heading')} sub={t('screens.photoConsent.sub')} />
       <Card>
-        <Row><Avatar uri={items[0]?.url} /><View><Text style={{ fontWeight: '700', fontSize: 13 }}>Ваше разрешение</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{mine ? 'включено' : 'ещё не включено'}</Text></View></Row>
+        <Row><Avatar uri={items[0]?.url} /><View><Text style={{ fontWeight: '700', fontSize: 13 }}>{t('screens.photoConsent.yours')}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{mine ? t('screens.photoConsent.enabled') : t('screens.photoConsent.notEnabled')}</Text></View></Row>
         <Line />
-        <Row><Avatar uri={theirs} /><View><Text style={{ fontWeight: '700', fontSize: 13 }}>Разрешение собеседника</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{them ? 'включено' : 'ожидает подтверждения'}</Text></View></Row>
+        <Row><Avatar uri={theirs} /><View><Text style={{ fontWeight: '700', fontSize: 13 }}>{t('screens.photoConsent.theirs')}</Text><Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{them ? t('screens.photoConsent.enabled') : t('screens.photoConsent.pending')}</Text></View></Row>
       </Card>
-      <Btn label={mine ? 'Выключить своё разрешение' : 'Разрешить обмен фото'} busy={busy} onPress={toggle} />
-      <Btn kind="ghost" label="Не сейчас" onPress={() => router.back()} />
+      <Btn label={mine ? t('screens.photoConsent.disableMine') : t('screens.photoConsent.allow')} busy={busy} onPress={toggle} />
+      <Btn kind="ghost" label={t('screens.photoConsent.notNow')} onPress={() => router.back()} />
     </Screen>
   );
 }
