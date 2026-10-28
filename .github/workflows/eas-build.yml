@@ -1,0 +1,146 @@
+name: EAS Build and Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: What to run
+        type: choice
+        options: [build, update]
+        default: build
+      platform:
+        description: Platform
+        type: choice
+        options: [all, ios, android]
+        default: all
+      profile:
+        description: Build profile (build only)
+        type: choice
+        options: [development, preview, production]
+        default: preview
+      channel:
+        description: Update branch (update only)
+        type: choice
+        options: [preview, production]
+        default: preview
+      message:
+        description: Update message (update only)
+        type: string
+        default: ""
+
+env:
+  # Public values: repository VARIABLES, not secrets.
+  EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+  EXPO_PUBLIC_REVENUECAT_IOS_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_IOS_KEY }}
+  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
+  EXPO_PUBLIC_APP_URL: ${{ vars.EXPO_PUBLIC_APP_URL }}
+
+jobs:
+  build:
+    name: EAS build
+    if: inputs.job == 'build'
+    runs-on: ubuntu-latest
+    # Production builds wait for approval when the production environment has reviewers.
+    environment: ${{ inputs.profile == 'production' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required config
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          missing=0
+          [ -z "$EXPO_TOKEN" ] && { echo "::error::Secret EXPO_TOKEN is not set."; missing=1; }
+          for name in EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY; do
+            [ -z "${!name}" ] && { echo "::error::Repository variable $name is not set."; missing=1; }
+          done
+          if ! grep -q '"projectId"' app.json; then
+            echo "::error::app.json has no extra.eas.projectId. Run 'npx eas-cli@latest init' once locally and commit app.json (see docs/SETUP.md)."
+            missing=1
+          fi
+          exit $missing
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      # The build runs on EAS servers, which do not see this runner's env.
+      # Copy the public EXPO_PUBLIC_* values into the chosen profile's env in eas.json
+      # (CI checkout only, never committed).
+      - name: Inject public env into eas.json
+        env:
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          jq --arg p "$PROFILE" \
+            --arg a "$EXPO_PUBLIC_SUPABASE_URL" \
+            --arg b "$EXPO_PUBLIC_SUPABASE_ANON_KEY" \
+            --arg c "$EXPO_PUBLIC_REVENUECAT_IOS_KEY" \
+            --arg d "$EXPO_PUBLIC_REVENUECAT_ANDROID_KEY" \
+            --arg e "$EXPO_PUBLIC_APP_URL" \
+            '.build[$p].env = {
+               EXPO_PUBLIC_SUPABASE_URL: $a,
+               EXPO_PUBLIC_SUPABASE_ANON_KEY: $b,
+               EXPO_PUBLIC_REVENUECAT_IOS_KEY: $c,
+               EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: $d,
+               EXPO_PUBLIC_APP_URL: $e
+             }' eas.json > eas.ci.json
+          mv eas.ci.json eas.json
+
+      - name: Start EAS build
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          PROFILE: ${{ inputs.profile }}
+        run: npx eas-cli@latest build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
+
+  update:
+    name: EAS Update (OTA)
+    if: inputs.job == 'update'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.channel == 'production' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required config
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          missing=0
+          [ -z "$EXPO_TOKEN" ] && { echo "::error::Secret EXPO_TOKEN is not set."; missing=1; }
+          if ! grep -q '"projectId"' app.json; then
+            echo "::error::app.json has no extra.eas.projectId. Run 'npx eas-cli@latest init' and 'npx eas-cli@latest update:configure' once locally and commit."
+            missing=1
+          fi
+          if ! grep -q '"expo-updates"' package.json; then
+            echo "::error::expo-updates is not installed. Run 'npx expo install expo-updates' and commit."
+            missing=1
+          fi
+          exit $missing
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      # The JS bundle is created on this runner, so the workflow-level EXPO_PUBLIC_* env applies.
+      - name: Publish update
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          BRANCH: ${{ inputs.channel }}
+          MESSAGE: ${{ inputs.message || github.sha }}
+        run: npx eas-cli@latest update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive

@@ -1,0 +1,75 @@
+name: Deploy Supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_migrations:
+        description: Apply database migrations (supabase db push)
+        type: boolean
+        default: true
+      deploy_functions:
+        description: Deploy all Edge Functions
+        type: boolean
+        default: true
+  # Manual only on purpose: production migrations are applied by a person pressing "Run workflow".
+
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Migrations and Edge Functions
+    runs-on: ubuntu-latest
+    # Add required reviewers in Settings -> Environments -> production
+    environment: production
+    permissions:
+      contents: read
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          missing=0
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing secret::Repository secret $name is not set (Settings -> Secrets and variables -> Actions)."
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Dry run of migrations
+        if: github.event_name == 'push' || inputs.push_migrations
+        run: supabase db push --dry-run
+
+      - name: Apply migrations
+        if: github.event_name == 'push' || inputs.push_migrations
+        run: supabase db push
+
+      - name: Deploy Edge Functions
+        if: github.event_name == 'push' || inputs.deploy_functions
+        run: |
+          set -euo pipefail
+          found=0
+          for dir in supabase/functions/*/; do
+            name=$(basename "$dir")
+            [ "$name" = "_shared" ] && continue
+            [ -f "${dir}index.ts" ] || continue
+            echo "::group::Deploy $name"
+            supabase functions deploy "$name" --project-ref "$SUPABASE_PROJECT_REF"
+            echo "::endgroup::"
+            found=1
+          done
+          if [ "$found" = 0 ]; then echo "No functions found"; fi
