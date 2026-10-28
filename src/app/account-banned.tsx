@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { Btn, Screen, StateBlock } from '@/components/ui';
+import { useLang } from '@/lib/lang';
 
 // 94 · Аккаунт заблокирован
 export default function AccountBanned() {
+  const { t } = useLang();
   return (
     <Screen>
-      <StateBlock icon="×" title="Аккаунт заблокирован" copy="Здесь будут причина, дата решения и ссылка на обжалование. Не прячем решение за обращением в поддержку." label="Подать апелляцию" onPress={() => router.push('/appeal')} />
-      <Btn kind="ghost" label="Скачать копию данных" onPress={() => router.push('/data-export')} />
+      <StateBlock icon="×" title={t('screens.accountBanned.akkauntZablokirovan')} copy={t('screens.accountBanned.zdesBudutPrichinaData')} label={t('screens.accountBanned.podatApellyatsiyu')} onPress={() => router.push('/appeal')} />
+      <Btn kind="ghost" label={t('screens.accountBanned.skachatKopiyuDannyh')} onPress={() => router.push('/data-export')} />
     </Screen>
   );
 }

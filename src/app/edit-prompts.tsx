@@ -6,9 +6,11 @@ import { PromptPicker } from '@/components/PromptPicker';
 import { PROMPTS } from '@/lib/catalog';
 import { useMyPrompts, type MyPrompt } from '@/hooks/usePrompts';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 // 66 · Редактор ответов
 export default function EditPrompts() {
+  const { t } = useLang();
   const toast = useToast();
   const { items, saveAll } = useMyPrompts();
   const [edited, setDraft] = useState<MyPrompt[] | null>(null);
@@ -16,28 +18,28 @@ export default function EditPrompts() {
   const draft: MyPrompt[] = edited ?? items;
   const used = draft.map((d) => d.question_key);
   const add = () => {
-    if (draft.length >= 3) { toast('Можно добавить до трёх ответов'); return; }
+    if (draft.length >= 3) { toast(t('screens.editPrompts.mozhnoDobavitDoTreh')); return; }
     const q = PROMPTS.find((p) => !used.includes(p));
     if (q) setDraft([...draft, { question_key: q, answer: '', position: draft.length }]);
   };
   const save = async () => {
     setBusy(true);
-    try { await saveAll(draft); toast('Изменения сохранены'); router.navigate('/me'); } catch { toast('Не удалось сохранить'); } finally { setBusy(false); }
+    try { await saveAll(draft); toast(t('screens.editPrompts.izmeneniyaSohraneny')); router.navigate('/me'); } catch { toast(t('screens.editPrompts.neUdalosSohranit')); } finally { setBusy(false); }
   };
   return (
     <Screen tabs="me">
       <BackLink />
-      <Title kicker="ВОПРОСЫ" heading="Пусть разговор начнётся" sub="Добавьте до 3 ответов. Каждый можно прокомментировать искрой." />
+      <Title kicker={t('screens.editPrompts.voprosy')} heading={t('screens.editPrompts.pustRazgovorNachnetsya')} sub={t('screens.editPrompts.dobavteDo3Otvetov')} />
       {draft.map((d, i) => (
         <View key={i} style={{ backgroundColor: colors.blush, borderRadius: 17, padding: 18, marginVertical: 10 }}>
-          <Eyebrow>ВОПРОС</Eyebrow>
+          <Eyebrow>{t('screens.editPrompts.vopros')}</Eyebrow>
           <PromptPicker value={d.question_key} exclude={used} onChange={(q) => setDraft(draft.map((x, j) => (j === i ? { ...x, question_key: q } : x)))} />
           <Field value={d.answer} onChangeText={(a) => setDraft(draft.map((x, j) => (j === i ? { ...x, answer: a } : x)))} multiline maxLength={300} style={{ minHeight: 70, textAlignVertical: 'top' }} />
-          <LinkBtn label="Удалить ответ" onPress={() => { setDraft(draft.filter((_, j) => j !== i)); toast('Ответ удалён'); }} />
+          <LinkBtn label={t('screens.editPrompts.udalitOtvet')} onPress={() => { setDraft(draft.filter((_, j) => j !== i)); toast(t('screens.editPrompts.otvetUdalen')); }} />
         </View>
       ))}
-      <Choice onPress={add}><Text style={{ fontSize: 12 }}>＋ Добавить вопрос</Text><Text style={{ fontSize: 10, color: colors.sub }}>до 3</Text></Choice>
-      <Btn label="Сохранить ответы" busy={busy} onPress={save} />
+      <Choice onPress={add}><Text style={{ fontSize: 12 }}>{t('screens.editPrompts.dobavitVopros')}</Text><Text style={{ fontSize: 10, color: colors.sub }}>{t('screens.editPrompts.do3')}</Text></Choice>
+      <Btn label={t('screens.editPrompts.sohranitOtvety')} busy={busy} onPress={save} />
     </Screen>
   );
 }

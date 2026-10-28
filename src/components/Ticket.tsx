@@ -2,12 +2,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { BrandMark } from './BrandMark';
 import { Chip } from './ui';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 export function Ticket({ place, day, time, status, tone }: { place: string; day: string; time: string; status: string; tone: 'amber' | 'green' | 'plain' }) {
+  const { t } = useLang();
   return (
     <View style={s.ticket}>
       <BrandMark size={34} />
-      <Text style={s.title}>{'Кофе?\nДавайте увидимся.'}</Text>
+      <Text style={s.title}>{t('components.Ticket.kofeDavayteUvidimsya')}</Text>
       <Text style={s.meta}>{place}</Text>
       <View style={s.line} />
       <View style={s.between}><Text style={s.b}>{day}</Text><Text style={s.b}>{time}</Text></View>

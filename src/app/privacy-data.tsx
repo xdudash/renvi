@@ -1,26 +1,28 @@
 import { router } from 'expo-router';
 import { BackLink, Card, Eyebrow, Screen, Tiny, Title } from '@/components/ui';
 import { Row } from '@/components/Row';
+import { useLang } from '@/lib/lang';
 
 // 71 · Приватность и данные
 export default function PrivacyData() {
+  const { t } = useLang();
   return (
     <Screen tabs="me">
       <BackLink onPress={() => router.navigate('/me')} />
-      <Title kicker="ПРИВАТНОСТЬ" heading="Данные под вашим контролем" sub="Показываем понятные настройки без скрытых согласий." />
+      <Title kicker={t('screens.privacyData.privatnost')} heading={t('screens.privacyData.dannyePodVashimKontrolem')} sub={t('screens.privacyData.pokazyvaemPonyatnyeNastroy')} />
       <Card tight>
-        <Eyebrow>ВАШИ ВЫБОРЫ</Eyebrow>
-        <Row label="Видимость анкеты" sub="Пауза · активность · инкогнито" onPress={() => router.push('/privacy-visibility')} />
-        <Row label="Геолокация" sub="Город · примерное расстояние" onPress={() => router.push('/location-permission')} />
-        <Row label="Заблокированные профили" onPress={() => router.push('/blocked')} />
+        <Eyebrow>{t('screens.privacyData.vashiVybory')}</Eyebrow>
+        <Row label={t('screens.privacyData.vidimostAnkety')} sub={t('screens.privacyData.pauzaAktivnostInkognito')} onPress={() => router.push('/privacy-visibility')} />
+        <Row label={t('screens.privacyData.geolokatsiya')} sub={t('screens.privacyData.gorodPrimernoeRasstoyanie')} onPress={() => router.push('/location-permission')} />
+        <Row label={t('screens.privacyData.zablokirovannyeProfili')} onPress={() => router.push('/blocked')} />
       </Card>
       <Card tight>
-        <Eyebrow>ВАШИ ДАННЫЕ</Eyebrow>
-        <Row label="Получить копию данных" sub="Запросить файл в переносимом формате" onPress={() => router.push('/data-export')} />
-        <Row label="Удалить аккаунт" sub="Удаление без повторного предложения подписки" onPress={() => router.push('/delete-account')} />
-        <Row label="Согласия и документы" onPress={() => router.push('/legal')} />
+        <Eyebrow>{t('screens.privacyData.vashiDannye')}</Eyebrow>
+        <Row label={t('screens.privacyData.poluchitKopiyuDannyh')} sub={t('screens.privacyData.zaprositFaylVPerenosimom')} onPress={() => router.push('/data-export')} />
+        <Row label={t('screens.privacyData.udalitAkkaunt')} sub={t('screens.privacyData.udalenieBezPovtornogoPredl')} onPress={() => router.push('/delete-account')} />
+        <Row label={t('screens.privacyData.soglasiyaIDokumenty')} onPress={() => router.push('/legal')} />
       </Card>
-      <Tiny>Собираем только данные, необходимые для работы выбранных функций. Дизайн экрана не заменяет юридическую проверку политики и оснований обработки.</Tiny>
+      <Tiny>{t('screens.privacyData.sobiraemTolkoDannyeNeobhod')}</Tiny>
     </Screen>
   );
 }

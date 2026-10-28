@@ -3,15 +3,17 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Field, Screen, Title, useToast } from '@/components/ui';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { useLang } from '@/lib/lang';
 
 // 88 · Обжаловать решение
 export default function Appeal() {
+  const { t } = useLang();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const toast = useToast();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const submit = async () => {
-    if (text.trim().length < 5) { toast('Коротко опишите причину пересмотра'); return; }
+    if (text.trim().length < 5) { toast(t('screens.appeal.korotkoOpishitePrichinuPer')); return; }
     setBusy(true);
     try {
       let reportId = id;
@@ -23,17 +25,17 @@ export default function Appeal() {
       }
       if (reportId) await api.appeal(reportId, text.trim());
       else await api.support('appeal', text.trim(), false);
-      toast('Апелляция зарегистрирована');
+      toast(t('screens.appeal.apellyatsiyaZaregistrirova'));
       router.replace(reportId ? { pathname: '/report-status', params: { id: reportId } } : '/support-help');
-    } catch { toast('Не удалось отправить апелляцию'); } finally { setBusy(false); }
+    } catch { toast(t('screens.appeal.neUdalosOtpravitApellyatsi')); } finally { setBusy(false); }
   };
   return (
     <Screen>
       <BackLink />
-      <Title kicker="АПЕЛЛЯЦИЯ" heading="Попросить пересмотр" sub="Коротко объясните, с каким пунктом решения вы не согласны." />
-      <Field value={text} onChangeText={setText} multiline maxLength={1000} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder="Опишите причину пересмотра" />
-      <Btn label="Отправить апелляцию" busy={busy} onPress={submit} />
-      <Btn kind="ghost" label="Назад к решению" onPress={() => router.back()} />
+      <Title kicker={t('screens.appeal.apellyatsiya')} heading={t('screens.appeal.poprositPeresmotr')} sub={t('screens.appeal.korotkoObyasniteSKakim')} />
+      <Field value={text} onChangeText={setText} multiline maxLength={1000} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder={t('screens.appeal.opishitePrichinuPeresmotra')} />
+      <Btn label={t('screens.appeal.otpravitApellyatsiyu')} busy={busy} onPress={submit} />
+      <Btn kind="ghost" label={t('screens.appeal.nazadKResheniyu')} onPress={() => router.back()} />
     </Screen>
   );
 }

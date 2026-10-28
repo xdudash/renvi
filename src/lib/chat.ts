@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 import { api, type MessageRow } from './api';
+import { useLang } from './lang';
 
 export type ChatItem = MessageRow & { state: 'sent' | 'sending' | 'failed' };
 type Pending = { client_id: string; match_id: string; body: string | null; photo_path: string | null; created_at: string };
@@ -15,6 +16,7 @@ async function readOutbox(): Promise<Pending[]> {
 async function writeOutbox(list: Pending[]) { await AsyncStorage.setItem(OUTBOX, JSON.stringify(list)); }
 
 export function useChat(matchId: string | undefined, myId: string | undefined) {
+  const { t } = useLang();
   const [items, setItems] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
   const applyLatest = useCallback((r: { rows: ChatItem[]; older: boolean }) => {
     merge(r.rows); setHasOlder(r.older); setError(null); setLoading(false);
   }, [merge]);
-  const failLatest = useCallback(() => { setError('Не удалось загрузить'); setLoading(false); }, []);
+  const failLatest = useCallback(() => { setError(t('common.loadFailed')); setLoading(false); }, [t]);
   const load = useCallback(() => fetchLatest().then(applyLatest, failLatest), [fetchLatest, applyLatest, failLatest]);
 
   // Missed messages are fetched again after reconnecting (load() on resubscribe).

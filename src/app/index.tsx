@@ -11,7 +11,7 @@ import { nextOnboardingRoute } from '@/lib/onboarding';
 // 01 · Обложка (welcome)
 export default function Welcome() {
   const { ready, session, profile } = useSession();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
 
   useEffect(() => {
     if (!ready || !session) return;
@@ -22,24 +22,24 @@ export default function Welcome() {
 
   return (
     <Screen>
-      {draft ? <Btn kind="secondary" label="Продолжить анкету" onPress={() => router.push(draft as never)} /> : null}
+      {draft ? <Btn kind="secondary" label={t('screens.index.prodolzhitAnketu')} onPress={() => router.push(draft as never)} /> : null}
       <View style={s.brandRow}>
         <BrandMark size={55} />
         <Text style={s.wordmark}>renvi</Text>
       </View>
-      <Text style={s.heading} accessibilityRole="header">{'Пусть будет\nвзаимно.'}</Text>
-      <Text style={s.lede}>{'Начните с того, что зацепило.\nПродолжите настоящим разговором.'}</Text>
+      <Text style={s.heading} accessibilityRole="header">{t('screens.index.pustBudetVzaimno')}</Text>
+      <Text style={s.lede}>{t('screens.index.nachniteSTogoChto')}</Text>
       <Image
         resizeMode="cover"
         source={require('@/assets/images/welcome-hero.png')}
         style={s.hero}
-        accessibilityLabel="Вымышленная взрослая пара разговаривает в городской кофейне"
+        accessibilityLabel={t('screens.index.vymyshlennayaVzroslayaPara')}
       />
-      <Text style={s.signoff}>Make it mutual.　·　Знакомства 18+</Text>
-      <Btn label="Начать знакомство" onPress={() => router.push('/signup')} />
-      <Btn kind="secondary" label="У меня уже есть аккаунт" onPress={() => router.push('/signin')} />
-      <LinkBtn center label={`${LANGUAGE_NAMES[lang]} · изменить язык`} onPress={() => router.push('/language')} />
-      <Tiny center>Создавая аккаунт, вы отдельно подтвердите возраст, Условия и необходимые согласия.</Tiny>
+      <Text style={s.signoff}>{t('screens.index.makeItMutualZnakomstva')}</Text>
+      <Btn label={t('screens.index.nachatZnakomstvo')} onPress={() => router.push('/signup')} />
+      <Btn kind="secondary" label={t('screens.index.uMenyaUzheEst')} onPress={() => router.push('/signin')} />
+      <LinkBtn center label={t('screens.index.vIzmenitYazyk', { language: LANGUAGE_NAMES[lang] })} onPress={() => router.push('/language')} />
+      <Tiny center>{t('screens.index.sozdavayaAkkauntVyOtdelno')}</Tiny>
     </Screen>
   );
 }

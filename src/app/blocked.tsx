@@ -6,11 +6,13 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { supabase } from '@/lib/supabase';
 import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
+import { useLang } from '@/lib/lang';
 
 type BlockedRow = { blocked_id: string; created_at: string };
 
 // 78 · Заблокированные профили
 export default function Blocked() {
+  const { t } = useLang();
   const toast = useToast();
   const { data, loading, reload } = useAsync(async () => {
     const { data: rows, error } = await supabase.from('blocks').select('blocked_id, created_at').order('created_at', { ascending: false });
@@ -20,20 +22,21 @@ export default function Blocked() {
   return (
     <Screen>
       <BackLink onPress={() => router.navigate('/privacy-data')} />
-      <Title kicker="ЗАБЛОКИРОВАННЫЕ" heading="Кого вы исключили" sub="Профили из этого списка не увидят вашу анкету и не смогут написать." />
+      <Title kicker={t('screens.blocked.zablokirovannye')} heading={t('screens.blocked.kogoVyIsklyuchili')} sub={t('screens.blocked.profiliIzEtogoSpiska')} />
       {loading ? <Loading /> : (
         <Card>
           {(data ?? []).length ? (data ?? []).map((b) => (
-            <BlockedItem key={b.blocked_id} row={b} onUnblock={async () => { try { await api.unblock(b.blocked_id); toast('Профиль разблокирован'); reload(); } catch { toast('Не удалось разблокировать'); } }} />
-          )) : <Text style={{ fontSize: 12, color: colors.sub }}>Вы никого не блокировали.</Text>}
+            <BlockedItem key={b.blocked_id} row={b} onUnblock={async () => { try { await api.unblock(b.blocked_id); toast(t('screens.blocked.profilRazblokirovan')); reload(); } catch { toast(t('screens.blocked.neUdalosRazblokirovat')); } }} />
+          )) : <Text style={{ fontSize: 12, color: colors.sub }}>{t('screens.blocked.vyNikogoNeBlokirovali')}</Text>}
         </Card>
       )}
-      <Btn kind="ghost" label="Вернуться в приватность" onPress={() => router.navigate('/privacy-data')} />
+      <Btn kind="ghost" label={t('screens.blocked.vernutsyaVPrivatnost')} onPress={() => router.navigate('/privacy-data')} />
     </Screen>
   );
 }
 
 function BlockedItem({ row, onUnblock }: { row: BlockedRow; onUnblock: () => void }) {
+  const { t } = useLang();
   const card = useAsync(() => api.profileCard(row.blocked_id), [row.blocked_id]);
   const url = useSignedUrl(card.data?.photos[0]?.path);
   const when = new Date(row.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
@@ -42,11 +45,11 @@ function BlockedItem({ row, onUnblock }: { row: BlockedRow; onUnblock: () => voi
       <Pressable style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 6 }}>
         <Avatar uri={url} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontWeight: '700', fontSize: 13 }}>{card.data ? `${card.data.display_name}, ${card.data.age}` : 'Профиль'}</Text>
-          <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>Заблокирован {when}</Text>
+          <Text style={{ fontWeight: '700', fontSize: 13 }}>{card.data ? `${card.data.display_name}, ${card.data.age}` : t('screens.blocked.profil')}</Text>
+          <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.blocked.zablokirovanWhen', { when })}</Text>
         </View>
       </Pressable>
-      <LinkBtn label="Разблокировать" onPress={onUnblock} />
+      <LinkBtn label={t('screens.blocked.razblokirovat')} onPress={onUnblock} />
     </View>
   );
 }
