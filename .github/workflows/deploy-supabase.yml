@@ -20,7 +20,7 @@ concurrency:
 jobs:
   deploy:
     name: Migrations and Edge Functions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Add required reviewers in Settings -> Environments -> production
     environment: production
     permissions:
@@ -45,7 +45,8 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned (same version as e2e.yml): production migrations must not run on an untested CLI release.
+          version: 2.120.0
 
       - name: Link project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
