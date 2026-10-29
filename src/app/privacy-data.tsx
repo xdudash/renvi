@@ -1,3 +1,4 @@
+import { AnalyticsConsent } from '@/components/AnalyticsConsent';
 import { router } from 'expo-router';
 import { BackLink, Card, Eyebrow, Screen, Tiny, Title } from '@/components/ui';
 import { Row } from '@/components/Row';
@@ -22,6 +23,7 @@ export default function PrivacyData() {
         <Row label={t('screens.privacyData.udalitAkkaunt')} sub={t('screens.privacyData.udalenieBezPovtornogoPredl')} onPress={() => router.push('/delete-account')} />
         <Row label={t('screens.privacyData.soglasiyaIDokumenty')} onPress={() => router.push('/legal')} />
       </Card>
+      <AnalyticsConsent />
       <Tiny>{t('screens.privacyData.sobiraemTolkoDannyeNeobhod')}</Tiny>
     </Screen>
   );

@@ -7,6 +7,7 @@ import { HCAPTCHA_SITE_KEY } from '@/lib/captcha';
 import { supabase } from '@/lib/supabase';
 import { pendingInvite } from '@/lib/referral';
 import { getPendingSignup, setPendingSignup } from '@/lib/pendingSignup';
+import { confirmationRedirectUrl } from '@/lib/confirmationAuth';
 import { useLang } from '@/lib/lang';
 
 const html = (key: string) => `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -27,13 +28,14 @@ export default function Captcha() {
     if (!token) { setError(t('screens.captcha.confirmHuman')); return; }
     setBusy(true);
     const { email, password } = creds;
-    const { data, error: err } = await supabase.auth.signUp({
-      email, password, options: { captchaToken: token, data: { invite_code: await pendingInvite() } },
+    const { error: err } = await supabase.auth.signUp({
+      email, password, options: { emailRedirectTo: confirmationRedirectUrl(), captchaToken: token, data: { invite_code: await pendingInvite() } },
     });
     setBusy(false);
     if (err) { setError(t('screens.captcha.failed')); return; }
     setPendingSignup(null);
-    router.replace(data.session ? '/ob-age' : { pathname: '/confirmation', params: { email } });
+    await supabase.auth.signOut();
+    router.replace({ pathname: '/confirmation', params: { email } });
   };
   return (
     <Screen>

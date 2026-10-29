@@ -61,7 +61,7 @@ export function Screen({ children, scroll = true, tabs, style }: {
   const compactBar = path === '/';
   const showTabs = !!session && !NO_TABS.includes(path) && !path.startsWith('/ob-') && !path.startsWith('/invite');
   const body = scroll ? (
-    <ScrollView contentContainerStyle={[styles.main, style]} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.main, style]} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>{children}</ScrollView>
   ) : (
     <View style={[styles.main, styles.mainFill, style]}>{children}</View>
   );
@@ -203,7 +203,7 @@ export function Btn({ label, onPress, kind = 'primary', disabled, busy, accessib
 export function LinkBtn({ label, onPress, center, icon }: { label: string; onPress: () => void; center?: boolean; icon?: IconName }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.linkBtn, center && { alignSelf: 'stretch' }]} hitSlop={8}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: center ? 'center' : 'flex-start' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: center ? 'center' : 'flex-start', minWidth: 0 }}>
         <Text style={[styles.linkBtnText, center && { textAlign: 'center' }]}>{label}</Text>
         {icon ? <UiIcon name={icon} size={16} color={colors.redDark} /> : null}
       </View>
@@ -330,9 +330,13 @@ export function Sheet({ visible, onClose, children }: { visible: boolean; onClos
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel={t('common.close')}>
         <Pressable style={styles.sheet} onPress={() => {}}>
+        <SafeAreaView edges={['bottom']} style={{ flexShrink: 1 }}>
           <View style={styles.grabber} />
-          {children}
+          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets style={{ flexShrink: 1 }}>
+            {children}
+          </ScrollView>
           <Btn kind="ghost" label={t('common.close')} onPress={onClose} />
+        </SafeAreaView>
         </Pressable>
       </Pressable>
     </Modal>
@@ -499,7 +503,7 @@ export function Row({ children, style }: { children: React.ReactNode; style?: St
   return <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10 }, style]}>{children}</View>;
 }
 export function Between({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }, style]}>{children}</View>;
+  return <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -510,7 +514,7 @@ const styles = StyleSheet.create({
   wordmarkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wordmark: { fontSize: 29, fontWeight: '900', letterSpacing: -2.2, color: colors.ink },
   barActions: { flexDirection: 'row', gap: 6 },
-  iconBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   iconBtnText: { fontSize: 11, fontWeight: '800', color: colors.ink },
   tabs: { height: 76, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: 10 },
   tab: { width: '24%', height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 },
@@ -524,15 +528,15 @@ const styles = StyleSheet.create({
   tiny: { fontSize: 10, lineHeight: 15, color: colors.muted },
   bold: { fontSize: 13, fontWeight: '700', color: colors.ink },
   btn: { minHeight: 49, borderRadius: 25, paddingHorizontal: 15, alignItems: 'center', justifyContent: 'center', marginVertical: 8 },
-  btnText: { fontSize: 13, fontWeight: '700', letterSpacing: -0.1 },
-  linkBtn: { paddingVertical: 7, alignSelf: 'flex-start' },
-  linkBtnText: { fontSize: 12, fontWeight: '700', color: colors.redDark },
+  btnText: { textAlign: 'center', flexShrink: 1, fontSize: 13, fontWeight: '700', letterSpacing: -0.1 },
+  linkBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center', maxWidth: '100%', paddingVertical: 7, alignSelf: 'flex-start' },
+  linkBtnText: { flexShrink: 1, fontSize: 12, fontWeight: '700', color: colors.redDark },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 17, padding: 15, marginVertical: 10 },
   line: { height: 1, backgroundColor: colors.line, marginVertical: 14 },
   pill: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6, marginRight: 7, marginBottom: 7 },
   pillText: { fontSize: 10, lineHeight: 12 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  check: { width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },
   checkMark: { color: '#fff', fontSize: 9, fontWeight: '800', lineHeight: 11 },
   choiceSelected: { borderColor: colors.red, backgroundColor: colors.redWash },
@@ -543,19 +547,19 @@ const styles = StyleSheet.create({
   stateBlock: { alignItems: 'center', paddingVertical: 35, paddingHorizontal: 16 },
   stateIcon: { fontSize: 44, color: colors.red, marginBottom: 16 },
   stateTitle: { fontSize: 31, fontWeight: '800', lineHeight: 33, letterSpacing: -1.5, color: colors.ink, textAlign: 'center', marginBottom: 10 },
-  back: { alignSelf: 'flex-start', paddingVertical: 7 },
+  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingVertical: 7 },
   backText: { fontSize: 12, fontWeight: '700', color: colors.redDark },
   meter: { height: 5, borderRadius: 9, backgroundColor: '#ece9e2', overflow: 'hidden', marginVertical: 8 },
   meterFill: { height: 5, borderRadius: 8, backgroundColor: colors.red },
   scrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 14, paddingBottom: 33, maxHeight: '82%' },
+  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 14, paddingBottom: 14, maxHeight: '82%' },
   grabber: { width: 38, height: 4, borderRadius: 4, backgroundColor: '#d3d0c9', alignSelf: 'center', marginBottom: 17 },
   toast: { position: 'absolute', top: 57, left: 16, right: 16, backgroundColor: '#20201e', borderRadius: 13, padding: 12, zIndex: 20 },
   toastText: { color: '#fff', fontSize: 12, textAlign: 'center' },
   promptCard: { backgroundColor: colors.blush, borderRadius: 17, padding: 18, paddingBottom: 49, marginVertical: 10, position: 'relative' },
   promptQ: { fontSize: 22, fontWeight: '800', lineHeight: 24, letterSpacing: -0.9, color: colors.ink, maxWidth: '94%' },
   promptA: { fontSize: 14, lineHeight: 21, color: '#47443f', marginTop: 12 },
-  promptReact: { position: 'absolute', right: 12, bottom: 11, backgroundColor: colors.paper, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 7 },
+  promptReact: { minHeight: 44, justifyContent: 'center', position: 'absolute', right: 12, bottom: 11, backgroundColor: colors.paper, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 7 },
   promptReactText: { fontSize: 11, fontWeight: '700', color: colors.ink },
   actionSet: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', paddingVertical: 12 },
   action: { alignItems: 'center', gap: 7, minWidth: 56 },
@@ -563,11 +567,11 @@ const styles = StyleSheet.create({
   actionLabel: { fontSize: 9, color: colors.ink, fontWeight: '600' },
   sparkRing: { width: 61, height: 61, alignItems: 'center', justifyContent: 'center' },
   sparkInner: { width: 45, height: 45, borderRadius: 23, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
-  pillBtn: { borderWidth: 1, borderColor: colors.line, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 7, marginRight: 7, marginBottom: 7, backgroundColor: colors.white },
+  pillBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 7, marginRight: 7, marginBottom: 7, backgroundColor: colors.white },
   pillBtnOn: { backgroundColor: colors.redWash, borderColor: colors.chipBorder },
   pillBtnText: { fontSize: 11, color: '#625f59' },
   segmented: { backgroundColor: '#eeece6', padding: 4, borderRadius: 12, flexDirection: 'row', gap: 3, marginVertical: 8 },
-  segBtn: { flex: 1, borderRadius: 9, paddingVertical: 8, alignItems: 'center' },
+  segBtn: { flex: 1, minWidth: 0, minHeight: 44, justifyContent: 'center', paddingHorizontal: 4, borderRadius: 9, paddingVertical: 8, alignItems: 'center' },
   segBtnOn: { backgroundColor: colors.white },
-  segText: { fontSize: 11, color: '#777' },
+  segText: { textAlign: 'center', flexShrink: 1, fontSize: 11, color: '#777' },
 });

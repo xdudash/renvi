@@ -12,6 +12,8 @@ const COLUMNS = 'user_id, tier, store, sandbox, expires_at, product_id, last_eve
 
 function supabaseDb(db: SupabaseClient): BillingDb {
   const fail = (error: { message: string; code?: string }) => { throw new DbError(error.message, error.code); };
+  const snapshots = new Map<string, SubRow | null>();
+  const writes = new Map<string, SubRow>();
   return {
     async isProcessed(id) {
       const { data, error } = await db.from('billing_events').select('id').eq('id', id).maybeSingle();
@@ -19,17 +21,23 @@ function supabaseDb(db: SupabaseClient): BillingDb {
       return !!data;
     },
     async markProcessed(e) {
-      const { error } = await db.from('billing_events').upsert(e, { onConflict: 'id', ignoreDuplicates: true });
+      const { error } = await db.rpc('billing_commit', {
+        p_event: e,
+        p_expected: e.user_id === null ? [] : [...snapshots].map(([user_id, row]) => ({ user_id, row })),
+        p_writes: e.user_id === null ? [] : [...writes.values()],
+      });
       if (error) fail(error);
     },
     async getSub(userId) {
+      if (snapshots.has(userId)) return snapshots.get(userId)!;
       const { data, error } = await db.from('subscriptions').select(COLUMNS).eq('user_id', userId).maybeSingle();
       if (error) fail(error);
-      return (data as SubRow | null) ?? null;
+      const row = (data as SubRow | null) ?? null;
+      snapshots.set(userId, row);
+      return row;
     },
     async upsertSub(row) {
-      const { error } = await db.from('subscriptions').upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-      if (error) fail(error);
+      writes.set(row.user_id, row);
     },
   };
 }

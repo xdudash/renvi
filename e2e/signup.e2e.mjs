@@ -1,4 +1,7 @@
 import { APP, ASSETS, URL as API } from './api.mjs';
+import assert from 'node:assert/strict';
+import { signIn } from './api.mjs';
+import { waitForAuthEmail } from './mail.mjs';
 import { chromium } from 'playwright';
 import { createRunner } from './steps.mjs';
 const A = ASSETS;
@@ -20,19 +23,38 @@ await step('signup', async () => {
   await p.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await p.getByRole('checkbox', { name: /Мне исполнилось 18 лет/ }).click();
   await shot('signup');
+  const sentAt=Date.now();
   await click('Продолжить');
+  await p.getByText('Письмо отправлено', {exact:true}).waitFor({timeout:15000});
+  await assert.rejects(()=>signIn('anna@renvi.test','renvi-test-1'),/confirm/i);
+  const {link}=await waitForAuthEmail('anna@renvi.test',{after:sentAt});
+  // A fresh device has no locally stored PKCE verifier or previous session.
+  const fresh=await b.newContext({viewport:{width:393,height:852}});
+  const confirmation=await fresh.newPage();
+  await confirmation.goto(link,{waitUntil:'networkidle'});
+  await confirmation.getByText('Почта подтверждена',{exact:true}).first().waitFor({timeout:15000});
+  await fresh.close();
+  await p.goto(APP+'/signin',{waitUntil:'networkidle'});
+  await p.getByPlaceholder('name@example.com').fill('anna@renvi.test');
+  await p.locator('input[type="password"]').fill('renvi-test-1');
+  await click('Войти');
   await p.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
 });
 await step('ob-age', async () => {
   await p.getByPlaceholder('Как вас называть').fill('Анна');
-  await p.getByPlaceholder('1998-08-12').fill('1999-04-02');
+  for(const [label,value] of [['День','02'],['Месяц','04'],['Год','1999']]) {
+    await p.getByRole('button',{name:label,exact:true}).click();
+    await p.getByText(value,{exact:true}).last().click();
+  }
   await p.getByRole('checkbox', { name: /Мне уже исполнилось 18 лет/ }).click();
   await p.getByRole('checkbox', { name: /Я принимаю Условия/ }).click();
   await shot('ob-age');
   await click('Продолжить');
+  await p.getByText('Подтвердите дату рождения',{exact:true}).waitFor();
+  await click('Подтверждаю, сохранить');
   await p.getByText('Как вас описать?').waitFor();
 });
-await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Кого вы хотите встретить?').waitFor(); });
+await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого вы хотите встретить?').waitFor(); });
 await step('ob-seeking', async () => {
   await click('Мужчин');
   await click('Продолжить'); // without consent → toast

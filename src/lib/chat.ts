@@ -7,6 +7,7 @@ import { supabase } from './supabase';
 import { api, type MessageRow } from './api';
 import { useLang } from './lang';
 import { createOutbox, reconcile, type Pending } from './outbox';
+import { durableSend } from './durableSend';
 
 export type ChatItem = MessageRow & { state: 'sent' | 'sending' | 'failed' };
 
@@ -118,11 +119,9 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
 
   /** `onStored` fires once the message is safely in the outbox (before the request), e.g. to clear the composer. */
   const send = useCallback(async (body: string | null, photoPath: string | null = null, onStored?: () => void) => {
-    if (!matchId) return false;
+    if (!matchId || !myId) return false;
     const p: Pending = { client_id: Crypto.randomUUID(), match_id: matchId, body, photo_path: photoPath, created_at: new Date().toISOString() };
-    if (myId) { try { await outbox.add(myId, p); } catch { /* storage unavailable: still send, kept in memory only */ } }
-    onStored?.();
-    return deliver(p);
+    return durableSend(() => outbox.add(myId, p), () => deliver(p), onStored);
   }, [matchId, myId, deliver]);
 
   const retry = useCallback(async (clientId: string) => {

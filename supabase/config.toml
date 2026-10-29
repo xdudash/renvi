@@ -12,3 +12,32 @@ verify_jwt = true
 
 [functions.export-data]
 verify_jwt = true
+
+# Scheduler authenticates with x-digest-secret inside the handler.
+[functions.weekly-digest]
+verify_jwt = false
+
+[functions.demo-access]
+verify_jwt = true
+
+# Local development/test Auth. Hosted Supabase Auth/SMTP must also be configured in its Dashboard.
+[auth]
+site_url = "http://127.0.0.1:8081"
+additional_redirect_urls = ["http://127.0.0.1:8081/auth-callback", "http://127.0.0.1:8081/reset-password", "http://localhost:8081/auth-callback", "http://localhost:8081/reset-password", "renvi://auth-callback", "renvi://reset-password", "https://xdudash.github.io/renvi/auth-callback", "https://xdudash.github.io/renvi/reset-password"]
+
+[auth.email]
+enable_confirmations = true
+# Local mail E2E; hosted rate limits remain configured independently.
+max_frequency = "1s"
+
+[auth.email.template.confirmation]
+subject = "Подтвердите почту в RENVI"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Восстановление доступа к RENVI"
+content_path = "./supabase/templates/recovery.html"
+
+# Disposable local Mailpit test traffic, not hosted SMTP policy.
+[auth.rate_limit]
+email_sent = 1000

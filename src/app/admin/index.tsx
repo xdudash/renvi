@@ -28,6 +28,10 @@ export default function AdminHome() {
   const sum = (k: (typeof COLS)[number]) => rows.reduce((a, r) => a + (r[k] ?? 0), 0);
   return (
     <AdminPage title={t('adm.dash.title')} sub={t('adm.dash.sub')} right={<Act label={t('adm.common.refresh')} tone="ghost" onPress={reload} />}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
+        <Act label={t('analytics.title')} onPress={() => router.push('/admin/analytics' as never)} />
+        <Act label={t('adm.nav.demo')} tone="ghost" onPress={() => router.push('/admin/demo' as never)} />
+      </View>
       {error ? <ErrorNote message={errText(error)} onRetry={reload} /> : null}
       {loading && !data ? <Busy /> : null}
       {data ? (

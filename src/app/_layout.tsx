@@ -11,6 +11,7 @@ import { LangProvider } from '@/lib/lang';
 import { DiscoverProvider } from '@/lib/discover';
 import { Gate } from '@/components/Gate';
 import { NotConfigured } from '@/components/NotConfigured';
+import { AnalyticsProvider } from '@/lib/analytics';
 import { WebUpdateBanner } from '@/components/WebUpdateBanner';
 
 if (Platform.OS !== 'web') {
@@ -44,6 +45,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <LangProvider>
         <SessionProvider>
+          <AnalyticsProvider>
           <DiscoverProvider>
             <ToastProvider>
               <StatusBar style="dark" />
@@ -51,6 +53,7 @@ export default function RootLayout() {
               <WebUpdateBanner />
             </ToastProvider>
           </DiscoverProvider>
+          </AnalyticsProvider>
         </SessionProvider>
       </LangProvider>
     </SafeAreaProvider>

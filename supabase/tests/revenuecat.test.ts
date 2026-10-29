@@ -164,6 +164,26 @@ describe('B1: idempotency and TRANSFER', () => {
     expect(db.subs.get(A)?.tier).toBe('free');
   });
 
+  test('late TRANSFER cannot move or clear a source renewed after the transfer', async () => {
+    const db = new FakeDb();
+    db.subs.set(A, paid(A, 'premium', { last_event_ms: NOW + 300 }));
+    await handleEvent({ id: 'late-transfer-source', type: 'TRANSFER', event_timestamp_ms: NOW + 100,
+      transferred_from: [A], transferred_to: [B] }, db, NOW);
+    expect(db.subs.get(A)?.tier).toBe('premium');
+    expect(db.subs.get(A)?.last_event_ms).toBe(NOW + 300);
+    expect(db.subs.has(B)).toBe(false);
+  });
+
+  test('late TRANSFER cannot clear sources when recipient already processed a newer event', async () => {
+    const db = new FakeDb();
+    db.subs.set(A, paid(A, 'plus'));
+    db.subs.set(B, paid(B, 'premium', { last_event_ms: NOW + 300 }));
+    await handleEvent({ id: 'late-transfer-destination', type: 'TRANSFER', event_timestamp_ms: NOW + 100,
+      transferred_from: [A], transferred_to: [B] }, db, NOW);
+    expect(db.subs.get(A)?.tier).toBe('plus');
+    expect(db.subs.get(B)?.last_event_ms).toBe(NOW + 300);
+  });
+
   test('TRANSFER never downgrades a recipient that already has a better plan', async () => {
     const db = new FakeDb();
     db.subs.set(A, paid(A, 'plus'));

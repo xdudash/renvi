@@ -184,14 +184,16 @@ async function transfer(event: Record<string, any>, db: BillingDb, eventMs: numb
   const from = uuids(event.transferred_from).filter((id) => id !== to);
   if (!to || !from.length) return { userId: to, result: 'no_user' };
 
+  const mine = await db.getSub(to);
+  if (stale(mine, eventMs)) return { userId: to, result: 'stale' };
+
   const sources: SubRow[] = [];
   for (const id of from) {
     const row = await db.getSub(id);
-    if (row && storeBacked(row) && activeTier(row, nowMs) !== 'free') sources.push(row);
+    if (row && !stale(row, eventMs) && storeBacked(row) && activeTier(row, nowMs) !== 'free') sources.push(row);
   }
   if (!sources.length) return { userId: to, result: 'nothing_to_move' };
 
-  const mine = await db.getSub(to);
   const best = sources.reduce<SubRow | null>((acc, r) => better(acc, r, nowMs), null)!;
   const winner = better(mine, best, nowMs)!;
   if (winner !== mine) {

@@ -1,3 +1,5 @@
+import { AdminUserAnalytics } from '@/components/AdminUserAnalytics';
+import IdentityCorrection from '@/components/admin/IdentityCorrection';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -64,6 +66,8 @@ export default function AdminUserDetail() {
       <Act label={t('adm.user.back')} tone="ghost" onPress={() => (router.canGoBack() ? router.back() : router.replace('/admin/users' as never))} />
       <Act label={t('adm.common.refresh')} tone="ghost" onPress={reload} />
     </>}>
+      <AdminUserAnalytics userId={String(id)} />
+      <IdentityCorrection userId={String(id)} onSaved={reload} />
       {dialog}
       {error ? <ErrorNote message={errText(error)} onRetry={reload} /> : null}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
