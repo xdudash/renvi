@@ -15,10 +15,10 @@ export function OnbHeader({ step, kicker, heading, sub }: { step: number; kicker
     <View>
       <View style={s.between}>
         <Eyebrow>{kicker}</Eyebrow>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: -12 }}>
           <Text style={s.stepnum}>{step + 1} / 12</Text>
           {/* Leaving mid-profile: progress is saved; the user can come back or sign in with another account. */}
-          <Pressable accessibilityRole="button" hitSlop={10} onPress={async () => { await signOut(); router.replace('/'); }}>
+          <Pressable accessibilityRole="button" style={s.signOutBtn} onPress={async () => { await signOut(); router.replace('/'); }}>
             <Text style={s.signOut}>{t('screens.settings.signOut')}</Text>
           </Pressable>
         </View>
@@ -62,6 +62,8 @@ const s = StyleSheet.create({
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   stepnum: { fontSize: 10, color: '#98948c' },
   signOut: { fontSize: 11, fontWeight: '700', color: colors.redDark },
+  // Apple minimum touch target (44×44), checked by the mobile layout audit.
+  signOutBtn: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
   progress: { height: 4, backgroundColor: '#ebe8e1', borderRadius: 8, marginTop: 6, marginBottom: 16, overflow: 'hidden' },
   progressFill: { height: 4, backgroundColor: colors.red },
   h1: { fontSize: 34, fontWeight: '800', lineHeight: 35, letterSpacing: -1.9, color: colors.ink, marginTop: 8, marginBottom: 12 },
