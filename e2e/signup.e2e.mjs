@@ -38,8 +38,8 @@ await step('signup', async () => {
   await p.getByPlaceholder('name@example.com').fill('anna@renvi.test');
   await p.locator('input[type="password"]').fill('renvi-test-1');
   await click('Войти');
-  await p.getByText('Начать знакомство',{exact:true}).waitFor({timeout:15000});
-  await p.goto(APP+'/ob-age',{waitUntil:'networkidle'});
+  // A confirmed account without a profile goes straight to step 1 (no loop back to the welcome screen).
+  await p.waitForURL(/\/ob-age/,{timeout:15000});
   await p.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
 });
 await step('ob-age', async () => {

@@ -10,13 +10,17 @@ import { nextOnboardingRoute } from '@/lib/onboarding';
 
 // 01 · Обложка (welcome)
 export default function Welcome() {
-  const { ready, session, profile } = useSession();
+  const { ready, session, profile, loadError } = useSession();
   const { lang, t } = useLang();
 
   useEffect(() => {
     if (!ready || !session) return;
     if (profile?.onboarding_done) router.replace('/discover');
-  }, [ready, session, profile]);
+    // A new account has no profile row until the first onboarding step. Once the e-mail is confirmed (sign-in or the
+    // link from the letter) it goes straight to that step, as signup did before confirmation was required. Without
+    // this the welcome screen showed only "sign up / sign in" and signing in returned here in a loop.
+    else if (!profile && !loadError && session.user.email_confirmed_at) router.replace(nextOnboardingRoute(null) as never);
+  }, [ready, session, profile, loadError]);
 
   const draft = session && profile && !profile.onboarding_done ? nextOnboardingRoute(profile) : null;
 
