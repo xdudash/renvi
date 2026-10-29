@@ -25,7 +25,14 @@ await step('signup requires actual confirmation',async()=>{
 await step('resend email and confirm on fresh device',async()=>{
   const after=Date.now();
   await page.goto(APP+'/confirmation?email='+encodeURIComponent(email),{waitUntil:'networkidle'});
+  // Capture the Auth answer to the resend: a missing e-mail must be explained (status + error code), never guessed.
+  const answer=page.waitForResponse(r=>r.url().includes('/auth/v1/resend'),{timeout:15000});
   await page.getByText('Отправить ещё раз',{exact:true}).click();
+  const r=await answer;
+  if(!r.ok()) {
+    let code='';try{const b=await r.json();code=b.error_code??b.code??'';}catch{/* no body */}
+    throw new Error(`resend rejected by Auth: HTTP ${r.status()} ${code}`);
+  }
   resent=await waitForAuthEmail(email,{after,excludeIds:[first.id]});
   await page.goto(resent.link,{waitUntil:'networkidle'});
   await page.getByText('Почта подтверждена',{exact:true}).first().waitFor({timeout:15000});
