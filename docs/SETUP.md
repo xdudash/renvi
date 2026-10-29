@@ -43,6 +43,7 @@
 1. В App Store Connect и Google Play создайте подписки Plus и Premium (месяц и год).
 2. RevenueCat: Entitlements `plus` и `premium`; Offering `default` с пакетами **`plus_month`, `plus_year`, `premium_month`, `premium_year`** (идентификаторы пакетов важны — по ним приложение находит тарифы).
 3. RevenueCat → Integrations → Webhooks: URL `https://<ref>.functions.supabase.co/revenuecat-webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_SECRET>`.
+   Вебхук идемпотентен: id обработанных событий хранятся в `billing_events` (миграция 0021), повтор отвечает 200 без изменений; любая ошибка записи в БД отвечает 500, чтобы RevenueCat повторил доставку. Миграцию 0021 нужно применить до деплоя новой версии функции.
 4. Приложение логинит RevenueCat идентификатором пользователя Supabase — так вебхук знает, кому включить тариф. Тестовые (sandbox) покупки дают доступ, но помечены `sandbox` и не считаются платящими в дашборде.
 5. Цены в приложении берутся из магазина; предварительные цены из брифа лежат в `app_config.prices_preliminary` только для справки.
 
