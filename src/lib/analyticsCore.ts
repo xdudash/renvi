@@ -24,8 +24,12 @@ export function normalizeScreen(path: string) {
 export function acquisition(url: string) {
  const safe = (value: string | null) => value && /^[a-zA-Z0-9_-]{1,64}$/.test(value) ? value : null;
  try {
-  const p = new URL(url).searchParams;
-  return { source:safe(p.get('utm_source')), medium:safe(p.get('utm_medium')), campaign:safe(p.get('utm_campaign')), referral:safe(p.get('ref')) };
+  const parsed = new URL(url), p = parsed.searchParams;
+  const segments = parsed.pathname.split('/').filter(Boolean);
+  const routeCode = segments.length >= 2 && segments[segments.length-2] === 'invite' ? segments[segments.length-1]
+    : parsed.protocol === 'renvi:' && parsed.hostname === 'invite' && segments.length === 1 ? segments[0] : null;
+  const referral = safe(p.get('ref')) ?? safe(routeCode);
+  return { source:safe(p.get('utm_source')) ?? (referral ? 'referral' : null), medium:safe(p.get('utm_medium')), campaign:safe(p.get('utm_campaign')), referral };
  } catch { return {source:null,medium:null,campaign:null,referral:null}; }
 }
 export type AnalyticsPacket = { p_session:string; p_event:'screen_view'|'heartbeat'; p_screen:string; p_seconds:number };

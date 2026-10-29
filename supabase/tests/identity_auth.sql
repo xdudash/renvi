@@ -51,5 +51,14 @@ select pg_temp.denied($q$select public.profile_age('00000000-0000-0000-0000-0000
 reset role;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000002602',true);
 select pg_temp.check(public.profile_card('00000000-0000-0000-0000-000000002604') is null,'unverified cannot read other profiles');
+-- A persisted age can lag a birthday; admin demographic buckets use the private birthdate at read time.
+reset role;
+insert into auth.users(id,email,email_confirmed_at) values('00000000-0000-0000-0000-000000002605','birthday-metric@test',now());
+insert into public.profiles(id,age,gender) values('00000000-0000-0000-0000-000000002605',18,'woman');
+insert into public.private_profile(user_id,birthdate) values('00000000-0000-0000-0000-000000002605','1980-01-01');
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000002603',true);
+set local role authenticated;
+select pg_temp.check(exists(select 1 from jsonb_array_elements(public.admin_analytics()->'demographics') x where x->>'age_group'='45+' and x->>'gender'='woman'),'admin demographic age follows birthdate instead of stale profile age');
+reset role;
 rollback;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
+import { useAuthLink } from '@/hooks/useAuthLink';
 import { router } from 'expo-router';
 import { Screen, Loading, StateBlock } from '@/components/ui';
 import { establishConfirmationSession } from '@/lib/confirmationAuth';
@@ -9,12 +10,12 @@ import { useLang } from '@/lib/lang';
 
 export default function AuthCallback() {
   const {t}=useLang(); const {refresh}=useSession();
-  const url=Linking.useLinkingURL();
+  const url=useAuthLink();
   const [phase,setPhase]=useState<'checking'|'confirmed'|'invalid'>('checking');
   useEffect(()=>{
     let alive=true;
     (async()=>{
-      const incoming=Platform.OS==='web' && typeof window!=='undefined'?window.location.href:url??await Linking.getInitialURL();
+      const incoming=url??await Linking.getInitialURL();
       let ok=false; try {ok=await establishConfirmationSession(incoming);} catch {ok=false;}
       if(!alive) return;
       if(Platform.OS==='web' && typeof window!=='undefined') window.history.replaceState(null,'',window.location.pathname);

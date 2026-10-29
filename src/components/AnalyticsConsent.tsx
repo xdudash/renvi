@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Act } from './AdminUI';
+import { Btn } from './ui';
 import { useAnalyticsConsent } from '@/lib/analytics';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
@@ -14,7 +14,7 @@ export function AnalyticsConsent() {
   <Text accessibilityRole="header" style={{fontSize:18,fontWeight:'700',color:colors.ink}}>{t('analytics.consentTitle')}</Text>
   <Text style={{color:colors.sub}}>{t('analytics.consentCopy')}</Text>
   <Text style={{color:colors.ink}}>{t(enabled?'analytics.consentOn':'analytics.consentOff')}</Text>
-  <Act label={t(error?'adm.common.retry':enabled?'analytics.disable':'analytics.enable')} onPress={()=>{void save();}} disabled={loading} />
+  <Btn kind="secondary" label={t(error?'adm.common.retry':enabled?'analytics.disable':'analytics.enable')} onPress={()=>{void save();}} disabled={loading} />
   {error?<Text accessibilityRole="alert" style={{color:colors.red}}>{t('analytics.saveError')}</Text>:null}
  </View>;
 }

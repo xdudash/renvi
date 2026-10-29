@@ -44,3 +44,9 @@ test('revocation cancels queued events and background routes emit nothing',async
 test('real app route names normalize without storing arbitrary dynamic ids',()=>{
  assert.equal(normalizeScreen('/ob-birthday'),'onboarding');assert.equal(normalizeScreen('/chats'),'matches');assert.equal(normalizeScreen('/me'),'profile');assert.equal(normalizeScreen('/purchase-success'),'subscription');
 });
+
+test('invite routes preserve limited referral attribution on web and native',()=>{
+ assert.equal(acquisition('https://host/renvi/invite/RN-1234').referral,'RN-1234');
+ assert.equal(acquisition('renvi://invite/RN-1234').referral,'RN-1234');
+ assert.equal(acquisition('https://host/invite/person@example.com').referral,null);
+});

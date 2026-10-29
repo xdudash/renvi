@@ -104,7 +104,7 @@ do $$
 declare f record; body text;
 begin
   for f in select p.oid,p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='public' and p.proname in ('publish_profile','discover','profile_card','incoming_sparks','list_matches','match_context','digest_new_count','admin_users','admin_user_search','admin_user_detail','admin_support_detail')
+    where n.nspname='public' and p.proname in ('publish_profile','discover','profile_card','incoming_sparks','list_matches','match_context','digest_new_count','admin_users','admin_user_search','admin_user_detail','admin_support_detail','admin_analytics')
   loop
     body:=pg_get_functiondef(f.oid);
     if f.proname='publish_profile' then body:=replace(body,'begin','begin' || E'\n  perform public.assert_email_confirmed();' || E'\n  if not exists(select 1 from public.private_profile where user_id=auth.uid() and birthdate is not null) or not exists(select 1 from public.profiles where id=auth.uid() and gender is not null) then raise exception ''birthdate and gender required'' using errcode=''22023''; end if;'); end if;
