@@ -10,7 +10,9 @@ jobs:
     name: Playwright end-to-end (local Supabase + web build)
     runs-on: ubuntu-latest
     continue-on-error: false
-    timeout-minutes: 30
+    timeout-minutes: 40
+    permissions:
+      contents: write # only to publish iPhone screenshots to the `screenshots` branch
     env:
       APP_URL: http://127.0.0.1:8081
       # Not a repository secret: a throw-away value for the local, CI-only stack.
@@ -83,6 +85,35 @@ jobs:
 
       - name: Run e2e
         run: npm run test:e2e
+
+      # iPhone 15 and iPhone SE screenshots of every screen + a report of redirects, page errors and overflow.
+      - name: iPhone screenshots
+        if: ${{ !cancelled() }}
+        working-directory: e2e
+        run: node screens.mjs
+
+      # Published to the `screenshots` branch (folder per source branch) so the layout can be reviewed
+      # without downloading artifacts. Skipped for pull requests from forks (no write token).
+      - name: Publish screenshots
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        env:
+          SRC_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          [ -f e2e/out/screens/report.md ] || { echo "no screenshots"; exit 0; }
+          dir="$(echo "$SRC_BRANCH" | tr '/' '-')"
+          tmp="$(mktemp -d)"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin screenshots >/dev/null; then
+            git clone --depth 1 --branch screenshots "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$tmp"
+          else
+            git init -q -b screenshots "$tmp" && git -C "$tmp" remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          fi
+          rm -rf "$tmp/$dir" && mkdir -p "$tmp/$dir" && cp -r e2e/out/screens/. "$tmp/$dir/"
+          echo "$GITHUB_SHA" > "$tmp/$dir/COMMIT"
+          git -C "$tmp" add -A
+          git -C "$tmp" commit -qm "screenshots: $dir @ ${GITHUB_SHA::7}" || { echo "unchanged"; exit 0; }
+          git -C "$tmp" push -q origin screenshots
 
       - name: Upload e2e artifacts
         if: failure()
