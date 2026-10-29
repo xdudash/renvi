@@ -41,7 +41,7 @@ async function loadSnapshot(): Promise<Snapshot> {
   if (!session) return { session: null, loaded: { userId: null, failed: false } };
   initPurchases(session.user.id).catch(() => {});
   const loaded: Loaded = { userId: session.user.id, failed: false };
-  try { loaded.profile = await api.myProfile(); } catch { loaded.failed = true; }
+  try { loaded.profile = await api.myProfile(session.user.id); } catch { loaded.failed = true; }
   try {
     const sub = await api.subscription(session.user.id);
     const now = Date.now();

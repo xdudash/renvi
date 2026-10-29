@@ -140,10 +140,16 @@ export const api = {
     if (error) throw toAppError(error);
     return (data?.value as T) ?? null;
   },
-  myProfile: async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-    if (!uid) return null;
+  // `uid` comes from the already-known session. Without it we read the stored session (no network call).
+  // A failed auth lookup throws instead of returning null: null means "no profile row yet", and the
+  // gate would wrongly send an existing user back to onboarding.
+  myProfile: async (uid?: string) => {
+    if (!uid) {
+      const { data: sess, error: sessError } = await supabase.auth.getSession();
+      if (sessError) throw toAppError(sessError);
+      uid = sess.session?.user.id;
+      if (!uid) return null;
+    }
     const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
     if (error) throw toAppError(error);
     return data;

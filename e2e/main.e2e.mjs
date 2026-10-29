@@ -11,7 +11,10 @@ const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({
 const click = async (text) => { await p.getByText(text, { exact: true }).last().click(); };
 const consoleErr = [];
 p.on('console', (m) => { if (m.type() === 'error') consoleErr.push(m.text().slice(0, 200)); });
-const diagnose = async () => `url=${p.url().replace(APP, '')} js=[${[...errors, ...consoleErr].slice(-3).join(' ; ')}] text="${(await p.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 400)}"`;
+const bad = []; // failing network requests (URL without query) seen by the page
+p.on('response', (r) => { if (r.status() >= 500) bad.push(r.status() + ' ' + r.url().split('?')[0].replace(API, '')); });
+const profileState = async () => { try { const r = await rest(anna.access_token, 'profiles?select=onboarding_done,onboarding_step,suspended_until&id=eq.' + anna.user.id); return JSON.stringify(r); } catch (e) { return 'err ' + e.message; } };
+const diagnose = async () => `url=${p.url().replace(APP, '')} 5xx=[${[...new Set(bad)].slice(-4).join(' ; ')}] profile=${await profileState()} js=[${[...errors, ...consoleErr].slice(-2).join(' ; ')}] text="${(await p.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 250)}"`;
 const { step, finish } = createRunner({ label: 'main', diagnose, onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 const go = async (path) => { await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(800); };
 

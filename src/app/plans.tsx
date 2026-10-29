@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BackLink, Between, Btn, Chip, Line, LinkBtn, Screen, Segmented, Tiny, Title } from '@/components/ui';
@@ -16,12 +16,13 @@ import { useLang } from '@/lib/lang';
 export default function Plans() {
   const { t } = useLang();
   const { tier, productId } = useSession();
-  const [period, setPeriod] = useState<'month' | 'year'>('month');
+  // The user's own pick; until they choose, the toggle shows the period of their current plan.
+  const [periodChoice, setPeriod] = useState<'month' | 'year' | null>(null);
   const [selected, setSelected] = useDraft<'free' | 'plus' | 'premium'>(tier);
   const offers = useAsync(() => loadOffers().catch(() => []), []);
   // Period of the current paid plan, from the server product id; null when free or not matched to an offer.
   const currentPeriod = tier === 'free' ? null : periodOfProduct(productId, offers.data ?? []);
-  useEffect(() => { if (currentPeriod) setPeriod(currentPeriod); }, [currentPeriod]);
+  const period: 'month' | 'year' = periodChoice ?? currentPeriod ?? 'month';
   const isCurrent = (id: 'free' | 'plus' | 'premium') => tier === id && (id === 'free' || currentPeriod == null || currentPeriod === period);
   const limitsAll = useAsync(() => api.config<Record<string, any>>('tier_limits'), []);
   const L = limitsAll.data ?? {};
