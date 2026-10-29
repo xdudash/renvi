@@ -20,6 +20,11 @@ export function toAppError(e: unknown): AppError {
   if (msg.includes('Network request failed') || msg.includes('Failed to fetch')) {
     return new AppError('offline', tr('lib.errors.offline'));
   }
+  // The app is newer than the database (function/table not deployed yet, PostgREST PGRST202/PGRST205).
+  // The server is reachable, so "check your connection" would be wrong: say it is being updated.
+  if (err?.code === 'PGRST202' || err?.code === 'PGRST205' || msg.includes('Could not find the function') || msg.includes('schema cache')) {
+    return new AppError('server', tr('lib.errors.serverUpdating'));
+  }
   // Server-side hourly rate limit (report(), submit_appeal()): SQLSTATE P0429 'rate limited'.
   if (err?.code === 'P0429' || msg.includes('rate limited')) return new AppError('rate_limited', tr('lib.errors.rateLimited'));
   if (err?.code === 'P0003' || msg.includes('daily limit')) return new AppError('limit', tr('lib.errors.limit'));
