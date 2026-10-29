@@ -46,7 +46,7 @@ function BlockedItem({ row, onUnblock }: { row: BlockedRow; onUnblock: () => voi
       <Pressable style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 6 }}>
         <Avatar uri={url} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontWeight: '700', fontSize: 13 }}>{card.data ? `${card.data.display_name}, ${card.data.age}` : t('screens.blocked.profil')}</Text>
+          <Text style={{ fontWeight: '700', fontSize: 13 }}>{card.data ? (card.data.age ? `${card.data.display_name}, ${card.data.age}` : card.data.display_name) : t('screens.blocked.profil')}</Text>
           <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.blocked.zablokirovanWhen', { when })}</Text>
         </View>
       </Pressable>

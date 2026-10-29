@@ -17,13 +17,16 @@ export default function EditMedia() {
   };
   const onRemove = async (id: string) => {
     if (items.filter((i) => i.kind === 'photo').length <= 2 && items.find((i) => i.id === id)?.kind === 'photo') { toast(t('screens.editMedia.minPhotos')); return; }
-    await remove(id);
+    if ((await remove(id)) === 'error') toast(t('client.photos.deleteFailed'));
+  };
+  const onCover = async (id: string) => {
+    if ((await makeCover(id)) === 'error') toast(t('client.photos.coverFailed'));
   };
   return (
     <Screen tabs="me">
       <BackLink />
       <Title kicker={t('screens.editMedia.kicker')} heading={t('screens.editMedia.heading')} sub={t('screens.editMedia.sub')} />
-      <PhotoGrid items={items} onAdd={onAdd} onRemove={onRemove} onCover={makeCover} busy={busy} />
+      <PhotoGrid items={items} onAdd={onAdd} onRemove={onRemove} onCover={onCover} busy={busy} />
       <Card><Bold>{t('screens.editMedia.tipsTitle')}</Bold><Tiny>{t('screens.editMedia.tips')}</Tiny></Card>
       <Btn label={t('screens.editMedia.saveOrder')} onPress={() => { toast(t('screens.editMedia.saved')); router.navigate('/me'); }} />
     </Screen>

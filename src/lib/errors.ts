@@ -24,6 +24,8 @@ export function toAppError(e: unknown): AppError {
   if (err?.code === 'P0429' || msg.includes('rate limited')) return new AppError('rate_limited', tr('lib.errors.rateLimited'));
   if (err?.code === 'P0003' || msg.includes('daily limit')) return new AppError('limit', tr('lib.errors.limit'));
   if (err?.code === 'P0002' || msg.includes('not available')) return new AppError('not_found', tr('lib.errors.notFound'));
+  // Server action guard (migration 0020): the caller's own account is suspended or banned.
+  if (msg.includes('account restricted')) return new AppError('blocked', tr('lib.errors.accountRestricted'));
   if (err?.code === '42501' || msg.includes('blocked') || msg.includes('permission denied')) {
     return new AppError('unauthorized', tr('lib.errors.unauthorized'));
   }

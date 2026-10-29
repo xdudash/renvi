@@ -1,34 +1,30 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePathname, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSession } from '@/lib/session';
-import { nextOnboardingRoute } from '@/lib/onboarding';
+import { gateTarget } from '@/lib/gateRoutes';
 import { supabase } from '@/lib/supabase';
+import { useLang } from '@/lib/lang';
+import { colors } from '@/theme/tokens';
 
-const PUBLIC = ['/', '/language', '/signin', '/signup', '/forgot', '/confirmation', '/captcha', '/invite-not-found', '/legal', '/community-rules', '/support-help', '/not-found', '/safety'];
-// Account controls stay reachable with an unfinished profile (deletion and data export must always be available).
-const ACCOUNT_OK = ['/profile', '/media-viewer', '/settings', '/delete-account', '/delete-confirm', '/data-export', '/privacy-data', '/legal', '/support-help', '/community-rules', '/safety', '/language'];
-const ONBOARDING_OK = (p: string) => p.startsWith('/admin') || p.startsWith('/ob-') || p.startsWith('/verification-') || ACCOUNT_OK.includes(p);
-const RESTRICTED_OK = ['/appeal', '/support-help', '/data-export', '/report-status', '/legal', '/community-rules', '/account-suspended', '/account-banned', '/account-warning', '/settings'];
+export { isBanned, isSuspended } from '@/lib/gateRoutes';
+
 const SEEN = 'renvi.seenWarning';
 
-export const isBanned = (p: Record<string, any> | null) => p?.suspended_until === 'infinity' || (p?.suspended_until && new Date(p.suspended_until).getFullYear() > 9000);
-export const isSuspended = (p: Record<string, any> | null) => !!p?.suspended_until && !isBanned(p) && new Date(p.suspended_until) > new Date();
-
-// Route guard: sign-in → finished profile → account restrictions.
+// Route guard: sign-in → finished profile → account restrictions (rules live in lib/gateRoutes.ts).
 export function Gate() {
-  const { ready, configured, session, profile } = useSession();
+  const { ready, configured, session, profile, loadError, refresh } = useSession();
+  const { t } = useLang();
   const path = usePathname();
   const warned = useRef<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!ready || !configured) return;
-    const isPublic = PUBLIC.includes(path) || path.startsWith('/invite/');
-    if (!session) { if (!isPublic) router.replace('/'); return; }
-    if (isBanned(profile)) { if (!RESTRICTED_OK.includes(path)) router.replace('/account-banned'); return; }
-    if (isSuspended(profile)) { if (!RESTRICTED_OK.includes(path)) router.replace('/account-suspended'); return; }
-    if (!profile?.onboarding_done && !isPublic && !ONBOARDING_OK(path)) { router.replace(nextOnboardingRoute(profile) as never); return; }
-  }, [ready, configured, session, profile, path]);
+    const to = gateTarget(path, !!session, profile, loadError);
+    if (to) router.replace(to as never);
+  }, [ready, configured, session, profile, loadError, path]);
 
   // A new warning from moderation is shown once.
   useEffect(() => {
@@ -43,5 +39,22 @@ export function Gate() {
       });
   }, [session]);
 
-  return null;
+  // Profile / plan could not be loaded: keep the last good state and offer a retry instead of acting on missing data.
+  if (!session || !loadError) return null;
+  const retry = async () => { setRetrying(true); try { await refresh(); } finally { setRetrying(false); } };
+  return (
+    <View style={s.banner} accessibilityRole="alert" accessibilityLiveRegion="polite">
+      <Text style={s.text}>{profile ? t('client.loadError.banner') : t('client.loadError.bannerEmpty')}</Text>
+      <Pressable accessibilityRole="button" disabled={retrying} onPress={retry} style={s.btn}>
+        <Text style={s.btnText}>{retrying ? t('common.loading') : t('client.loadError.retry')}</Text>
+      </Pressable>
+    </View>
+  );
 }
+
+const s = StyleSheet.create({
+  banner: { position: 'absolute', left: 12, right: 12, bottom: 78, zIndex: 50, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: colors.ink, },
+  text: { flex: 1, color: '#fff', fontSize: 12, lineHeight: 17 },
+  btn: { minHeight: 44, paddingHorizontal: 14, borderRadius: 22, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  btnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+});

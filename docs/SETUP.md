@@ -20,6 +20,11 @@
 2. `npx supabase link --project-ref <ref>` → `npx supabase db push` — применит `supabase/migrations/*` (схема, RLS, функции, бакет `profile-media` с правилами доступа, публикация Realtime для `messages`).
 3. **Authentication → Providers → Email**: включён. Подтверждение почты — по решению команды (экран «Письмо отправлено» поддерживает оба режима).
    **URL Configuration**: Site URL = адрес сайта; Redirect URLs: `renvi://**` и адрес сайта.
+   **Восстановление пароля** (экран `/reset-password`): письмо ведёт на `renvi://reset-password` (нативное приложение) или `<адрес сайта>/reset-password` (веб). Добавьте в Redirect URLs именно их:
+   - `renvi://reset-password` (достаточно `renvi://**`);
+   - `https://<адрес сайта>/reset-password` и `http://localhost:8081/reset-password` для локальной веб-разработки;
+   - для Expo Go / dev-клиента — `exp://**` (адрес вида `exp://<ip>:8081/--/reset-password`, его печатает `Linking.createURL`).
+   Приложение понимает все три формата ссылки (PKCE `?code=`, `?token_hash=&type=recovery`, неявный `#access_token=&refresh_token=`). `detectSessionInUrl` в `src/lib/supabase.ts` оставлен `false`: ссылку разбирает сам экран `/reset-password`, чтобы не конкурировать с роутером. Для веба хостинг должен отдавать `index.html` на любой путь (SPA-fallback), иначе `/reset-password` даст 404.
    **Rate limits** — оставить включёнными.
 4. **CAPTCHA** (по желанию): Authentication → Bot and Abuse Protection → hCaptcha + `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без ключа шаг CAPTCHA в регистрации пропускается.
 5. **Edge Functions**:
@@ -35,14 +40,18 @@
    `messages` (INSERT), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
 7. **Администраторы**: SQL Editor →
    `insert into public.admins (user_id) select id from auth.users where email = 'founder@...';`
-   Админка открывается в веб-версии по адресу `/admin`.
-8. **Документы**: в админке → «Тарифы и настройки» → `legal_urls` впишите ссылки на политику, условия, правила, подписки, модерацию.
+   Админка открывается в веб-версии по адресу `/admin`. Так добавляется только первый админ; следующих добавляет
+   существующий админ в разделе «Админы» (последнего админа удалить нельзя). Все действия админов — санкции, решения
+   по жалобам, апелляциям и селфи, изменения настроек, управление админами — пишутся в `admin_actions`
+   (раздел «Журнал действий»); настройки `app_config` меняются только через проверяющий RPC `admin_config_set`.
+8. **Документы**: в админке → «Настройки» → «Документы и поддержка» впишите https-ссылки на политику, условия, правила, подписки, модерацию и e-mail поддержки (дашборд напоминает, пока они пусты).
 
 ## 3. Подписки (RevenueCat поверх App Store и Google Play)
 
 1. В App Store Connect и Google Play создайте подписки Plus и Premium (месяц и год).
 2. RevenueCat: Entitlements `plus` и `premium`; Offering `default` с пакетами **`plus_month`, `plus_year`, `premium_month`, `premium_year`** (идентификаторы пакетов важны — по ним приложение находит тарифы).
 3. RevenueCat → Integrations → Webhooks: URL `https://<ref>.functions.supabase.co/revenuecat-webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_SECRET>`.
+   Вебхук идемпотентен: id обработанных событий хранятся в `billing_events` (миграция 0021), повтор отвечает 200 без изменений; любая ошибка записи в БД отвечает 500, чтобы RevenueCat повторил доставку. Миграцию 0021 нужно применить до деплоя новой версии функции.
 4. Приложение логинит RevenueCat идентификатором пользователя Supabase — так вебхук знает, кому включить тариф. Тестовые (sandbox) покупки дают доступ, но помечены `sandbox` и не считаются платящими в дашборде.
 5. Цены в приложении берутся из магазина; предварительные цены из брифа лежат в `app_config.prices_preliminary` только для справки.
 
@@ -164,3 +173,19 @@ Workflow-файлы: `.github/workflows/deploy-supabase.yml` и `.github/workflo
 3. **Повторная проверка:** снова `check-no-demo-bots.sql`. Должна пройти без строк и ошибок.
 4. **Storage:** если в бакете `profile-media` остались папки `<bot_id>/…` (фото ботов), удалите их через Storage в дашборде Supabase или Storage API, по id из шага 2. Прямой `DELETE` из `storage.objects` Supabase не разрешает.
 5. **Админка:** откройте `/admin` и убедитесь, что число пользователей и анкет совпадает с реальными аккаунтами, а демо-профилей в списках нет.
+
+## Веб-версия: автоматическая публикация (GitHub Pages)
+
+Workflow `.github/workflows/web-deploy.yml` собирает веб-версию (`expo export --platform web`) и публикует её при **каждом** push в `main`, то есть после каждого слитого PR. Адрес: `https://<владелец>.github.io/renvi/`.
+
+Один раз:
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.** Без этого шаг публикации падает.
+2. **Settings → Secrets and variables → Actions → Variables** (публичные значения, встраиваются в сборку): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`; по желанию `EXPO_PUBLIC_APP_URL` (по умолчанию адрес Pages), `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без адреса и ключа Supabase сайт откроется с экраном «Сервер не подключён».
+3. Supabase → Authentication → URL Configuration: добавьте адрес сайта в Site URL / Redirect URLs (вход, восстановление пароля).
+4. Свой домен: Settings → Pages → Custom domain, затем переменная `WEB_BASE_URL` = `/`.
+
+Как это работает:
+- Подпуть `/renvi` задаётся только в сборке для сайта (`app.config.js` + `EXPO_BASE_URL`); нативные сборки и локальная разработка не меняются.
+- Прямые ссылки (`/renvi/admin`, `/renvi/invite/КОД`) работают: `404.html` — копия `index.html`.
+- В `version.json` лежит коммит сборки. Открытая вкладка раз в 5 минут и при возврате на вкладку сравнивает его со своим и показывает «Вышла новая версия RENVI · Обновить».
+- Админка открывается по адресу `/renvi/admin`; доступ проверяет сервер (`is_admin`).

@@ -1,4 +1,5 @@
 import { localeOf } from '@/i18n/current';
+import { onUserReset } from './userState';
 
 // Invitation draft shared by "Создать", "Место" and "Дата и время".
 export type DateDraft = { match: string; place: string; custom: string; day: string; time: string; note: string };
@@ -6,8 +7,9 @@ let draft: DateDraft = { match: '', place: 'eurovea', custom: '', day: '', time:
 export const getDateDraft = () => draft;
 export const setDateDraft = (p: Partial<DateDraft>) => { draft = { ...draft, ...p }; };
 export const resetDateDraft = (match: string) => { draft = { match, place: 'eurovea', custom: '', day: '', time: '16:00', note: '' }; };
+onUserReset(() => resetDateDraft(''));
 
-const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+const cap =(v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 const part = (d: Date, opts: Intl.DateTimeFormatOptions, type: Intl.DateTimeFormatPartTypes) =>
   new Intl.DateTimeFormat(localeOf(), opts).formatToParts(d).find((p) => p.type === type)?.value ?? '';
 export const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

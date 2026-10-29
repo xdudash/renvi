@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
 import { router } from 'expo-router';
-import * as Linking from 'expo-linking';
+import { recoveryRedirectUrl } from '@/lib/recoveryAuth';
 import { BackLink, Btn, Field, Screen, Title } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/validate';
@@ -17,7 +17,7 @@ export default function Forgot() {
     const e = validateEmail(email);
     if (e) { setError(e); return; }
     setBusy(true); setError(null);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: Linking.createURL('/signin') });
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: recoveryRedirectUrl() });
     setBusy(false);
     if (err) { setError(t('screens.forgot.sendFailed')); return; }
     router.replace({ pathname: '/confirmation', params: { email: email.trim(), kind: 'reset' } });

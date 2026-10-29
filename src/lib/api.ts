@@ -140,10 +140,16 @@ export const api = {
     if (error) throw toAppError(error);
     return (data?.value as T) ?? null;
   },
-  myProfile: async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-    if (!uid) return null;
+  // `uid` comes from the already-known session. Without it we read the stored session (no network call).
+  // A failed auth lookup throws instead of returning null: null means "no profile row yet", and the
+  // gate would wrongly send an existing user back to onboarding.
+  myProfile: async (uid?: string) => {
+    if (!uid) {
+      const { data: sess, error: sessError } = await supabase.auth.getSession();
+      if (sessError) throw toAppError(sessError);
+      uid = sess.session?.user.id;
+      if (!uid) return null;
+    }
     const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
     if (error) throw toAppError(error);
     return data;
@@ -166,10 +172,11 @@ export const api = {
     if (error) throw toAppError(error);
     return data ?? [];
   },
-  subscription: async (userId: string) => {
-    const { data, error } = await supabase.from('subscriptions').select('tier, expires_at').eq('user_id', userId).maybeSingle();
+  // '*' rather than a column list: product_id (migration 0021) is optional for the app.
+  subscription: async (userId: string): Promise<{ tier: string; expires_at: string | null; product_id?: string | null }> => {
+    const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', userId).maybeSingle();
     if (error) throw toAppError(error);
-    return data ?? { tier: 'free' as const, expires_at: null };
+    return data ?? { tier: 'free' as const, expires_at: null, product_id: null };
   },
   saveFilters: (f: { ageMin: number; ageMax: number; distance: number; verifiedOnly: boolean; intents: string[] }) =>
     rpc<void>('save_filters', { p_age_min: f.ageMin, p_age_max: f.ageMax, p_distance: f.distance, p_verified: f.verifiedOnly, p_intents: f.intents }),

@@ -11,6 +11,7 @@ import { LangProvider } from '@/lib/lang';
 import { DiscoverProvider } from '@/lib/discover';
 import { Gate } from '@/components/Gate';
 import { NotConfigured } from '@/components/NotConfigured';
+import { WebUpdateBanner } from '@/components/WebUpdateBanner';
 
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
@@ -47,6 +48,7 @@ export default function RootLayout() {
             <ToastProvider>
               <StatusBar style="dark" />
               <Shell />
+              <WebUpdateBanner />
             </ToastProvider>
           </DiscoverProvider>
         </SessionProvider>

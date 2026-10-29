@@ -1,0 +1,65 @@
+name: Web deploy
+
+# Publishes the Expo web build to GitHub Pages on every push to main,
+# so the web version always matches the latest merged code.
+# One-time setup: Settings → Pages → Source: "GitHub Actions".
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: web-deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build web
+    runs-on: ubuntu-latest
+    env:
+      # Public values (baked into the bundle). Set them in Settings → Secrets and variables → Actions → Variables.
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_APP_URL: ${{ vars.EXPO_PUBLIC_APP_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+      EXPO_PUBLIC_HCAPTCHA_SITE_KEY: ${{ vars.EXPO_PUBLIC_HCAPTCHA_SITE_KEY }}
+      # Sub-path of the Pages site (/<repo>). With a custom domain set the WEB_BASE_URL variable to "/".
+      EXPO_BASE_URL: ${{ vars.WEB_BASE_URL || format('/{0}', github.event.repository.name) }}
+      EXPO_PUBLIC_BASE_PATH: ${{ vars.WEB_BASE_URL || format('/{0}', github.event.repository.name) }}
+      # Lets an open tab notice that a newer build is live (see src/components/WebUpdateBanner.tsx).
+      EXPO_PUBLIC_BUILD_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Warn when the server is not configured
+        if: ${{ env.EXPO_PUBLIC_SUPABASE_URL == '' || env.EXPO_PUBLIC_SUPABASE_ANON_KEY == '' }}
+        run: echo "::warning::EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY variables are empty — the site will show 'Сервер не подключён'."
+      - name: Export web
+        run: npx expo export --platform web
+      - name: SPA fallback and build stamp
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+          printf '{"commit":"%s","built_at":"%s"}\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/version.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
