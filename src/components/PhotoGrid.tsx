@@ -15,7 +15,10 @@ export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
         if (!it) {
           return (
             <Pressable key={n} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.add')} disabled={busy} onPress={onAdd} style={[s.slot, s.add]}>
-              <Text style={s.plus}>{busy && n === items.length ? '…' : '＋'}</Text>
+              {busy && n === items.length ? <Text style={s.plus}>…</Text> : (
+                // Drawn, not the ＋ glyph: the font's baseline put it at the bottom of the tile on iOS.
+                <View style={s.plusBox}><View style={s.plusH} /><View style={s.plusV} /></View>
+              )}
             </Pressable>
           );
         }
@@ -35,8 +38,11 @@ export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
 const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   slot: { width: '31.6%', aspectRatio: 0.78, borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
-  add: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderStyle: 'dashed', borderColor: '#d2cdc4', backgroundColor: 'transparent' },
+  add: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#e2b9b1', backgroundColor: colors.white },
   plus: { fontSize: 22, color: '#8e8980' },
+  plusBox: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.redWash, alignItems: 'center', justifyContent: 'center' },
+  plusH: { position: 'absolute', width: 14, height: 2.4, borderRadius: 2, backgroundColor: colors.red },
+  plusV: { position: 'absolute', width: 2.4, height: 14, borderRadius: 2, backgroundColor: colors.red },
   x: { position: 'absolute', right: 5, top: 5, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(17,17,17,0.53)', alignItems: 'center', justifyContent: 'center' },
   video: { position: 'absolute', left: 4, bottom: 4, backgroundColor: colors.white, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 4 },
 });

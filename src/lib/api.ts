@@ -28,6 +28,14 @@ export type DiscoverCard = {
   music_title: string | null;
   prompts: PromptRow[];
   photos: PhotoRow[];
+  /** "Подробнее обо мне" (migration 0031): only the filled-in values; undefined on an older database. */
+  details?: ProfileDetails;
+};
+
+export type ProfileDetails = {
+  height_cm?: number;
+  languages?: string[];
+  kids?: string; smoking?: string; drinking?: string; workout?: string; education?: string; pets?: string; zodiac?: string;
 };
 
 export type IncomingSpark = {
@@ -138,6 +146,7 @@ export const api = {
   support: (topic: string | null, body: string, includeHistory: boolean) =>
     rpc<{ id: string }>('submit_support', { p_topic: topic, p_body: body, p_include_history: includeHistory }),
   saveOnboarding: (patch: Record<string, unknown>) => rpc<Record<string, unknown>>('save_onboarding', { p_patch: patch }),
+  saveDetails: (details: Record<string, unknown>) => rpc<ProfileDetails>('save_profile_details', { p_details: details }),
   publish: () => rpc<Record<string, unknown>>('publish_profile'),
   registerPush: (token: string, platform: 'ios' | 'android') =>
     rpc<void>('register_push_token', { p_token: token, p_platform: platform }),

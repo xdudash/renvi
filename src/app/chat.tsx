@@ -3,7 +3,8 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Keyboa
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Avatar, BackLink, Between, Card, Choice, Eyebrow, LinkBtn, Loading, Pill, SafeBanner, Sheet, TabBar, TopBar, useToast } from '@/components/ui';
+import { Avatar, BackLink, Between, Card, Choice, Eyebrow, LinkBtn, Loading, Pill, SafeBanner, Sheet, TabBar, TopBar, useToast, VerifiedBadge } from '@/components/ui';
+import Svg, { Path } from 'react-native-svg';
 import { ErrorRetryState } from '@/components/States';
 import { useChat, type ChatItem } from '@/lib/chat';
 import { api, type MatchContext } from '@/lib/api';
@@ -144,9 +145,9 @@ function Chat({ match }: { match: string }) {
           {!(c.my_photo_consent && c.their_photo_consent) ? <SafeBanner>{t('screens.chat.photoConsentBanner')}</SafeBanner> : null}
         </ScrollView>
         <View style={s.composer}>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.attachPhoto')} onPress={attach} style={s.plus}><Text style={{ fontSize: 17 }}>＋</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.attachPhoto')} onPress={attach} style={s.plus}><View style={s.plusH} /><View style={s.plusV} /></Pressable>
           <TextInput value={text} onChangeText={setText} placeholder={t('screens.chat.placeholder')} placeholderTextColor="#aaa" style={s.input} multiline maxLength={2000} accessibilityLabel={t('screens.chat.message')} />
-          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.send')} onPress={send} style={s.send}><Text style={{ color: '#fff', fontSize: 17 }}>↑</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.send')} onPress={send} style={[s.send, !text.trim() && { opacity: 0.45 }]}><Svg width={20} height={20} viewBox="0 0 24 24"><Path d="M12 19V5m-6 6 6-6 6 6" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg></Pressable>
         </View>
         <View style={[s.main, { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 0, paddingBottom: 4 }]}>
           <LinkBtn label={t('screens.chat.proposeDate')} onPress={() => router.push({ pathname: '/date-create', params: { match } })} />
@@ -174,9 +175,15 @@ function ChatHeader({ c, activeToday, onDate, onMore, onVideo }: { c: MatchConte
   const status = c.muted ? t('screens.chat.notificationsOff') : activeToday ? t('screens.chat.activeToday') : '';
   return (
     <View style={s.head}>
-      <Avatar uri={url} />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700', fontSize: 13 }}>{c.partner.name}, {c.partner.age}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('screens.chat.openProfile')} onPress={() => router.push({ pathname: '/profile', params: { id: c.partner.id } })} style={s.headAvatar}>
+        <Avatar uri={url} size={46} />
+        {activeToday ? <View style={s.online} /> : null}
+      </Pressable>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: colors.ink, flexShrink: 1 }} numberOfLines={1}>{c.partner.name}, {c.partner.age}</Text>
+          {c.partner.verified ? <VerifiedBadge size={16} /> : null}
+        </View>
         <Text style={s.sub}>{[status, c.partner.verified ? t('screens.chat.photoVerified') : ''].filter(Boolean).join(' · ')}</Text>
       </View>
       {onVideo ? <Pressable accessibilityRole="button" accessibilityLabel={t('video.actionA11y')} onPress={onVideo} style={s.pillBtn}><Text style={{ fontSize: 11, fontWeight: '700' }} numberOfLines={1}>{t('video.action')}</Text></Pressable> : null}
@@ -224,7 +231,7 @@ function Bubble({ m, mine, showDay, onLong, onRetry }: { m: ChatItem; mine: bool
   const deleted = !!m.deleted_at;
   return (
     <>
-      {showDay ? <Text style={[s.tiny, { textAlign: 'center' }]}>{dayLabel(m.created_at, t)} · {time(m.created_at)}</Text> : null}
+      {showDay ? <View style={s.dayPill}><Text style={s.dayText}>{dayLabel(m.created_at, t)}</Text></View> : null}
       <Pressable
         accessibilityRole="text"
         accessibilityHint={t('screens.chat.longPressHint')}
@@ -235,6 +242,7 @@ function Bubble({ m, mine, showDay, onLong, onRetry }: { m: ChatItem; mine: bool
         {deleted ? <Text style={{ fontSize: 10, color: '#7d7971' }}>{mine ? t('screens.chat.youDeleted') : t('screens.chat.deleted')}</Text> : null}
         {!deleted && photo ? <Image source={{ uri: photo }} style={{ width: 200, height: 200, borderRadius: 12 }} accessibilityLabel={t('screens.chat.photoInChat')} /> : null}
         {!deleted && m.body ? <Text style={[s.bubbleText, mine && { color: '#fff' }]}>{m.body}</Text> : null}
+        {!deleted && m.state === 'sent' ? <Text style={[s.stamp, mine && { color: 'rgba(255,255,255,0.75)' }]}>{time(m.created_at)}</Text> : null}
         {mine && !deleted && m.state !== 'sent' ? (
           <Text style={{ fontSize: 10, color: '#ffe4df', marginTop: 3 }}>{m.state === 'sending' ? t('screens.chat.sending') : t('screens.chat.notSent')}</Text>
         ) : null}
@@ -270,17 +278,24 @@ const dayLabel = (iso: string, t: TFunction) => {
 
 const s = StyleSheet.create({
   main: { paddingHorizontal: 18, paddingTop: 5 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingTop: 4, paddingBottom: 11, borderBottomWidth: 1, borderBottomColor: colors.line },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
+  headAvatar: { position: 'relative' },
+  online: { position: 'absolute', right: 1, bottom: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#3fb36b', borderWidth: 2, borderColor: colors.paper },
+  dayPill: { alignSelf: 'center', backgroundColor: '#ece8e1', borderRadius: 99, paddingHorizontal: 12, paddingVertical: 5, marginVertical: 10 },
+  dayText: { fontSize: 10, fontWeight: '700', color: colors.sub, letterSpacing: 0.5 },
+  stamp: { fontSize: 9, color: colors.muted, alignSelf: 'flex-end', marginTop: 3 },
+  plusH: { position: 'absolute', width: 14, height: 2.2, borderRadius: 2, backgroundColor: colors.ink },
+  plusV: { position: 'absolute', width: 2.2, height: 14, borderRadius: 2, backgroundColor: colors.ink },
   sub: { fontSize: 10, color: colors.sub, marginTop: 3 },
   pillBtn: { height: 44, paddingHorizontal: 11, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   icon: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   tiny: { fontSize: 10, color: colors.muted, marginVertical: 4 },
-  bubble: { maxWidth: '82%', paddingHorizontal: 13, paddingVertical: 11, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomRightRadius: 16, borderBottomLeftRadius: 4, backgroundColor: '#EAE6E0', marginVertical: 7, alignSelf: 'flex-start' },
-  mine: { alignSelf: 'flex-end', backgroundColor: colors.red, borderBottomLeftRadius: 16, borderBottomRightRadius: 4 },
+  bubble: { maxWidth: '80%', paddingHorizontal: 14, paddingTop: 10, paddingBottom: 7, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderBottomRightRadius: 20, borderBottomLeftRadius: 6, backgroundColor: colors.white, borderWidth: 1, borderColor: '#ebe6df', marginVertical: 4, alignSelf: 'flex-start', shadowColor: '#201E1D', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  mine: { alignSelf: 'flex-end', backgroundColor: colors.red, borderColor: colors.red, borderBottomLeftRadius: 20, borderBottomRightRadius: 6 },
   note: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.line },
-  bubbleText: { fontSize: 13, lineHeight: 19, color: colors.ink },
+  bubbleText: { fontSize: 15, lineHeight: 21, color: colors.ink },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 7, paddingHorizontal: 18, paddingTop: 9, paddingBottom: 4, backgroundColor: colors.paper },
   plus: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
-  input: { flex: 1, borderWidth: 1, borderColor: '#e4e0d8', backgroundColor: colors.white, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 11, fontSize: 13, maxHeight: 120 },
-  send: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  input: { flex: 1, borderWidth: 1, borderColor: '#e4e0d8', backgroundColor: colors.white, borderRadius: 22, paddingHorizontal: 15, paddingTop: 12, paddingBottom: 12, fontSize: 15, maxHeight: 120 },
+  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', shadowColor: colors.red, shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
 });

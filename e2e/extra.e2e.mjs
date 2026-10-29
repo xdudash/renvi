@@ -82,7 +82,7 @@ await step('Daniel hits the daily spark limit: neutral message, no upgrade offer
   await go(p, '/discover');
   await p.getByText(/из 1 лайков осталось/).waitFor({ timeout: 10000 });
   await shot(p, 'discover-limit-config');
-  const btn = p.getByLabel('Удержать искру');
+  const btn = p.getByLabel('Удержать искру').first();
   await btn.hover(); await p.mouse.down(); await p.waitForTimeout(700); await p.mouse.up();
   await p.getByText('Лимит на сегодня исчерпан').waitFor({ timeout: 10000 });
   await p.getByText(/Возвращайтесь завтра/).waitFor();

@@ -6,7 +6,7 @@ import { BackLink, Btn, Card, Screen, Title } from '@/components/ui';
 import { HCAPTCHA_SITE_KEY } from '@/lib/captcha';
 import { supabase } from '@/lib/supabase';
 import { pendingInvite } from '@/lib/referral';
-import { getPendingSignup, setPendingSignup } from '@/lib/pendingSignup';
+import { getPendingSignup, setPendingSignup, setAwaitingConfirmation } from '@/lib/pendingSignup';
 import { confirmationRedirectUrl } from '@/lib/confirmationAuth';
 import { useLang } from '@/lib/lang';
 
@@ -35,6 +35,7 @@ export default function Captcha() {
     if (err) { setError(t('screens.captcha.failed')); return; }
     setPendingSignup(null);
     await supabase.auth.signOut();
+    setAwaitingConfirmation({ email, password });
     router.replace({ pathname: '/confirmation', params: { email } });
   };
   return (

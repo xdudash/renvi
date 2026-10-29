@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View,
   ViewStyle, StyleProp, AccessibilityInfo, Image,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/theme/tokens';
@@ -226,7 +226,7 @@ export function Card({ children, tight, style }: { children: React.ReactNode; ti
 export function Line() {
   return <View style={styles.line} />;
 }
-export function Chip({ label, tone = 'plain' }: { label: string; tone?: 'plain' | 'red' | 'green' | 'amber' }) {
+export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'plain' | 'red' | 'green' | 'amber'; icon?: string }) {
   const t = {
     plain: { bg: colors.white, border: colors.line, fg: '#625f59' },
     red: { bg: colors.redWash, border: colors.chipBorder, fg: colors.redDark },
@@ -235,7 +235,7 @@ export function Chip({ label, tone = 'plain' }: { label: string; tone?: 'plain' 
   }[tone];
   return (
     <View style={[styles.pill, { backgroundColor: t.bg, borderColor: t.border }]}>
-      <Text style={[styles.pillText, { color: t.fg }]}>{label}</Text>
+      <Text style={[styles.pillText, { color: t.fg }]}>{icon ? <Text style={styles.pillIcon}>{icon}  </Text> : null}{label}</Text>
     </View>
   );
 }
@@ -360,10 +360,19 @@ export function PromptCard({ question, answer, onReply }: { question: string; an
       <Text style={styles.promptQ}>{promptLabel(t, question)}</Text>
       <Text style={styles.promptA}>{answer}</Text>
       {onReply ? (
-        <Pressable accessibilityRole="button" onPress={onReply} style={styles.promptReact}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><UiIcon name="comment" size={13} /><Text style={styles.promptReactText}>{t('components.ui.otvetit')}</Text></View>
+        <Pressable accessibilityRole="button" onPress={onReply} style={({ pressed }) => [styles.promptReact, pressed && { opacity: 0.7 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><UiIcon name="comment" size={14} color={colors.redDark} /><Text style={styles.promptReactText}>{t('components.ui.otvetit')}</Text></View>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+// Verified profile mark next to a name: a round green badge with a white check (not a black text square).
+export function VerifiedBadge({ size = 18, label }: { size?: number; label?: string }) {
+  return (
+    <View accessible={!!label} accessibilityLabel={label} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#fff' }}>
+      <Svg width={size * 0.62} height={size * 0.62} viewBox="0 0 24 24"><Path d="m5 12.5 4.5 4.5L19 7.5" stroke="#fff" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg>
     </View>
   );
 }
@@ -547,7 +556,8 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 17, padding: 15, marginVertical: 10 },
   line: { height: 1, backgroundColor: colors.line, marginVertical: 14 },
   pill: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6, marginRight: 7, marginBottom: 7 },
-  pillText: { fontSize: 10, lineHeight: 12 },
+  pillText: { fontSize: 11, lineHeight: 14 },
+  pillIcon: { fontSize: 12 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },
@@ -569,17 +579,17 @@ const styles = StyleSheet.create({
   grabber: { width: 38, height: 4, borderRadius: 4, backgroundColor: '#d3d0c9', alignSelf: 'center', marginBottom: 17 },
   toast: { position: 'absolute', top: 57, left: 16, right: 16, backgroundColor: '#20201e', borderRadius: 13, padding: 12, zIndex: 20 },
   toastText: { color: '#fff', fontSize: 12, textAlign: 'center' },
-  promptCard: { backgroundColor: colors.blush, borderRadius: 17, padding: 18, paddingBottom: 49, marginVertical: 10, position: 'relative' },
-  promptQ: { fontSize: 22, fontWeight: '800', lineHeight: 24, letterSpacing: -0.9, color: colors.ink, maxWidth: '94%' },
-  promptA: { fontSize: 14, lineHeight: 21, color: '#47443f', marginTop: 12 },
-  promptReact: { minHeight: 44, justifyContent: 'center', position: 'absolute', right: 12, bottom: 11, backgroundColor: colors.paper, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 7 },
-  promptReactText: { fontSize: 11, fontWeight: '700', color: colors.ink },
+  promptCard: { backgroundColor: colors.blush, borderRadius: 22, padding: 20, marginVertical: 10 },
+  promptQ: { fontSize: 22, fontWeight: '800', lineHeight: 25, letterSpacing: -0.9, color: colors.ink },
+  promptA: { fontSize: 17, lineHeight: 24, color: '#3d3935', marginTop: 10, fontWeight: '500' },
+  promptReact: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-end', marginTop: 14, backgroundColor: colors.white, borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, shadowColor: '#5a1d16', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  promptReactText: { fontSize: 12, fontWeight: '800', color: colors.redDark },
   actionSet: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', paddingVertical: 12 },
   action: { alignItems: 'center', gap: 7, minWidth: 56 },
-  actionRound: { width: 47, height: 47, borderRadius: 24, backgroundColor: '#EDE9E3', alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { fontSize: 9, color: colors.ink, fontWeight: '600' },
+  actionRound: { width: 54, height: 54, borderRadius: 27, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line, shadowColor: '#201E1D', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  actionLabel: { fontSize: 10, color: colors.ink, fontWeight: '700' },
   sparkRing: { width: 61, height: 61, alignItems: 'center', justifyContent: 'center' },
-  sparkInner: { width: 45, height: 45, borderRadius: 23, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  sparkInner: { width: 47, height: 47, borderRadius: 24, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', shadowColor: colors.red, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
   pillBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 7, marginRight: 7, marginBottom: 7, backgroundColor: colors.white },
   pillBtnOn: { backgroundColor: colors.redWash, borderColor: colors.chipBorder },
   pillBtnText: { fontSize: 11, color: '#625f59' },
