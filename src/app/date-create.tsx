@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Card, Choice, Eyebrow, LinkBtn, Row, SafeBanner, Screen, Title } from '@/components/ui';
 import { getDateDraft, resetDateDraft, setDateDraft, dayLong, weekDays, iso } from '@/lib/dateDraft';
 import { placeLabel } from '@/lib/catalog';
+import { isPastDay } from '@/lib/dateSlots';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
@@ -13,7 +14,7 @@ export default function DateCreate() {
   const { match } = useLocalSearchParams<{ match: string }>();
   const [d] = useState(() => {
     if (getDateDraft().match !== match) resetDateDraft(match);
-    if (!getDateDraft().day) { const days = weekDays('this'); setDateDraft({ day: iso(days[days.length - 1]) }); }
+    if (isPastDay(getDateDraft().day, new Date())) { const days = weekDays('this'); setDateDraft({ day: iso(days[days.length - 1]) }); }
     return getDateDraft();
   });
   const pick = (place: string) => { setDateDraft({ place }); router.push({ pathname: '/date-place', params: { match } }); };
@@ -32,7 +33,7 @@ export default function DateCreate() {
           <Text style={{ color: colors.red, fontSize: 22 }}>⌑</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ fontWeight: '700', fontSize: 13 }}>{d.day ? dayLong(d.day) : ''} · {d.time}</Text>
-            <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.dateCreate.vVremyaMozhnoIzmenit', { place: placeLabel(d.place, d.custom) })}</Text>
+            <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{t('screens.dateCreate.vVremyaMozhnoIzmenit', { place: placeLabel(d.place, d.custom, t) })}</Text>
           </View>
           <LinkBtn label={t('screens.dateCreate.izmenit')} onPress={() => router.push({ pathname: '/date-time', params: { match } })} />
         </Row>

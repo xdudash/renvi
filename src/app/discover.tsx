@@ -8,6 +8,7 @@ import { LoadingCards } from '@/components/LoadingCards';
 import { useDiscover } from '@/lib/discover';
 import { useSession, useSparkLimit } from '@/lib/session';
 import { useLang } from '@/lib/lang';
+import { interestLabel } from '@/lib/catalog';
 
 // 25 · Главная карточка
 export default function Discover() {
@@ -67,8 +68,8 @@ export default function Discover() {
         <ProfileHero path={card.photos[0]?.path} count={card.photos.length} verified={card.verified} label={t('screens.discover.portretDisplayName', { display_name: card.display_name })} />
         <ProfileMeta card={card} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {card.interests.map((x, i) => <Chip key={x} label={x} tone={i === 0 ? 'red' : 'plain'} />)}
-          {common.length ? <Chip label={t('screens.discover.obscheeV', { common: common.join(', ').toLowerCase() })} /> : null}
+          {card.interests.map((x, i) => <Chip key={x} label={interestLabel(t, x)} tone={i === 0 ? 'red' : 'plain'} />)}
+          {common.length ? <Chip label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /> : null}
         </View>
         <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} onProfile={() => router.push({ pathname: '/profile', params: { id: card.profile_id } })} />
         <LinkBtn label={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} />

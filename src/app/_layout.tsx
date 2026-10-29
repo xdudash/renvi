@@ -13,6 +13,9 @@ import { Gate } from '@/components/Gate';
 import { NotConfigured } from '@/components/NotConfigured';
 import { AnalyticsProvider } from '@/lib/analytics';
 import { WebUpdateBanner } from '@/components/WebUpdateBanner';
+import { pushRoute, responseKey } from '@/lib/pushRoute';
+
+const handledPushes = new Set<string>();
 
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
@@ -22,14 +25,23 @@ if (Platform.OS !== 'web') {
 
 function Shell() {
   const { configured } = useSession();
-  // Tapping a push opens the right conversation.
+  // Tapping a push opens the right conversation. The listener alone misses the tap that launched a killed app
+  // (cold start), so the last response is read once as well; each tap is handled once (module-level set).
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
-      const route = r.notification.request.content.data?.route;
-      if (typeof route === 'string' && route.startsWith('/')) router.push(route as never);
-    });
-    return () => sub.remove();
+    let alive = true;
+    const open = (r: Notifications.NotificationResponse | null) => {
+      const key = responseKey(r);
+      if (!r || !key || handledPushes.has(key)) return;
+      handledPushes.add(key);
+      const route = pushRoute(r.notification.request.content.data);
+      if (route) router.push(route as never);
+    };
+    Notifications.getLastNotificationResponseAsync()
+      .then((r) => { if (alive) { open(r); Notifications.clearLastNotificationResponseAsync().catch(() => {}); } })
+      .catch(() => {});
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
+    return () => { alive = false; sub.remove(); };
   }, []);
   if (!configured) return <NotConfigured />;
   return (

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/validate';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
+import { isNetworkAuthError } from '@/lib/authErrors';
 
 // 03 · Войти
 export default function SignIn() {
@@ -21,7 +22,7 @@ export default function SignIn() {
     setBusy(true); setError(null);
     const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (err) { setError(err.message.includes('confirm') ? t('screens.signin.confirmEmail') : t('screens.signin.wrongCredentials')); return; }
+    if (err) { setError(isNetworkAuthError(err) ? t('lib.errors.offline') : err.message.includes('confirm') ? t('screens.signin.confirmEmail') : t('screens.signin.wrongCredentials')); return; }
     await refresh();
     router.replace('/');
   };

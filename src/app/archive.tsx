@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { BackLink, Btn, Card, Loading, Screen, Title, useToast } from '@/components/ui';
 import { ChatRow } from '@/components/ChatRow';
 import { useAsync } from '@/hooks/useAsync';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
@@ -12,6 +13,7 @@ export default function Archive() {
   const { t } = useLang();
   const toast = useToast();
   const { data, loading, reload } = useAsync(() => api.matches(), []);
+  useReloadOnFocus(reload);
   const rows = (data ?? []).filter((m) => m.archived);
   return (
     <Screen tabs="chats">

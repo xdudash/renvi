@@ -11,19 +11,26 @@ import { useSession } from '@/lib/session';
 import { useAsync } from '@/hooks/useAsync';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { getDraft, setDraft } from '@/lib/drafts';
-import { placeLabel } from '@/lib/catalog';
+import { placeLabel, promptLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 import { effectiveStatus, useVideoAvailable, useVideoCall } from '@/lib/video';
 import type { TFunction } from '@/i18n';
 import { localeOf } from '@/i18n/current';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const DEFAULT_STARTERS = [['screens.chat.starter1Label', 'screens.chat.starter1Text'], ['screens.chat.starter2Label', 'screens.chat.starter2Text']] as const;
 
 // 44 · Диалог · переписка
-export default function Chat() {
-  const { t } = useLang();
+// Keyed by conversation: opening another match in the same screen instance (push tap, navigate with new params)
+// must not keep the previous conversation's messages, composer text or context.
+export default function ChatRoute() {
   const { match } = useLocalSearchParams<{ match: string }>();
+  return <Chat key={match ?? ''} match={match} />;
+}
+
+function Chat({ match }: { match: string }) {
+  const { t } = useLang();
   const { session } = useSession();
   const me = session?.user.id;
   const toast = useToast();
@@ -38,6 +45,14 @@ export default function Chat() {
   const video = useVideoCall(match, videoOn);
 
   useEffect(() => { setDraft(match, text); }, [match, text]);
+  // Back from icebreakers / photo consent / date screens: pick up the chosen opener and fresh context.
+  const textRef = useRef(text);
+  useEffect(() => { textRef.current = text; }, [text]);
+  useReloadOnFocus(() => {
+    ctx.reload();
+    const stored = getDraft(match);
+    if (stored !== textRef.current) setText(stored);
+  });
 
   const lastMine = useMemo(() => [...chat.items].reverse().find((m) => m.sender_id === me && m.state === 'sent'), [chat.items, me]);
   const read = c?.their_read_at && lastMine && c.their_read_at >= lastMine.created_at;
@@ -101,7 +116,7 @@ export default function Chat() {
           {c.spark?.prompt ? (
             <Card tight>
               <Eyebrow>{c.spark.from_me ? t('screens.chat.eyebrowFromMe') : t('screens.chat.eyebrowFromThem')}</Eyebrow>
-              <Text style={{ fontWeight: '700', fontSize: 13 }}>«{c.spark.prompt.question} {c.spark.prompt.answer}»</Text>
+              <Text style={{ fontWeight: '700', fontSize: 13 }}>«{promptLabel(t, c.spark.prompt.question)} {c.spark.prompt.answer}»</Text>
               <LinkBtn label={t('screens.chat.openProfile')} onPress={() => router.push({ pathname: '/profile', params: { id: c.partner.id } })} />
             </Card>
           ) : null}

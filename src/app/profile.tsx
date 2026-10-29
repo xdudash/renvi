@@ -6,7 +6,7 @@ import { ErrorRetryState } from '@/components/States';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useDiscover } from '@/lib/discover';
 import { useSession, useSparkLimit } from '@/lib/session';
-import { intentChip } from '@/lib/catalog';
+import { intentChip, interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
@@ -47,7 +47,7 @@ export default function Profile() {
       {card.interests.length ? (
         <View>
           <Text style={st.section}>{t('screens.profile.obschieInteresy')}</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={x} tone="red" />)}</View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={interestLabel(t, x)} tone="red" />)}</View>
         </View>
       ) : null}
       {rest.length ? (
@@ -67,7 +67,7 @@ export default function Profile() {
         </Card>
       ) : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <View style={st.tile}><Eyebrow>{t('screens.profile.tsel')}</Eyebrow><Text style={st.bold}>{intentChip(card.intent)}</Text></View>
+        <View style={st.tile}><Eyebrow>{t('screens.profile.tsel')}</Eyebrow><Text style={st.bold}>{intentChip(card.intent, t)}</Text></View>
         <View style={st.tile}><Eyebrow>{t('screens.profile.lokatsiya')}</Eyebrow><Text style={st.bold}>{card.city} · {card.distance}</Text></View>
       </View>
       {isSelf ? null : (

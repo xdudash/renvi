@@ -9,6 +9,7 @@ import { pendingInvite } from '@/lib/referral';
 import { setPendingSignup } from '@/lib/pendingSignup';
 import { confirmationRedirectUrl } from '@/lib/confirmationAuth';
 import { useLang } from '@/lib/lang';
+import { isNetworkAuthError } from '@/lib/authErrors';
 
 // 04 · Создать аккаунт
 export default function SignUp() {
@@ -29,7 +30,7 @@ export default function SignUp() {
       options: { emailRedirectTo: confirmationRedirectUrl(), data: { invite_code: await pendingInvite() } },
     });
     setBusy(false);
-    if (err) { setError(err.message.includes('registered') ? t('screens.signup.etotAdresUzheZaregistrirov') : t('screens.signup.neUdalosSozdatAkkaunt')); return; }
+    if (err) { setError(isNetworkAuthError(err) ? t('lib.errors.offline') : err.message.includes('registered') ? t('screens.signup.etotAdresUzheZaregistrirov') : t('screens.signup.neUdalosSozdatAkkaunt')); return; }
     // An accidentally disabled hosted Confirm Email setting must not skip the confirmation screen.
     await supabase.auth.signOut();
     router.replace({ pathname: '/confirmation', params: { email: email.trim() } });

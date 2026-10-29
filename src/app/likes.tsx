@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Avatar, Bold, Card, Loading, Screen, Segmented, Tiny, Title } from '@/components/ui';
 import { ErrorRetryState } from '@/components/States';
 import { useAsync } from '@/hooks/useAsync';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { api, type IncomingSpark } from '@/lib/api';
 import { colors } from '@/theme/tokens';
@@ -15,6 +16,7 @@ export default function Likes() {
   const [seg, setSeg] = useState('new');
   const { data, loading, error, reload } = useAsync(() => api.incoming(), []);
   const matches = useAsync(() => api.matches(), []);
+  useReloadOnFocus(() => { reload(); matches.reload(); });
   const count = data?.count ?? 0;
 
   if (loading) return <Screen tabs="likes"><Loading /></Screen>;
@@ -40,14 +42,17 @@ export default function Likes() {
 
 function IncomingRow({ it }: { it: IncomingSpark }) {
   const { t } = useLang();
-  const card = useAsync(() => api.profileCard(it.profile_id), [it.profile_id]);
-  const url = useSignedUrl(card.data?.photos[0]?.path);
+  // incoming_sparks returns photo + verified (0030); profile_card per row only for an older database.
+  const fromList = it.photo !== undefined;
+  const card = useAsync(() => (fromList ? Promise.resolve(null) : api.profileCard(it.profile_id)), [it.profile_id, fromList]);
+  const url = useSignedUrl(fromList ? it.photo : card.data?.photos[0]?.path);
+  const verified = fromList ? !!it.verified : !!card.data?.verified;
   const what = it.target_kind === 'prompt' ? t('screens.likes.sparkOnPrompt') : it.target_kind === 'photo' ? t('screens.likes.sparkOnPhoto') : t('screens.likes.spark');
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/incoming-profile', params: { id: it.profile_id } })} style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.line }}>
       <Avatar uri={url} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700', fontSize: 13 }}>{it.name}, {it.age} {card.data?.verified ? '✓' : ''}</Text>
+        <Text style={{ fontWeight: '700', fontSize: 13 }}>{it.name}, {it.age} {verified ? '✓' : ''}</Text>
         <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{it.city} · {what}</Text>
       </View>
       <Text style={{ color: '#aaa' }}>›</Text>

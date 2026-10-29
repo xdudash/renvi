@@ -7,16 +7,19 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { colors } from '@/theme/tokens';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useLang } from '@/lib/lang';
+import { clampIndex } from '@/lib/chatLogic';
 
 // 27 · Просмотр фото / видео
 export default function MediaViewer() {
   const { t } = useLang();
   const { id, at } = useLocalSearchParams<{ id: string; at?: string }>();
   const { data: card, loading } = useProfileCard(id);
-  const [i, setI] = useState(Number(at ?? 0));
+  const [picked, setI] = useState(Number(at ?? 0));
   const [muted, setMuted] = useState(true);
   const toast = useToast();
   const media = card?.photos ?? [];
+  // `at` comes from the URL: keep it inside the list (out of range or NaN showed an empty frame and "NaN of 3").
+  const i = clampIndex(picked, media.length);
   const cur = media[i];
   const url = useSignedUrl(cur?.path);
   if (loading) return <Screen><BackLink /><Loading /></Screen>;

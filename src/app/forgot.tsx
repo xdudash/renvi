@@ -6,6 +6,7 @@ import { BackLink, Btn, Field, Screen, Title } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/validate';
 import { useLang } from '@/lib/lang';
+import { isNetworkAuthError } from '@/lib/authErrors';
 
 // 05 · Восстановление пароля
 export default function Forgot() {
@@ -19,7 +20,7 @@ export default function Forgot() {
     setBusy(true); setError(null);
     const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: recoveryRedirectUrl() });
     setBusy(false);
-    if (err) { setError(t('screens.forgot.sendFailed')); return; }
+    if (err) { setError(isNetworkAuthError(err) ? t('lib.errors.offline') : t('screens.forgot.sendFailed')); return; }
     router.replace({ pathname: '/confirmation', params: { email: email.trim(), kind: 'reset' } });
   };
   return (

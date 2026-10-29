@@ -14,6 +14,9 @@ import type { TranslationKey } from '@/i18n';
 import { UiIcon, type IconName } from './UiIcon';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { promptLabel } from '@/lib/catalog';
+import { runGuarded } from '@/lib/pressGuard';
+import { createCachedLoader } from '@/lib/cachedLoader';
 
 // ---------- toast ----------
 type ToastFn = (message: string) => void;
@@ -117,15 +120,18 @@ const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' 
 ];
 
 // Number of new incoming sparks for the tab badge (visible on every plan; the list itself is plan-gated).
+// Every Screen renders its own TabBar: one shared, briefly cached request instead of one per screen mount.
+const incomingBadge = createCachedLoader(() => api.incoming().then((r) => r.count), 30_000);
 function useIncomingCount() {
   const { session } = useSession();
-  const [n, setN] = useState(0);
+  const uid = session?.user.id ?? null;
+  const [state, setState] = useState<{ uid: string | null; n: number }>({ uid: null, n: 0 });
   useEffect(() => {
     let alive = true;
-    if (session) api.incoming().then((r) => alive && setN(r.count), () => {});
+    if (uid) incomingBadge.get(uid).then((n) => { if (alive) setState({ uid, n }); }, () => {});
     return () => { alive = false; };
-  }, [session]);
-  return session ? n : 0;
+  }, [uid]);
+  return uid && state.uid === uid ? state.n : 0;
 }
 
 export function TabBar({ active }: { active?: string }) {
@@ -175,7 +181,7 @@ export const Bold = ({ children }: { children: React.ReactNode }) => <Text style
 // ---------- buttons ----------
 type BtnKind = 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'warn';
 export function Btn({ label, onPress, kind = 'primary', disabled, busy, accessibilityLabel }: {
-  label: string; onPress: () => void; kind?: BtnKind; disabled?: boolean; busy?: boolean; accessibilityLabel?: string;
+  label: string; onPress: () => unknown; kind?: BtnKind; disabled?: boolean; busy?: boolean; accessibilityLabel?: string;
 }) {
   const bg = {
     primary: { backgroundColor: colors.red },
@@ -187,13 +193,15 @@ export function Btn({ label, onPress, kind = 'primary', disabled, busy, accessib
   const fg = {
     primary: '#fff', secondary: colors.ink, tertiary: colors.ink, ghost: colors.sub, warn: '#a42623',
   }[kind];
+  // `busy` disables the button only after a re-render; drop presses while the handler's promise is pending.
+  const press = useRef({ busy: false });
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: !!disabled || !!busy, busy: !!busy }}
       disabled={disabled || busy}
-      onPress={onPress}
+      onPress={() => { runGuarded(press.current, onPress); }}
       style={({ pressed }) => [styles.btn, bg, (disabled || busy) && { opacity: 0.5 }, pressed && { opacity: 0.85 }]}
     >
       {busy ? <ActivityIndicator color={fg} /> : <Text style={[styles.btnText, { color: fg }]}>{label}</Text>}
@@ -349,7 +357,7 @@ export function PromptCard({ question, answer, onReply }: { question: string; an
   return (
     <View style={styles.promptCard}>
       <Eyebrow>{t('components.ui.otvetVAnkete')}</Eyebrow>
-      <Text style={styles.promptQ}>{question}</Text>
+      <Text style={styles.promptQ}>{promptLabel(t, question)}</Text>
       <Text style={styles.promptA}>{answer}</Text>
       {onReply ? (
         <Pressable accessibilityRole="button" onPress={onReply} style={styles.promptReact}>
@@ -432,6 +440,9 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
       onPressIn={start}
       onPressOut={end}
       onPress={() => { /* hold only; tap explains the gesture */ }}
+      // VoiceOver / Switch Control cannot hold: their double tap performs "activate", which sends the spark.
+      accessibilityActions={[{ name: 'activate' }]}
+      onAccessibilityAction={(e) => { if (e.nativeEvent.actionName === 'activate' && !disabled) onComplete(() => {}); }}
       disabled={disabled}
       style={[styles.action, disabled && { opacity: 0.5 }]}
     >
@@ -472,7 +483,9 @@ export function HoldButton({ label, onComplete }: { label: string; onComplete: (
     if (!fired.current) { setProgress(0); toast(t('components.ui.uderzhivaytePokaNeZapolnit')); }
   };
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={t('components.ui.uderzhivayteChtobyOtpravit')} onPressIn={start} onPressOut={end} style={[styles.btn, { backgroundColor: colors.red, overflow: 'hidden' }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={t('components.ui.uderzhivayteChtobyOtpravit')} onPressIn={start} onPressOut={end}
+      accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={(e) => { if (e.nativeEvent.actionName === 'activate') onComplete(); }}
+      style={[styles.btn, { backgroundColor: colors.red, overflow: 'hidden' }]}>
       <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${progress * 100}%`, backgroundColor: colors.redDark }} />
       <Text style={[styles.btnText, { color: '#fff' }]}>{label}</Text>
     </Pressable>

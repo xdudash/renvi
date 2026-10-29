@@ -69,7 +69,7 @@ export default function Filters() {
       <Eyebrow style={{ marginTop: 12 }}>{t('screens.filters.namerenie')}</Eyebrow>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {INTENTS.map((i) => (
-          <Pill key={i.key} label={i.filter} active={intents.includes(i.key)} onPress={() => setIntents(intents.includes(i.key) ? intents.filter((x) => x !== i.key) : [...intents, i.key])} />
+          <Pill key={i.key} label={t(i.filterKey)} active={intents.includes(i.key)} onPress={() => setIntents(intents.includes(i.key) ? intents.filter((x) => x !== i.key) : [...intents, i.key])} />
         ))}
       </View>
       <Btn label={t('screens.filters.pokazatPodhodyaschihLyudey')} busy={busy} onPress={apply} />

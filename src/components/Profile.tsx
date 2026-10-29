@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Chip, Sheet, Choice, useToast } from './ui';
 import { colors } from '@/theme/tokens';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
-import { intentChip } from '@/lib/catalog';
+import { intentChip, interestLabel } from '@/lib/catalog';
 import { api, type DiscoverCard } from '@/lib/api';
 import { useLang } from '@/lib/lang';
 
@@ -40,9 +40,9 @@ export function ProfileMeta({ card }: { card: Pick<DiscoverCard, 'profile_id' | 
         <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.deystviyaSProfilem')} onPress={() => setOpen(true)} style={s.more}><Text>···</Text></Pressable>
       </View>
       <View style={s.wrap}>
-        <Chip label={intentChip(card.intent)} tone="red" />
+        <Chip label={intentChip(card.intent, t)} tone="red" />
         {card.verified ? <Chip label={t('components.Profile.fotoProvereno')} tone="green" /> : null}
-        {card.interests.slice(0, 2).map((x) => <Chip key={x} label={x} />)}
+        {card.interests.slice(0, 2).map((x) => <Chip key={x} label={interestLabel(t, x)} />)}
       </View>
       <Sheet visible={open} onClose={() => setOpen(false)}>
         <Text style={s.sheetH}>{t('components.Profile.chtoSdelatSProfilem')}</Text>

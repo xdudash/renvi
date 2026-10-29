@@ -14,7 +14,13 @@ export default function DatePlace() {
   const [place, setPlace] = useState(getDateDraft().place);
   const [custom, setCustom] = useState(getDateDraft().custom);
   const [q, setQ] = useState('');
-  const list = useMemo(() => DATE_PLACES.filter((p) => p.key === 'custom' || !q.trim() || `${p.name} ${p.sub}`.toLowerCase().includes(q.trim().toLowerCase())), [q]);
+  // Names and districts in the selected language (the catalog's `name` / `sub` fields are the Russian originals).
+  const label = (p: (typeof DATE_PLACES)[number]) => ({ name: 'nameKey' in p ? t(p.nameKey) : p.name, sub: t(p.subKey) });
+  const list = useMemo(() => DATE_PLACES.filter((p) => {
+    if (p.key === 'custom' || !q.trim()) return true;
+    const l = 'nameKey' in p ? `${t(p.nameKey)} ${t(p.subKey)}` : `${p.name} ${t(p.subKey)}`;
+    return l.toLowerCase().includes(q.trim().toLowerCase());
+  }), [q, t]);
   const next = () => {
     if (place === 'custom' && (custom.trim().length < 2 || custom.trim().length > 60)) { toast(t('screens.datePlace.ukazhitePublichnoeMesto2')); return; }
     setDateDraft({ place, custom: custom.trim() });
@@ -29,7 +35,7 @@ export default function DatePlace() {
         <Choice key={p.key} selected={place === p.key} onPress={() => setPlace(p.key)}>
           <View style={{ flexDirection: 'row', gap: 8, flex: 1 }}>
             <Text>{p.icon}</Text>
-            <View><Text style={{ fontSize: 12, fontWeight: '700' }}>{p.name}</Text><Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{p.sub}</Text></View>
+            <View><Text style={{ fontSize: 12, fontWeight: '700' }}>{label(p).name}</Text><Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{label(p).sub}</Text></View>
           </View>
           <Text>{place === p.key ? '✓' : '›'}</Text>
         </Choice>

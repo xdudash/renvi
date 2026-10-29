@@ -38,7 +38,7 @@ jobs:
   build:
     name: EAS build
     if: inputs.job == 'build'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Production builds wait for approval when the production environment has reviewers.
     environment: ${{ inputs.profile == 'production' && 'production' || 'preview' }}
     steps:
@@ -66,7 +66,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 27.1.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: npm ci
@@ -98,12 +98,12 @@ jobs:
         env:
           PLATFORM: ${{ inputs.platform }}
           PROFILE: ${{ inputs.profile }}
-        run: npx eas-cli@latest build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
+        run: eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
 
   update:
     name: EAS Update (OTA)
     if: inputs.job == 'update'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.channel == 'production' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +131,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 27.1.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: npm ci
@@ -142,4 +142,4 @@ jobs:
           PLATFORM: ${{ inputs.platform }}
           BRANCH: ${{ inputs.channel }}
           MESSAGE: ${{ inputs.message || github.sha }}
-        run: npx eas-cli@latest update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive
+        run: eas update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive
