@@ -39,6 +39,9 @@ export type IncomingSpark = {
   target_kind: 'profile' | 'photo' | 'prompt';
   target_ref: string | null;
   created_at: string;
+  /** Cover photo path and verification (migration 0030); undefined on an older database. */
+  photo?: string | null;
+  verified?: boolean;
 };
 
 export type MatchRow = {
@@ -52,6 +55,9 @@ export type MatchRow = {
   muted: boolean;
   archived: boolean;
   created_at: string;
+  /** Partner cover photo path and verification (migration 0030); undefined on an older database. */
+  partner_photo?: string | null;
+  partner_verified?: boolean;
 };
 
 export type MessageRow = {
@@ -173,12 +179,6 @@ export const api = {
       .order('position');
     if (error) throw toAppError(error);
     return data ?? [];
-  },
-  // '*' rather than a column list: product_id (migration 0021) is optional for the app.
-  subscription: async (userId: string): Promise<{ tier: string; expires_at: string | null; product_id?: string | null }> => {
-    const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', userId).maybeSingle();
-    if (error) throw toAppError(error);
-    return data ?? { tier: 'free' as const, expires_at: null, product_id: null };
   },
   saveFilters: (f: { ageMin: number; ageMax: number; distance: number; verifiedOnly: boolean; intents: string[] }) =>
     rpc<void>('save_filters', { p_age_min: f.ageMin, p_age_max: f.ageMax, p_distance: f.distance, p_verified: f.verifiedOnly, p_intents: f.intents }),

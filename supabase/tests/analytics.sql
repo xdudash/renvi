@@ -47,14 +47,13 @@ insert into public.analytics_events(user_id,session_id,event,screen,created_at) 
  ('a1000000-0000-0000-0000-000000000004','44444444-4444-4444-4444-444444444444','screen_view','discover',now());
 -- Receiving a match does not imply the offline partner returned.
 insert into public.analytics_events(user_id,event) values('a1000000-0000-0000-0000-000000000002','match');
-insert into public.subscriptions(user_id,tier,expires_at) values('a1000000-0000-0000-0000-000000000001','premium',null);
 set local role authenticated;
 select pg_temp.check((public.admin_analytics()->>'total')::int=3,'total includes unprofiled account and excludes demo');
 select pg_temp.check((public.admin_analytics()->>'new')::int=3,'new includes unprofiled signup');
 select pg_temp.check((public.admin_analytics()->>'dau')::int=1,'offline match recipient and demo do not inflate DAU');
 select pg_temp.check((select (r->>'eligible')::int=1 and (r->>'returned')::int=0 from jsonb_array_elements(public.admin_analytics()->'retention') r where r->>'d'='1'),'D1 mature cohort excludes outcome-only returns and demos');
 select pg_temp.check((select (r->>'eligible')::int=0 from jsonb_array_elements(public.admin_analytics()->'retention') r where r->>'d'='7'),'immature D7 excluded');
-select pg_temp.check((select count(*)=1 from jsonb_array_elements(public.admin_analytics()->'demographics') r where r->>'tier'='premium'),'null expiry paid tier counted');
+select pg_temp.check(not exists(select 1 from jsonb_array_elements(public.admin_analytics()->'demographics') r where r ? 'tier'),'demographics have no tier column (no paid plans)');
 select pg_temp.check((select sum((r->>'active_seconds')::int)=30 from jsonb_array_elements(public.admin_analytics()->'screens') r),'per-screen duration totals agree');
 select pg_temp.check((select sum((r->>'active_seconds')::int)=30 from jsonb_array_elements(public.admin_analytics()->'hourly') r),'UTC hourly durations agree');
 select pg_temp.check(public.admin_analytics()->'funnel'->'first_visit'='null'::jsonb,'anonymous visit never fabricated');

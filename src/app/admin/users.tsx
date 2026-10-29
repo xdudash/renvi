@@ -54,8 +54,8 @@ export default function AdminUsers() {
       {data ? (
         <View style={{ opacity: loading ? 0.5 : 1 }}>
           <Pager total={data.total} offset={offset} limit={LIMIT} onChange={setOffset} />
-          <Tbl widths={[230, 110, 110, 110, 90, 90, 130, 120, 90]}
-            head={[t('adm.users.colUser'), t('adm.users.colCountry'), t('adm.users.colStatus'), t('adm.users.colVerif'), t('adm.users.colTier'),
+          <Tbl widths={[230, 110, 110, 110, 90, 130, 120, 90]}
+            head={[t('adm.users.colUser'), t('adm.users.colCountry'), t('adm.users.colStatus'), t('adm.users.colVerif'),
               t('adm.users.colReports'), t('adm.users.colActive'), t('adm.users.colCreated'), '']}
             rows={data.rows.map((u) => [
               <Pressable key="u" accessibilityRole="link" onPress={() => open(u)}>
@@ -70,7 +70,6 @@ export default function AdminUsers() {
               `${u.country}${u.city ? ` · ${u.city}` : ''}`,
               <View key="s"><Badge label={t(STATUS_LABEL[u.status])} tone={STATUS_TONE[u.status]} />{u.status === 'suspended' ? <Text style={{ fontSize: 10, color: colors.sub, marginTop: 2 }}>{t('adm.users.until', { date: fmtDate(u.suspended_until) })}</Text> : null}</View>,
               t(VERIF_LABEL[u.verification_status]),
-              u.tier,
               <Text key="r" style={{ fontSize: 12, color: u.reports_open > 0 ? colors.red : colors.ink, fontWeight: u.reports_open > 0 ? '800' : '400' }}>{`${u.reports_open} / ${u.reports_total}`}</Text>,
               fmtDate(u.last_active),
               fmtDate(u.created_at),

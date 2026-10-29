@@ -12,15 +12,14 @@ import { useLang } from '@/lib/lang';
 export default function PrivacyVisibility() {
   const { t } = useLang();
   const toast = useToast();
-  const { profile, tier, refresh } = useSession();
+  const { profile, refresh } = useSession();
   const [paused, setPaused] = useDraft<boolean>(!!profile?.paused);
   const [active, setActive] = useDraft<boolean>(profile?.show_active ?? true);
   const [incognito, setIncognito] = useDraft<boolean>(!!profile?.incognito);
   const [busy, setBusy] = useState(false);
-  const premium = tier === 'premium';
   const save = async () => {
     setBusy(true);
-    try { await api.saveOnboarding({ paused, show_active: active, incognito: premium && incognito }); await refresh(); toast(t('screens.privacyVisibility.saved')); router.navigate('/me'); }
+    try { await api.saveOnboarding({ paused, show_active: active, incognito }); await refresh(); toast(t('screens.privacyVisibility.saved')); router.navigate('/me'); }
     catch { toast(t('screens.privacyVisibility.saveFailed')); } finally { setBusy(false); }
   };
   return (
@@ -29,8 +28,7 @@ export default function PrivacyVisibility() {
       <Title kicker={t('screens.privacyVisibility.kicker')} heading={t('screens.privacyVisibility.heading')} sub={t('screens.privacyVisibility.sub')} />
       <Toggle title={t('screens.privacyVisibility.pauseTitle')} sub={t('screens.privacyVisibility.pauseSub')} on={paused} set={setPaused} />
       <Toggle title={t('screens.privacyVisibility.activeTitle')} sub={t('screens.privacyVisibility.activeSub')} on={active} set={setActive} />
-      <Toggle title={t('screens.privacyVisibility.incognitoTitle')} sub={premium ? t('screens.privacyVisibility.incognitoSub') : t('screens.privacyVisibility.incognitoLocked')} on={incognito} set={setIncognito} disabled={!premium} />
-      {!premium ? <Btn kind="tertiary" label={t('screens.privacyVisibility.viewPremium')} onPress={() => router.push('/plans')} /> : null}
+      <Toggle title={t('screens.privacyVisibility.incognitoTitle')} sub={t('screens.privacyVisibility.incognitoSub')} on={incognito} set={setIncognito} />
       <Btn label={t('screens.privacyVisibility.save')} busy={busy} onPress={save} />
     </Screen>
   );

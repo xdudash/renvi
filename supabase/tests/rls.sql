@@ -66,12 +66,11 @@ select pg_temp.check(public.distance_label('00000000-0000-0000-0000-000000000001
 
 select pg_temp.expect_error($q$update public.profiles set verification_status = 'approved' where id = '00000000-0000-0000-0000-000000000001'$q$,
   'client cannot approve own verification');
-select pg_temp.expect_error($q$insert into public.subscriptions (user_id, tier) values ('00000000-0000-0000-0000-000000000001','premium')$q$,
-  'client cannot write subscriptions');
+select pg_temp.check(to_regclass('public.subscriptions') is null, 'there is no subscriptions table (RENVI is free)');
 select pg_temp.expect_error($q$select public.save_onboarding('{"birthdate":"2015-01-01"}'::jsonb)$q$,
   'under 18 birth date rejected');
 
--- ---------- free tier limits and sparks ----------
+-- ---------- sparks ----------
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select pg_temp.check((select count(*) from public.discover()) = 1, 'Marek sees Anna');
 select pg_temp.check((select public.send_spark('00000000-0000-0000-0000-000000000001','profile',null,'hi there')->>'status') = 'sent',
@@ -79,10 +78,10 @@ select pg_temp.check((select public.send_spark('00000000-0000-0000-0000-00000000
 select pg_temp.check(public.likes_today() = 1, 'likes_today counts the spark');
 select pg_temp.check((select count(*) from public.sparks where comment is not null) = 1, 'comment is stored');
 
--- Anna sees the incoming spark count, but Free hides the list.
+-- Anna sees who sparked her: count and list (no paid plans).
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
-select pg_temp.check((public.incoming_sparks()->>'count')::int = 1 and jsonb_array_length(public.incoming_sparks()->'items') = 0,
-  'Free tier sees only the count of incoming sparks');
+select pg_temp.check((public.incoming_sparks()->>'count')::int = 1 and jsonb_array_length(public.incoming_sparks()->'items') = 1,
+  'everyone sees the incoming sparks list');
 select pg_temp.check((select (public.send_spark('00000000-0000-0000-0000-000000000002','profile',null,null)->>'status')) = 'match',
   'mutual spark creates a match');
 select pg_temp.check(exists (select 1 from public.matches where user_a = '00000000-0000-0000-0000-000000000001'), 'match row exists');
@@ -133,7 +132,7 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
 select pg_temp.check(public.is_admin(), 'admin is recognised');
 select pg_temp.check((select count(*) from public.profiles) >= 4, 'admin reads all profiles');
 
--- ---------- billing: plus unlocks incoming list ----------
+-- ---------- anonymous ----------
 select pg_temp.as_user(null::uuid);
 select pg_temp.expect_error($q$select 1 from public.profiles$q$, 'anonymous user cannot read profiles');
 
@@ -141,24 +140,21 @@ select pg_temp.expect_error($q$select 1 from public.profiles$q$, 'anonymous user
 -- ---------- more: admin-only functions are closed to regular users ----------
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
 select pg_temp.expect_error($q$select public.admin_stats(null)$q$, 'regular user cannot read admin stats');
-select pg_temp.expect_error($q$select public.admin_set_config('tier_limits', '{}'::jsonb)$q$, 'regular user cannot change tariffs');
+select pg_temp.expect_error($q$select public.admin_set_config('daily_spark_limit', '5'::jsonb)$q$, 'regular user cannot change the spark limit');
 select pg_temp.expect_error($q$select public.admin_sanction('00000000-0000-0000-0000-000000000002', 'ban', 'x', null)$q$, 'regular user cannot ban');
 select pg_temp.check((select count(*) from public.admin_users(null, null)) = 0, 'admin_users returns nothing to regular users');
-select pg_temp.check(public.my_tier() = 'free', 'default plan is free');
 
 -- ---------- error journal: insert allowed, read denied ----------
 insert into public.error_events (area, message, user_id) values ('test', 'boom', '00000000-0000-0000-0000-000000000001');
 select pg_temp.check((select count(*) from public.error_events) = 0, 'users cannot read the error journal');
 
--- ---------- paid plan from the server unlocks the incoming list ----------
+-- ---------- incoming list without any plan ----------
 select pg_temp.as_admin_db();
 insert into public.sparks (from_id, to_id) values ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001') on conflict do nothing;
 insert into public.private_profile(user_id,birthdate) values ('00000000-0000-0000-0000-000000000004',((now() at time zone 'UTC')::date-interval '19 years')::date);
 update public.profiles set onboarding_done = true, age = 19, terms_accepted_at = now(), adult_confirmed_at = now(), sensitive_consent_at = now() where id = '00000000-0000-0000-0000-000000000004';
-insert into public.subscriptions (user_id, tier) values ('00000000-0000-0000-0000-000000000001', 'plus');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
-select pg_temp.check(public.my_tier() = 'plus', 'server-set plan is read');
-select pg_temp.check(jsonb_array_length(public.incoming_sparks()->'items') = 1, 'Plus sees the incoming list');
+select pg_temp.check(jsonb_array_length(public.incoming_sparks()->'items') = 1, 'a new incoming spark is listed without any plan');
 
 -- ---------- selfie verification ----------
 select pg_temp.expect_error($q$select public.request_verification('00000000-0000-0000-0000-000000000002/verify/x.jpg')$q$, 'cannot file a selfie in someone else''s folder');
@@ -184,7 +180,7 @@ select pg_temp.check(exists (select 1 from public.referral_signups where invited
 -- ---------- filters ----------
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
 select public.save_filters(30, 40, 50, true, array['serious']);
-select pg_temp.check((select filter_verified_only from public.profiles where id = '00000000-0000-0000-0000-000000000002') = false, 'verified-only filter requires a paid plan');
+select pg_temp.check((select filter_verified_only from public.profiles where id = '00000000-0000-0000-0000-000000000002') = true, 'verified-only filter is saved for everyone');
 select pg_temp.check((select count(*) from public.discover()) = 0, 'age filter hides profiles outside the range');
 
 rollback;

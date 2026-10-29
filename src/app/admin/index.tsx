@@ -57,7 +57,6 @@ export default function AdminHome() {
             <Tile value={data.reports_unassigned} label={t('adm.dash.tileReportsNew', { total: data.reports_open })} href="/admin/reports" alert={data.reports_unassigned > 0} />
             <Tile value={data.appeals_open} label={t('adm.dash.tileAppeals')} href="/admin/appeals" alert={data.appeals_open > 0} />
             <Tile value={data.pending_verifications} label={t('adm.dash.tileVerif')} href="/admin/verification" />
-            <Tile value={data.paid_subscribers} label={t('adm.dash.tilePaid')} />
             <Tile value={data.admins} label={t('adm.dash.tileAdmins')} href="/admin/admins" />
             <Tile value={data.demo_bots} label={t('adm.dash.tileDemo')} alert={data.demo_bots > 0} />
           </View>

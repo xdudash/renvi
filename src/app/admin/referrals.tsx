@@ -7,7 +7,7 @@ import { AdminError } from '@/lib/adminApi';
 
 type Rf = { invited_user: string; code: string; status: string; created_at: string; owner_name: string | null };
 
-// Referral rewards: a verified invite waits for a manual decision (approve grants the configured promo days).
+// Referrals: a verified invite waits for a manual decision. Approving only marks it counted (no promo days, RENVI is free).
 export default function AdminReferrals() {
   const { t } = useLang();
   const toast = useToast();

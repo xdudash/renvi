@@ -6,12 +6,13 @@ import { PromptPicker } from '@/components/PromptPicker';
 import { PROMPTS } from '@/lib/catalog';
 import { useMyPrompts, type MyPrompt } from '@/hooks/usePrompts';
 import { useLang } from '@/lib/lang';
+import { ErrorRetryState } from '@/components/States';
 
 // 17 · Вопросы-подсказки
 export default function ObPrompts() {
   const { t } = useLang();
   const toast = useToast();
-  const { items, saveAll } = useMyPrompts();
+  const { items, saveAll, error, reload } = useMyPrompts();
   const [edited, setDraft] = useState<MyPrompt[] | null>(null);
   const { save, busy } = useStepSave('ob-prompts');
   const draft: MyPrompt[] = edited ?? (items.length ? items : [{ question_key: PROMPTS[0], answer: '', position: 0 }]);
@@ -24,6 +25,7 @@ export default function ObPrompts() {
   const submit = async () => {
     try { await saveAll(draft); await save({}); } catch { toast(t('screens.obPrompts.saveFailed')); }
   };
+  if (error && !edited) return <Screen><ErrorRetryState onRetry={reload} /></Screen>;
   return (
     <Screen>
       <OnbHeader step={7} kicker={t('screens.obPrompts.kicker')} heading={t('screens.obPrompts.heading')} sub={t('screens.obPrompts.sub')} />

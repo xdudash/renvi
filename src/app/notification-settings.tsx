@@ -1,7 +1,6 @@
 import { Linking, Text } from 'react-native';
 import { BackLink, Btn, Card, CheckRow, Screen, Title, useToast } from '@/components/ui';
 import { usePrefs } from '@/hooks/usePrefs';
-import { useTierLimits } from '@/lib/session';
 import type { Prefs } from '@/lib/account';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
@@ -11,13 +10,11 @@ export default function NotificationSettings() {
   const { t } = useLang();
   const toast = useToast();
   const { prefs, set } = usePrefs();
-  const { limits } = useTierLimits();
-  const canLikes = !!limits?.see_incoming;
   const rows: [keyof Prefs, string, string, boolean][] = [
     ['messages', t('screens.notificationSettings.soobscheniya'), t('screens.notificationSettings.kogdaPrihoditNovoeSoobsche'), true],
     ['matches', t('screens.notificationSettings.sovpadeniya'), t('screens.notificationSettings.kogdaIskraVzaimna'), true],
     ['dates', t('screens.notificationSettings.predlozhenieVstrechi'), t('screens.notificationSettings.otvetNaPriglashenie'), true],
-    ['likes', t('screens.notificationSettings.novyeSimpatii'), t('screens.notificationSettings.tolkoEsliDostupnyVashemu'), canLikes],
+    ['likes', t('screens.notificationSettings.novyeSimpatii'), t('screens.notificationSettings.kogdaVamOtpraviliIskru'), true],
     ['news', t('screens.notificationSettings.podborkiINovosti'), t('screens.notificationSettings.neChascheParyRaz'), true],
     ['digest_push', t('screens.notificationSettings.digestPush'), t('screens.notificationSettings.digestPushHint'), true],
     ['digest_email', t('screens.notificationSettings.digestEmail'), t('screens.notificationSettings.digestEmailHint'), true],

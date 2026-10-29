@@ -1,7 +1,7 @@
 // Browser-only fictitious fixtures; this does not verify backend behavior.
 export const fixtureScreenMap = Object.fromEntries([
   'ob-age', 'ob-gender', 'ob-seeking', 'ob-intent', 'ob-city', 'ob-about', 'ob-prompts', 'ob-location',
-  'settings', 'privacy-visibility', 'privacy-data', 'plans', 'filters', 'legal',
+  'settings', 'privacy-visibility', 'privacy-data', 'filters', 'legal',
 ].map((route) => [route, [`/${route}`, 1]]));
 fixtureScreenMap['ob-age-locked'] = ['/ob-age?qa=locked', 1];
 fixtureScreenMap['ob-gender-locked'] = ['/ob-gender?qa=locked', 1];
@@ -19,7 +19,6 @@ export async function installMobileFixtures(context, app) {
     let value = [];
     if (url.pathname === '/auth/v1/user') value = session.user;
     else if (url.pathname === '/rest/v1/profiles') value = { ...profile, ...identity };
-    else if (url.pathname === '/rest/v1/subscriptions') value = null;
     else if (url.pathname === '/rest/v1/rpc/my_identity') value = identity;
     else if (url.pathname === '/rest/v1/rpc/incoming_sparks') value = { count: 0, items: [] };
     else if (url.pathname === '/rest/v1/rpc/my_analytics_consent') value = false;

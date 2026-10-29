@@ -1,16 +1,13 @@
-// Session, own profile and tier. The tier is read from the server; the client never sets it.
+// Session and own profile. RENVI is free for everyone: there are no plans, tiers or purchases.
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, isBackendConfigured } from './supabase';
 import { api } from './api';
-import { initPurchases } from './purchases';
 import { useLang } from './lang';
-import { serverProduct, serverTier } from './billing';
-import { mergeSnapshot, type Held, type Loaded, type Tier } from './snapshot';
+import { mergeSnapshot, type Held, type Loaded } from './snapshot';
 import { unlinkPush } from './push';
 import { resetUserState } from './userState';
 
-export type { Tier };
 export type Profile = Record<string, any> | null;
 
 type Ctx = {
@@ -18,36 +15,26 @@ type Ctx = {
   configured: boolean;
   session: Session | null;
   profile: Profile;
-  tier: Tier;
-  /** Store product of the active paid plan (server subscriptions.product_id), null when free or unknown. */
-  productId: string | null;
-  /** True when the last profile/plan load failed. The last good profile (same account) is kept meanwhile. */
+  /** True when the last profile load failed. The last good profile (same account) is kept meanwhile. */
   loadError: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const SessionCtx = createContext<Ctx>({
-  ready: false, configured: isBackendConfigured, session: null, profile: null, tier: 'free', productId: null, loadError: false,
+  ready: false, configured: isBackendConfigured, session: null, profile: null, loadError: false,
   refresh: async () => {}, signOut: async () => {},
 });
 
 type Snapshot = { session: Session | null; loaded: Loaded };
 
-// Reads session, own profile and the server-side plan in one go. A part that fails stays undefined, never null.
+// Reads session and own profile in one go. A profile that fails to load stays undefined, never null.
 async function loadSnapshot(): Promise<Snapshot> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
   if (!session) return { session: null, loaded: { userId: null, failed: false } };
-  initPurchases(session.user.id).catch(() => {});
   const loaded: Loaded = { userId: session.user.id, failed: false };
   try { loaded.profile = await api.myProfile(session.user.id); } catch { loaded.failed = true; }
-  try {
-    const sub = await api.subscription(session.user.id);
-    const now = Date.now();
-    loaded.tier = serverTier(sub, now);
-    loaded.productId = serverProduct(sub, now);
-  } catch { loaded.failed = true; }
   return { session, loaded };
 }
 
@@ -59,17 +46,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(!isBackendConfigured);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile>(null);
-  const [tier, setTier] = useState<Tier>('free');
-  const [productId, setProductId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const held = useRef<Held>({ userId: null, profile: null, tier: 'free', productId: null });
+  const held = useRef<Held>({ userId: null, profile: null });
 
   const { applyProfileLang } = useLang();
 
   const apply = useCallback((s: Snapshot) => {
     const m = mergeSnapshot(held.current, s.loaded);
-    held.current = { userId: m.userId, profile: m.profile, tier: m.tier, productId: m.productId };
-    setSession(s.session); setProfile(m.profile); setTier(m.tier); setProductId(m.productId); setLoadError(m.loadError);
+    held.current = { userId: m.userId, profile: m.profile };
+    setSession(s.session); setProfile(m.profile); setLoadError(m.loadError);
     if (m.profile?.language) applyProfileLang(m.profile.language);
   }, [applyProfileLang]);
   const seq = useRef(0);
@@ -94,8 +79,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setSession(s);
       // A different account must never see the previous account's profile while its own loads.
       if ((s?.user.id ?? null) !== held.current.userId) {
-        held.current = { userId: null, profile: null, tier: 'free', productId: null };
-        setProfile(null); setTier('free'); setProductId(null);
+        held.current = { userId: null, profile: null };
+        setProfile(null);
         setReady(false); // the gate waits for this account's own profile before routing
       }
       refresh();
@@ -118,13 +103,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const id = held.current.userId;
     if (id) await withTimeout(unlinkPush(id), 4000).catch(() => {});
     await supabase.auth.signOut();
-    held.current = { userId: null, profile: null, tier: 'free', productId: null };
-    setSession(null); setProfile(null); setTier('free'); setProductId(null); setLoadError(false);
+    held.current = { userId: null, profile: null };
+    setSession(null); setProfile(null); setLoadError(false);
     resetUserState();
   }, []);
 
   return (
-    <SessionCtx.Provider value={{ ready, configured: isBackendConfigured, session, profile, tier, productId, loadError, refresh, signOut }}>
+    <SessionCtx.Provider value={{ ready, configured: isBackendConfigured, session, profile, loadError, refresh, signOut }}>
       {children}
     </SessionCtx.Provider>
   );
@@ -132,12 +117,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
 export const useSession = () => useContext(SessionCtx);
 
-// Daily like limit comes from server configuration (app_config.tier_limits).
-export function useTierLimits() {
-  const { tier } = useSession();
-  const [limits, setLimits] = useState<Record<string, any> | null>(null);
+/** Fallback while app_config.daily_spark_limit is loading or unreadable; the server enforces the real value. */
+export const DEFAULT_SPARK_LIMIT = 100;
+
+// Anti-abuse daily spark limit, the same for everyone (app_config.daily_spark_limit, editable in the admin panel).
+export function useSparkLimit(): number {
+  const [limit, setLimit] = useState(DEFAULT_SPARK_LIMIT);
   useEffect(() => {
-    api.config<Record<string, any>>('tier_limits').then(setLimits).catch(() => setLimits(null));
+    let alive = true;
+    api.config<number>('daily_spark_limit')
+      .then((v) => { if (alive && typeof v === 'number' && v > 0) setLimit(v); })
+      .catch(() => {});
+    return () => { alive = false; };
   }, []);
-  return { tier, limits: limits?.[tier] ?? null };
+  return limit;
 }

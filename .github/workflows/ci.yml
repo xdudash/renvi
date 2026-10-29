@@ -8,7 +8,7 @@ on:
 jobs:
   check:
     name: TypeScript, lint, web bundle
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,6 +27,9 @@ jobs:
       - name: Client logic checks
         if: ${{ !cancelled() }}
         run: scripts/ci-annotate.sh client node scripts/check-client.mjs
+      - name: App Store release gate
+        if: ${{ !cancelled() }}
+        run: scripts/ci-annotate.sh release node scripts/check-release.mjs
       - name: Identity and feature logic checks
         if: ${{ !cancelled() }}
         run: node scripts/check-identity.mjs && node --test scripts/tests/*.test.mjs
@@ -36,7 +39,7 @@ jobs:
 
   db:
     name: Database migrations and behaviour tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16

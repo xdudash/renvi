@@ -36,8 +36,6 @@ export default function AdminUserDetail() {
   }
   const p = u.profile;
   const name = `${p.display_name ?? '—'}${p.age ? `, ${p.age}` : ''}`;
-  const sub = u.subscription;
-  const canReset = !!sub && sub.tier !== 'free' && (!sub.store || sub.sandbox || !sub.active);
 
   const warn = () => openDialog({ title: t('adm.user.warnTitle', { name }), body: t('adm.user.warnBody'), confirmLabel: t('adm.user.warn'),
     onConfirm: ({ reason }) => adminApi.sanction(p.id, 'warning', reason), onDone: done(t('adm.common.saved')) });
@@ -56,8 +54,6 @@ export default function AdminUserDetail() {
     onConfirm: ({ reason }) => adminApi.verify(p.id, 'rejected', reason), onDone: done(t('adm.verify.rejectedToast')) });
   const revoke = () => openDialog({ title: t('adm.user.revokeTitle', { name }), body: t('adm.verify.reasonVisible'), confirmLabel: t('adm.user.revoke'), tone: 'red',
     onConfirm: ({ reason }) => adminApi.verify(p.id, 'revoked', reason), onDone: done(t('adm.common.saved')) });
-  const resetFree = () => openDialog({ title: t('adm.user.resetTitle'), body: t('adm.user.resetBody'), confirmLabel: t('adm.user.reset'), tone: 'red',
-    onConfirm: ({ reason }) => adminApi.resetFree(p.id, reason), onDone: done(t('adm.common.saved')) });
   const removePhoto = (photoId: string) => openDialog({ title: t('adm.user.removePhotoTitle'), body: t('adm.user.removePhotoBody'), confirmLabel: t('adm.user.removePhoto'), tone: 'red',
     onConfirm: ({ reason }) => adminApi.removePhoto(photoId, reason), onDone: done(t('adm.common.saved')) });
 
@@ -89,7 +85,6 @@ export default function AdminUserDetail() {
           {p.verification_status !== 'approved' ? <Act label={t('adm.verify.approve')} tone="green" onPress={approve} /> : null}
           {p.verification_status === 'pending' ? <Act label={t('adm.verify.reject')} tone="red" onPress={reject} /> : null}
           {p.verification_status === 'approved' ? <Act label={t('adm.user.revoke')} tone="ghost" onPress={revoke} /> : null}
-          {canReset ? <Act label={t('adm.user.reset')} tone="ghost" onPress={resetFree} /> : null}
         </Acts>
         {u.is_admin ? <Text style={[muted, { marginTop: 8 }]}>{t('adm.user.adminNote')}</Text> : null}
       </Section>
@@ -138,17 +133,6 @@ export default function AdminUserDetail() {
           </Section>
         </View>
         <View>
-          <Section title={t('adm.user.subscription')}>
-            {sub ? (
-              <View>
-                <KV k={t('adm.user.tier')} v={`${sub.tier}${sub.active ? '' : ` (${t('adm.user.inactive')})`}`} />
-                <KV k={t('adm.user.store')} v={sub.store ?? t('adm.user.noStore')} />
-                <KV k={t('adm.user.expires')} v={fmtDate(sub.expires_at)} />
-                {sub.sandbox ? <KV k="Sandbox" v={t('adm.common.yes')} /> : null}
-              </View>
-            ) : <Text style={small}>Free</Text>}
-            <Text style={[muted, { marginTop: 8 }]}>{t('adm.user.subscriptionNote')}</Text>
-          </Section>
           <Section title={t('adm.user.activity')}>
             <KV k={t('adm.user.matches')} v={t('adm.user.matchesValue', { active: u.stats.matches_active, total: u.stats.matches_total })} />
             <KV k={t('adm.user.sparks')} v={t('adm.user.sparksValue', { sent: u.stats.sparks_sent, received: u.stats.sparks_received })} />

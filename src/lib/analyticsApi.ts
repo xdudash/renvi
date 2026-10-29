@@ -4,7 +4,7 @@ export type UserAnalytics={excluded?:boolean;consented?:boolean;sessions?:number
 export type Retention={d:number;eligible:number;returned:number;week?:string};
 export type AnalyticsReport={
  days:number;total:number;new:number;consented:number;measured:number;dau:number;wau:number;mau:number;online:number;active_seconds:number;sessions:number;
- demographics:{country:string;gender:string;age_group:string;tier:string;users:number}[];
+ demographics:{country:string;gender:string;age_group:string;users:number}[];
  acquisition:{source:string;medium:string|null;campaign:string|null;referral:string|null;users:number}[];
  funnel:Record<string,number|null>;
  screens:{screen:string;views:number;active_seconds:number}[];hourly:{hour:number;events:number;active_seconds:number}[];weekdays:{weekday:number;events:number;active_seconds:number}[];actions:{event:string;events:number}[];retention:Retention[];cohorts:Retention[];

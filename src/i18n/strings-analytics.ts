@@ -7,7 +7,7 @@ export const ruAnalytics = {
  'analytics.total':'Всего аккаунтов', 'analytics.new':'Новые аккаунты', 'analytics.consented':'Согласие включено', 'analytics.measured':'Измерено за 180 дней',
  'analytics.dau':'DAU', 'analytics.wau':'WAU', 'analytics.mau':'MAU', 'analytics.online':'Онлайн (примерно)',
  'analytics.sessions':'Сессии', 'analytics.time':'Активное время, сек.', 'analytics.meanTime':'Секунд на сессию',
- 'analytics.demographics':'Демография и тарифы', 'analytics.country':'Страна','analytics.gender':'Гендер','analytics.age':'Возраст','analytics.tier':'Тариф','analytics.users':'Пользователи',
+ 'analytics.demographics':'Демография', 'analytics.country':'Страна','analytics.gender':'Гендер','analytics.age':'Возраст','analytics.users':'Пользователи',
  'analytics.acquisition':'Источники (первый доступный UTM после согласия)', 'analytics.source':'Источник','analytics.medium':'Канал','analytics.campaign':'Кампания','analytics.referral':'Реферальный код',
  'analytics.funnel':'Последовательная воронка измеряемых событий',
  'analytics.funnelNote':'Первый анонимный визит и регистрация не измеряются: согласие доступно после входа. Последующие этапы считаются строго по порядку после первой измеренной сессии в выбранном периоде. События до согласия не восстанавливаются.',

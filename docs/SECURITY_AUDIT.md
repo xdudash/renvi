@@ -1,5 +1,7 @@
 # Аудит безопасности Supabase (2026-10-28)
 
+> **2026-10-29, миграция 0029:** подписки удалены целиком (RENVI бесплатен). Строки ниже про `subscriptions`, `guard_subscription_write`, RevenueCat, тарифы инкогнито / фильтра проверенных и S7 — история; таблиц, функций и вебхука больше нет. Подробности — [RELEASE_4_NO_SUBSCRIPTIONS.md](RELEASE_4_NO_SUBSCRIPTIONS.md).
+
 Проверены `supabase/migrations/0001–0013`, Edge Functions и тесты, по каждому пункту README «Правила, которые держит сервер».
 Исправления в `supabase/migrations/0014_security_audit.sql`, тесты в `supabase/tests/security.sql` (запускаются из `scripts/test-db.sh`).
 

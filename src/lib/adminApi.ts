@@ -28,14 +28,14 @@ export type CountryRow = {
 };
 export type Dashboard = {
   countries: CountryRow[]; reports_open: number; reports_unassigned: number; reports_stale: number;
-  appeals_open: number; pending_verifications: number; demo_bots: number; admins: number; paid_subscribers: number;
+  appeals_open: number; pending_verifications: number; demo_bots: number; admins: number;
   missing_legal_urls: string[]; support_email_missing: boolean;
 };
 
 export type UserRow = {
   id: string; email: string; display_name: string | null; age: number | null; country: string; city: string | null;
   verification_status: Verification; onboarding_done: boolean; suspended_until: string | null; status: AccountStatus;
-  tier: string; created_at: string; reports_open: number; reports_total: number; is_demo: boolean; is_admin: boolean;
+  created_at: string; reports_open: number; reports_total: number; is_demo: boolean; is_admin: boolean;
   last_active: string | null;
 };
 export type UserFilter = {
@@ -66,7 +66,6 @@ export type UserDetail = {
   sanctions: Sanction[];
   appeals: { id: string; report_id: string; details: string; status: string; created_at: string; decision_reason: string | null; decided_at: string | null }[];
   verification_requests: { id: string; storage_path: string; status: string; created_at: string; decision_reason: string | null; decided_at: string | null }[];
-  subscription: { tier: string; store: string | null; expires_at: string | null; sandbox: boolean; updated_at: string; active: boolean } | null;
   stats: { matches_active: number; matches_total: number; sparks_sent: number; sparks_received: number; messages_sent: number; blocked_by: number };
   admin_actions: { id: number; action: string; reason: string | null; details: Record<string, unknown>; created_at: string; admin_email: string | null }[];
 };
@@ -118,7 +117,6 @@ export const adminApi = {
     call<{ lifted: number; suspended_until: string | null }>('admin_lift_sanction', { p_user: user, p_reason: reason, p_sanction: sanctionId ?? null }),
   verify: (user: string, decision: 'approved' | 'rejected' | 'revoked', reason?: string) =>
     call<void>('admin_verification_decide', { p_user: user, p_decision: decision, p_reason: reason ?? null }),
-  resetFree: (user: string, reason: string) => call<void>('admin_reset_free', { p_user: user, p_reason: reason }),
   removePhoto: (photo: string, reason: string) => call<void>('admin_remove_photo', { p_photo: photo, p_reason: reason }),
 
   reports: (f: { state: ReportState | null; reason?: string | null; country?: string | null; assigned?: 'me' | 'none' | null; target?: string | null; limit: number; offset: number }) =>

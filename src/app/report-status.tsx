@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
 import { localeOf } from '@/i18n/current';
 import { AppealOutcome } from '@/components/AppealOutcome';
+import { ErrorRetryState } from '@/components/States';
 
 type ReportRow = { id: string; status: 'open' | 'actioned' | 'dismissed'; decision: string | null; created_at: string; decided_at: string | null };
 
@@ -13,7 +14,7 @@ type ReportRow = { id: string; status: 'open' | 'actioned' | 'dismissed'; decisi
 export default function ReportStatus() {
   const { t } = useLang();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error, reload } = useAsync(async () => {
     let q = supabase.from('reports').select('id,status,decision,created_at,decided_at').order('created_at', { ascending: false }).limit(1);
     if (id) q = supabase.from('reports').select('id,status,decision,created_at,decided_at').eq('id', id).limit(1);
     const { data: rows, error } = await q;
@@ -21,6 +22,8 @@ export default function ReportStatus() {
     return (rows?.[0] as ReportRow) ?? null;
   }, [id]);
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
+  // A failed load is not "no reports yet".
+  if (error) return <Screen><BackLink /><ErrorRetryState onRetry={reload} /></Screen>;
   if (!data) return <Screen><BackLink /><StateBlock icon="◎" title={t('screens.reportStatus.zhalobPokaNet')} copy={t('screens.reportStatus.zdesPoyavitsyaStatusKogda')} label={t('screens.reportStatus.tsentrBezopasnosti')} onPress={() => router.replace('/safety')} /></Screen>;
   const short = `#R-${data.id.slice(0, 4).toUpperCase()}`;
   const when = (iso: string) => new Date(iso).toLocaleString(localeOf(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });

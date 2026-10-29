@@ -5,6 +5,7 @@ import { BackLink, Card, Eyebrow, Field, LinkBtn, Loading, Pill, Screen, Tiny, T
 import { useAsync } from '@/hooks/useAsync';
 import { api } from '@/lib/api';
 import { setDraft } from '@/lib/drafts';
+import { interestLabel, promptLabel } from '@/lib/catalog';
 import { useLang } from '@/lib/lang';
 
 // 42 · Сценарии начала разговора
@@ -17,7 +18,7 @@ export default function Icebreakers() {
   if (ctx.loading) return <Screen tabs="chats"><BackLink /><Loading /></Screen>;
   const p = ctx.data?.their_prompts[0];
   const interest = ctx.data?.their_interests[0];
-  const topic = p ? t('screens.icebreakers.questionAnswerRasskazheshP', { question: p.question, answer: p.answer }) : interest ? t('screens.icebreakers.tyUpomyanulAV', { interest: interest.toLowerCase() }) : null;
+  const topic = p ? t('screens.icebreakers.questionAnswerRasskazheshP', { question: promptLabel(t, p.question), answer: p.answer }) : interest ? t('screens.icebreakers.tyUpomyanulAV', { interest: interestLabel(t, interest).toLowerCase() }) : null;
   return (
     <Screen tabs="chats">
       <BackLink />

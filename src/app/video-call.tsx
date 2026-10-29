@@ -11,8 +11,10 @@ import { useLang } from '@/lib/lang';
 import { effectiveStatus, useVideoAvailable, useVideoCall, videoApi, VideoError, type JoinInfo } from '@/lib/video';
 import type { TranslationKey } from '@/i18n';
 import { colors } from '@/theme/tokens';
+import { localeOf } from '@/i18n/current';
 
-const hhmm = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+// Formatted in the selected app language (was hard-coded to ru-RU).
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(localeOf(), { hour: '2-digit', minute: '2-digit' });
 
 const CLOSED: Record<string, TranslationKey> = {
   declined: 'video.closedDeclined', expired: 'video.closedExpired', ended: 'video.closedEnded', cancelled: 'video.closedCancelled',

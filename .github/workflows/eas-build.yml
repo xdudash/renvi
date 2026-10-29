@@ -32,15 +32,13 @@ env:
   # Public values: repository VARIABLES, not secrets.
   EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
   EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-  EXPO_PUBLIC_REVENUECAT_IOS_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_IOS_KEY }}
-  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
   EXPO_PUBLIC_APP_URL: ${{ vars.EXPO_PUBLIC_APP_URL }}
 
 jobs:
   build:
     name: EAS build
     if: inputs.job == 'build'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Production builds wait for approval when the production environment has reviewers.
     environment: ${{ inputs.profile == 'production' && 'production' || 'preview' }}
     steps:
@@ -68,10 +66,15 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 27.1.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: npm ci
+
+      # Store builds only: legal URLs, support e-mail and backend config must be live (docs/APP_STORE.md).
+      - name: App Store release gate (strict)
+        if: inputs.profile == 'production'
+        run: scripts/ci-annotate.sh release node scripts/check-release.mjs --strict
 
       # The build runs on EAS servers, which do not see this runner's env.
       # Copy the public EXPO_PUBLIC_* values into the chosen profile's env in eas.json
@@ -83,14 +86,10 @@ jobs:
           jq --arg p "$PROFILE" \
             --arg a "$EXPO_PUBLIC_SUPABASE_URL" \
             --arg b "$EXPO_PUBLIC_SUPABASE_ANON_KEY" \
-            --arg c "$EXPO_PUBLIC_REVENUECAT_IOS_KEY" \
-            --arg d "$EXPO_PUBLIC_REVENUECAT_ANDROID_KEY" \
             --arg e "$EXPO_PUBLIC_APP_URL" \
             '.build[$p].env = {
                EXPO_PUBLIC_SUPABASE_URL: $a,
                EXPO_PUBLIC_SUPABASE_ANON_KEY: $b,
-               EXPO_PUBLIC_REVENUECAT_IOS_KEY: $c,
-               EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: $d,
                EXPO_PUBLIC_APP_URL: $e
              }' eas.json > eas.ci.json
           mv eas.ci.json eas.json
@@ -99,12 +98,12 @@ jobs:
         env:
           PLATFORM: ${{ inputs.platform }}
           PROFILE: ${{ inputs.profile }}
-        run: npx eas-cli@latest build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
+        run: eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait
 
   update:
     name: EAS Update (OTA)
     if: inputs.job == 'update'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.channel == 'production' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
@@ -132,7 +131,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 27.1.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: npm ci
@@ -143,4 +142,4 @@ jobs:
           PLATFORM: ${{ inputs.platform }}
           BRANCH: ${{ inputs.channel }}
           MESSAGE: ${{ inputs.message || github.sha }}
-        run: npx eas-cli@latest update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive
+        run: eas update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive

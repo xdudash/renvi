@@ -56,7 +56,7 @@ $$;
 -- 45 Eva    woman, active match with 42      46 admin
 -- 47 Stefan man, matched with 41 (gets banned)
 -- 48 Gita   woman, PAUSED, blocked 49        49 Hugo   man, counter-blocks 48
--- 50 Ivan   man, has a subscription (account deletion)
+-- 50 Ivan   man (account deletion)
 insert into auth.users (id, email) select pg_temp.uid(n), 'u' || n || '@audit.test' from generate_series(41, 50) as g(n);
 insert into public.profiles (id, display_name, age, gender, seeking, intent, country, city, onboarding_done,
                              terms_accepted_at, adult_confirmed_at, sensitive_consent_at, bio)
@@ -78,7 +78,6 @@ select set_config('t.m_eva', (select id::text from public.matches where user_b =
 select set_config('t.m_stefan', (select id::text from public.matches where user_b = pg_temp.uid(47)), false);
 insert into public.photo_consents (match_id, user_id, allowed) values (current_setting('t.m_stefan')::uuid, pg_temp.uid(41), true);
 insert into public.blocks (blocker_id, blocked_id) values (pg_temp.uid(48), pg_temp.uid(49));
-insert into public.subscriptions (user_id, tier) values (pg_temp.uid(50), 'plus');
 
 -- ================= S1: incognito is one rule for tables, RPCs and media =================
 select pg_temp.as_user(pg_temp.uid(41));
@@ -115,8 +114,8 @@ select pg_temp.check(exists (select 1 from public.profiles where id = pg_temp.ui
 -- ================= S6: recipients do not read incoming spark rows directly =================
 select pg_temp.as_user(pg_temp.uid(44));
 select pg_temp.check(not exists (select 1 from public.sparks where to_id = pg_temp.uid(44)), 'S6 recipient cannot SELECT incoming spark rows');
-select pg_temp.check((public.incoming_sparks()->>'count')::int = 1 and jsonb_array_length(public.incoming_sparks()->'items') = 0,
-  'S6 Free recipient still gets only the count via RPC');
+select pg_temp.check((public.incoming_sparks()->>'count')::int = 1 and jsonb_array_length(public.incoming_sparks()->'items') = 1,
+  'S6 recipient gets the incoming spark through the RPC (no paid plans since 0029)');
 select pg_temp.as_user(pg_temp.uid(42));
 select pg_temp.check(exists (select 1 from public.sparks where from_id = pg_temp.uid(42)), 'S6 sender still reads own sent sparks');
 
@@ -238,11 +237,7 @@ select pg_temp.check((select suspended_until = 'infinity' from public.profiles w
 delete from auth.users where id = pg_temp.uid(50);
 select pg_temp.check(not exists (select 1 from public.profiles where id = pg_temp.uid(50)), 'S3 deleting the auth user still removes the profile');
 
--- ================= S7: subscriptions cascade with the auth user =================
-select pg_temp.check(not exists (select 1 from public.subscriptions where user_id = pg_temp.uid(50)), 'S7 subscription row is removed with the auth user');
-select pg_temp.check(not exists (select 1 from public.subscriptions s where not exists (select 1 from auth.users u where u.id = s.user_id)),
-  'S7 no orphan subscriptions');
-select pg_temp.as_user(pg_temp.uid(41));
-select pg_temp.expect_error(format('delete from public.subscriptions where user_id = %L', pg_temp.uid(41)), 'S7 clients still cannot delete subscriptions');
+-- ================= S7: obsolete since 0029 (subscriptions removed) =================
+select pg_temp.check(to_regclass('public.subscriptions') is null, 'S7 no subscriptions table is left to orphan rows');
 
 rollback;

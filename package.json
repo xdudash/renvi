@@ -13,7 +13,9 @@
     "test:db": "scripts/test-db.sh",
     "test:e2e": "e2e/run-all.sh",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "check": "tsc --noEmit && expo lint && node scripts/check-i18n.mjs && node scripts/check-client.mjs && node scripts/check-identity.mjs && node --test scripts/tests/*.test.mjs"
+    "check:release": "node scripts/check-release.mjs",
+    "release:check": "node scripts/check-release.mjs --strict",
+    "check": "tsc --noEmit && expo lint && node scripts/check-i18n.mjs && node scripts/check-client.mjs && node scripts/check-identity.mjs && node scripts/check-release.mjs && node --test scripts/tests/*.test.mjs"
   },
   "dependencies": {
     "@expo/log-box": "~58.0.13",
@@ -39,7 +41,6 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-native": "^0.88.0",
-    "react-native-purchases": "^10.16.0",
     "react-native-safe-area-context": "~5.11.0",
     "react-native-screens": "~4.30.0",
     "react-native-svg": "^15.16.0",

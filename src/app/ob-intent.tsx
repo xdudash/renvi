@@ -18,8 +18,8 @@ export default function ObIntent() {
       {INTENTS.map((i) => (
         <Choice key={i.key} selected={v === i.key} onPress={() => setV(i.key)}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, fontWeight: '700' }}>{i.label}</Text>
-            <Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{i.desc}</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700' }}>{t(i.labelKey)}</Text>
+            <Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{t(i.descKey)}</Text>
           </View>
           <Text>{v === i.key ? '✓' : '○'}</Text>
         </Choice>

@@ -8,7 +8,7 @@ import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
 const LIMIT = 50;
-const GROUPS = ['user.', 'report.', 'appeal.', 'verification.', 'config.', 'admin.', 'subscription.', 'photo.', 'referral.'] as const;
+const GROUPS = ['user.', 'report.', 'appeal.', 'verification.', 'config.', 'admin.', 'photo.', 'referral.'] as const;
 
 // Who did what and when. Rows are written only by the admin RPCs (admin_actions is read-only for clients).
 export default function AdminAudit() {

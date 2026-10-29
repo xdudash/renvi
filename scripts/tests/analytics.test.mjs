@@ -42,7 +42,7 @@ test('revocation cancels queued events and background routes emit nothing',async
  t.send('screen_view');t.stop();await t.drained();assert.equal(packets.length,0);
 });
 test('real app route names normalize without storing arbitrary dynamic ids',()=>{
- assert.equal(normalizeScreen('/ob-birthday'),'onboarding');assert.equal(normalizeScreen('/chats'),'matches');assert.equal(normalizeScreen('/me'),'profile');assert.equal(normalizeScreen('/purchase-success'),'subscription');
+ assert.equal(normalizeScreen('/ob-birthday'),'onboarding');assert.equal(normalizeScreen('/chats'),'matches');assert.equal(normalizeScreen('/me'),'profile');assert.equal(normalizeScreen('/plans'),'other');
 });
 
 test('invite routes preserve limited referral attribution on web and native',()=>{

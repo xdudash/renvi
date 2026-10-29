@@ -8,6 +8,7 @@ import { api, type MessageRow } from './api';
 import { useLang } from './lang';
 import { createOutbox, reconcile, type Pending } from './outbox';
 import { durableSend } from './durableSend';
+import { channelTopic, historyCursor } from './chatLogic';
 
 export type ChatItem = MessageRow & { state: 'sent' | 'sending' | 'failed' };
 
@@ -78,7 +79,7 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
     const alive = () => !dead && gen.current === my;
     loadAll(alive);
     const ch = supabase
-      .channel(`messages:${matchId}`)
+      .channel(channelTopic(matchId))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` }, (payload) => {
         const row = payload.new as MessageRow;
         if (!row?.id) return;
@@ -90,14 +91,20 @@ export function useChat(matchId: string | undefined, myId: string | undefined) {
     return () => { dead = true; supabase.removeChannel(ch); };
   }, [matchId, myId, loadAll, merge]);
 
+  // Returns false when nothing was requested (no first page yet) or the request failed; never rejects
+  // (it is called from effects and buttons, an unhandled rejection used to escape on a network error).
   const loadOlder = useCallback(async () => {
-    if (!matchId || !hasOlder || loadingOlder) return;
-    const first = itemsRef.current.find((m) => m.state === 'sent');
+    if (!matchId || !hasOlder || loadingOlder) return false;
+    const cursor = historyCursor(itemsRef.current);
+    if (!cursor) return false; // first page not loaded: "before null" would just fetch the newest page again
     setLoadingOlder(true);
     try {
-      const rows = await api.messages(matchId, first?.created_at ?? null);
+      const rows = await api.messages(matchId, cursor);
       merge(rows.map((r) => ({ ...r, state: 'sent' as const })));
       setHasOlder(rows.length >= 50);
+      return true;
+    } catch {
+      return false;
     } finally {
       setLoadingOlder(false);
     }

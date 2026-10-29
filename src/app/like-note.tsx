@@ -5,7 +5,7 @@ import { Avatar, BackLink, Btn, Card, Field, Row, Screen, Tiny, Title, useToast 
 import { useDiscover } from '@/lib/discover';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
-import { useTierLimits } from '@/lib/session';
+import { useSparkLimit } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 
 // 28 · Лайк с комментарием
@@ -14,7 +14,7 @@ export default function LikeNote() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const d = useDiscover();
   const toast = useToast();
-  const { limits } = useTierLimits();
+  const limit = useSparkLimit();
   const { data: fetched } = useProfileCard(id ?? null);
   const card = (id ? fetched : d.current) ?? d.current;
   const photo = useSignedUrl(card?.photos[0]?.path);
@@ -22,7 +22,7 @@ export default function LikeNote() {
   const [busy, setBusy] = useState(false);
   const send = async (withComment: boolean) => {
     if (!card) return;
-    if (d.likesUsed >= Number(limits?.daily_likes ?? 20)) { router.replace('/like-limit'); return; }
+    if (d.likesUsed >= limit) { router.replace('/like-limit'); return; }
     setBusy(true);
     try {
       const r = await d.spark(card, d.target, withComment ? comment.trim() || null : null);

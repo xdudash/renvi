@@ -5,6 +5,7 @@ import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
 import { useAsync } from '@/hooks/useAsync';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { completeness } from '@/lib/completeness';
 import { colors } from '@/theme/tokens';
@@ -15,9 +16,9 @@ import { useLang } from '@/lib/lang';
 const ROWS = [
   ['screens.me.rowLang', 'screens.me.rowLangSub', '/settings'],
   ['screens.me.rowPrivacy', 'screens.me.rowPrivacySub', '/privacy-data'],
-  ['screens.me.rowPlans', 'screens.me.rowPlansSub', '/plans'],
   ['screens.me.rowReferral', 'screens.me.rowReferralSub', '/referral'],
   ['screens.me.rowSafety', 'screens.me.rowSafetySub', '/safety'],
+  ['screens.me.rowSupport', 'screens.me.rowSupportSub', '/support-help'],
   ['screens.me.rowLegal', 'screens.me.rowLegalSub', '/legal'],
 ] as const;
 const VERIFY: Record<string, readonly [TranslationKey, string]> = {
@@ -30,10 +31,12 @@ const VERIFY: Record<string, readonly [TranslationKey, string]> = {
 // 63 · Мой профиль
 export default function Me() {
   const { t } = useLang();
-  const { profile, tier } = useSession();
-  const { items } = useMyPhotos();
-  const { items: prompts } = useMyPrompts();
-  const incoming = useAsync(() => api.incoming(), [tier]);
+  const { profile } = useSession();
+  const { items, reload: reloadPhotos } = useMyPhotos();
+  const { items: prompts, reload: reloadPrompts } = useMyPrompts();
+  const incoming = useAsync(() => api.incoming(), []);
+  // Back from edit-media / edit-prompts / likes: avatar, completeness and counters must be current.
+  useReloadOnFocus(() => { reloadPhotos(); reloadPrompts(); incoming.reload(); });
   const pct = completeness(profile, items.length, prompts.length);
   const v = VERIFY[profile?.verification_status ?? 'none'];
   return (
@@ -54,9 +57,6 @@ export default function Me() {
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/likes')} style={tile}>
           <Text style={eyebrow}>{t('screens.me.newSparks')}</Text><Text style={metric}>{incoming.data?.count ?? 0}</Text><Text style={tiny}>{t('screens.me.view')}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/plans')} style={tile}>
-          <Text style={eyebrow}>{t('screens.me.yourPlan')}</Text><Text style={metric}>{tier === 'free' ? 'Free' : tier === 'plus' ? 'Plus' : 'Premium'}</Text><Text style={tiny}>{t('screens.me.planTerms')}</Text>
         </Pressable>
       </View>
       <Text style={{ fontSize: 24, fontWeight: '800', letterSpacing: -1, marginTop: 23, marginBottom: 8, color: colors.ink }}>{t('screens.me.settingsHelp')}</Text>

@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Eyebrow, Field, Pill, Screen, Segmented, Title, useToast } from '@/components/ui';
 import { DATE_TIMES, dayParts, getDateDraft, iso, setDateDraft, weekDays } from '@/lib/dateDraft';
 import { api } from '@/lib/api';
+import { pickDay, pickTime, selectableTimes } from '@/lib/dateSlots';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
@@ -14,13 +15,19 @@ export default function DateTime() {
   const toast = useToast();
   const d0 = getDateDraft();
   const [week, setWeek] = useState<'this' | 'next'>('this');
-  const [day, setDay] = useState(d0.day);
-  const [time, setTime] = useState(d0.time);
+  const [pickedDay, setDay] = useState(d0.day);
+  const [pickedTime, setTime] = useState(d0.time);
   const [note, setNote] = useState(d0.note);
   const [busy, setBusy] = useState(false);
-  const days = weekDays(week);
+  // Only days and times still ahead: a draft day from an earlier visit, a day of the other week tab or today's
+  // passed hours can no longer be selected or sent.
+  const now = new Date();
+  const days = weekDays(week).filter((dt) => selectableTimes(iso(dt), DATE_TIMES, now).length > 0);
+  const day = pickDay(pickedDay, days.map(iso));
+  const times = day ? selectableTimes(day, DATE_TIMES, now) : [...DATE_TIMES];
+  const time = pickTime(pickedTime, times);
   const send = async () => {
-    if (!day) { toast(t('screens.dateTime.pickDay')); return; }
+    if (!day || !time) { toast(t('screens.dateTime.pickDay')); return; }
     setDateDraft({ day, time, note });
     const d = getDateDraft();
     setBusy(true);
@@ -47,7 +54,7 @@ export default function DateTime() {
       </View>
       <Eyebrow style={{ marginTop: 15 }}>{t('screens.dateTime.time')}</Eyebrow>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {DATE_TIMES.map((tm) => <Pill key={tm} label={tm} active={time === tm} onPress={() => setTime(tm)} />)}
+        {times.map((tm) => <Pill key={tm} label={tm} active={time === tm} onPress={() => setTime(tm)} />)}
       </View>
       <Field value={note} onChangeText={setNote} multiline maxLength={200} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder={t('screens.dateTime.notePlaceholder')} />
       <Btn label={t('screens.dateTime.send')} busy={busy} onPress={send} />

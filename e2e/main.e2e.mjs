@@ -27,7 +27,8 @@ await step('marek sparks anna on her answer (API)', async () => {
   const r = await rpc(marek.access_token, 'send_spark', { p_to: anna.user.id, p_kind: 'prompt', p_ref: annaPrompt.id, p_comment: 'Доброта к официанту — лучший тест.' });
   if (r.status !== 'sent') throw new Error(JSON.stringify(r));
 });
-await step('likes tab on Free shows only the count', async () => { await go('/likes'); await p.getByText(/новая искра|новые искры|новых искр/).waitFor(); await shot('likes-free'); });
+// RENVI is free for everyone (0029): the incoming list shows who sparked you, with no plan.
+await step('likes tab shows who sparked you (no plan needed)', async () => { await go('/likes'); await p.getByText('Уже выбрали вас').waitFor(); await p.getByText(/Марек, \d+/).first().waitFor(); await shot('likes'); });
 await step('full profile of Marek', async () => { await go('/profile?id=' + marek.user.id); await p.getByText('О человеке').waitFor(); await shot('profile'); });
 await step('media viewer', async () => { await go(`/media-viewer?id=${marek.user.id}&at=1`); await shot('media-viewer'); });
 await step('hold spark → mutual match', async () => {
@@ -66,6 +67,9 @@ await step('propose a date', async () => {
   await go('/date-create?match=' + matchId); await shot('date-create');
   await click('Продолжить');
   await p.getByText('Когда вам удобно?').waitFor();
+  // Next week: every day and time slot is ahead regardless of the CI clock (today's passed times are not offered).
+  await click('Следующая');
+  await p.getByRole('button', { name: /^Пн/ }).first().click();
   await click('18:00');
   await shot('date-time');
   await click('Отправить приглашение');
@@ -89,19 +93,16 @@ await step('incoming date from Marek → decline', async () => {
   await shot('date-declined');
 });
 await step('chats list', async () => { await go('/chats'); await shot('chats'); });
-await step('Plus via store webhook unlocks incoming list', async () => {
+// RENVI is free: the incoming list (who sparked you) is open to everyone, with no plan and no upsell.
+await step('incoming sparks list is open to everyone (no plan)', async () => {
   await rpc(daniel.access_token, 'send_spark', { p_to: anna.user.id, p_kind: 'profile', p_ref: null, p_comment: null });
-  const r = await fetch('' + API + '/functions/v1/revenuecat-webhook', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.REVENUECAT_WEBHOOK_SECRET, 'content-type': 'application/json' },
-    // Same shape RevenueCat sends: every event carries a unique id and timestamp (the webhook is idempotent on id).
-    body: JSON.stringify({ event: { id: crypto.randomUUID(), event_timestamp_ms: Date.now(), type: 'INITIAL_PURCHASE', app_user_id: anna.user.id, original_app_user_id: anna.user.id, aliases: [anna.user.id], product_id: 'renvi_plus_month', entitlement_ids: ['plus'], store: 'APP_STORE', environment: 'SANDBOX', purchased_at_ms: Date.now(), expiration_at_ms: Date.now() + 30 * 864e5 } }) });
-  if (!r.ok) console.log('  webhook body:', await r.clone().text());
-  if (!r.ok) throw new Error('webhook ' + r.status);
   await go('/likes');
   await p.getByText('Уже выбрали вас').waitFor({ timeout: 10000 });
-  await shot('likes-plus');
+  await p.getByText(/Даниэль/).first().waitFor({ timeout: 10000 });
+  if (await p.getByText(/RENVI Plus|Premium|Подписк|тариф/i).count()) throw new Error('upsell shown on likes');
+  await shot('likes');
 });
 await step('incoming profile', async () => { await go('/incoming-profile?id=' + daniel.user.id); await shot('incoming-profile'); });
-await step('plans shows current Plus', async () => { await go('/plans'); await shot('plans'); });
 await step('report a profile → status', async () => {
   const tomas = await signIn('tomas@renvi.test', 'renvi-test-1');
   await go('/report?profile=' + tomas.user.id);
@@ -111,7 +112,12 @@ await step('report a profile → status', async () => {
   await shot('report-status');
 });
 await step('me', async () => { await go('/me'); await shot('me'); });
-await step('filters (Plus)', async () => { await go('/filters'); await shot('filters'); });
+await step('filters: verified-only is available without a plan', async () => {
+  await go('/filters');
+  await p.getByText('Показывать только фото-проверенные профили').waitFor();
+  if (await p.getByText(/RENVI Plus|Посмотреть Plus/).count()) throw new Error('upsell shown on filters');
+  await shot('filters');
+});
 await step('referral', async () => { await go('/referral'); await p.getByText('ВАША ССЫЛКА').waitFor(); await shot('referral'); });
 await step('data export via function', async () => {
   await go('/data-export'); await click('Запросить выгрузку');

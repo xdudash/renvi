@@ -79,7 +79,6 @@ insert into public.messages (client_id, match_id, sender_id, body)
 select set_config('test.foreign_msg', (select id::text from public.messages where body like 'private between%'), true);
 -- Spark from a CZ profile (e.g. sent before the sender moved country).
 insert into public.sparks (from_id, to_id) values ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001');
-insert into public.subscriptions (user_id, tier) values ('00000000-0000-0000-0000-000000000001', 'plus');
 
 -- ---------- anonymous ----------
 select pg_temp.as_user(null::uuid);
@@ -106,9 +105,13 @@ select pg_temp.check((public.incoming_sparks()->>'count')::int = 0 and jsonb_arr
 -- ---------- protected profile columns ----------
 select pg_temp.expect_error($q$update public.profiles set age = 30 where id = '00000000-0000-0000-0000-000000000001'$q$, 'client cannot set age directly');
 select pg_temp.expect_error($q$update public.profiles set sensitive_consent_at = null where id = '00000000-0000-0000-0000-000000000001'$q$, 'client cannot forge consent timestamp');
-select pg_temp.expect_error($q$update public.profiles set incognito = true where id = '00000000-0000-0000-0000-000000000001'$q$, 'incognito needs Premium');
+update public.profiles set incognito = true where id = '00000000-0000-0000-0000-000000000001';
+select pg_temp.check((select incognito from public.profiles where id = '00000000-0000-0000-0000-000000000001'), 'incognito is an own setting for everyone (no plan)');
+update public.profiles set incognito = false where id = '00000000-0000-0000-0000-000000000001';
 select pg_temp.as_user('00000000-0000-0000-0000-000000000006');
-select pg_temp.expect_error($q$update public.profiles set filter_verified_only = true where id = '00000000-0000-0000-0000-000000000006'$q$, 'verified-only filter needs a paid plan');
+update public.profiles set filter_verified_only = true where id = '00000000-0000-0000-0000-000000000006';
+select pg_temp.check((select filter_verified_only from public.profiles where id = '00000000-0000-0000-0000-000000000006'), 'verified-only filter is an own setting for everyone (no plan)');
+update public.profiles set filter_verified_only = false where id = '00000000-0000-0000-0000-000000000006';
 reset role;
 update public.app_config set value = '["badword"]' where key = 'banned_words';
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');

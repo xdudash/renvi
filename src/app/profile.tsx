@@ -5,8 +5,8 @@ import { MediaThumb, ProfileHero, ProfileMeta } from '@/components/Profile';
 import { ErrorRetryState } from '@/components/States';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useTierLimits } from '@/lib/session';
-import { intentChip } from '@/lib/catalog';
+import { useSession, useSparkLimit } from '@/lib/session';
+import { intentChip, interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
@@ -20,14 +20,14 @@ export default function Profile() {
   const { data: card, loading, error, reload } = useProfileCard(id);
   const d = useDiscover();
   const toast = useToast();
-  const { limits } = useTierLimits();
+  const limit = useSparkLimit();
 
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
   if (error) return <Screen><BackLink /><ErrorRetryState onRetry={reload} /></Screen>;
   if (!card) return <Screen><BackLink /><StateBlock icon="↗" title={t('screens.profile.profilNedostupen')} copy={t('screens.profile.anketaSkrytaIliBolshe')} label={t('screens.profile.kZnakomstvam')} onPress={() => router.navigate('/discover')} /></Screen>;
 
   const onSpark = async () => {
-    if (d.likesUsed >= Number(limits?.daily_likes ?? 20)) { router.push('/like-limit'); return; }
+    if (d.likesUsed >= limit) { router.push('/like-limit'); return; }
     try {
       const r = await d.spark(card, { kind: 'profile', ref: null, label: t('screens.profile.fotoIzAnkety') }, null);
       if (!r) return;
@@ -47,7 +47,7 @@ export default function Profile() {
       {card.interests.length ? (
         <View>
           <Text style={st.section}>{t('screens.profile.obschieInteresy')}</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={x} tone="red" />)}</View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={interestLabel(t, x)} tone="red" />)}</View>
         </View>
       ) : null}
       {rest.length ? (
@@ -67,7 +67,7 @@ export default function Profile() {
         </Card>
       ) : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <View style={st.tile}><Eyebrow>{t('screens.profile.tsel')}</Eyebrow><Text style={st.bold}>{intentChip(card.intent)}</Text></View>
+        <View style={st.tile}><Eyebrow>{t('screens.profile.tsel')}</Eyebrow><Text style={st.bold}>{intentChip(card.intent, t)}</Text></View>
         <View style={st.tile}><Eyebrow>{t('screens.profile.lokatsiya')}</Eyebrow><Text style={st.bold}>{card.city} · {card.distance}</Text></View>
       </View>
       {isSelf ? null : (
