@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { router } from 'expo-router';
-import { BackLink, Between, Bold, Btn, CheckRow, Eyebrow, Field, LinkBtn, Pill, Screen, Tiny, Title, useToast } from '@/components/ui';
+import { BackLink, Between, Btn, CheckRow, Eyebrow, Field, Pill, Screen, Tiny, Title, useToast } from '@/components/ui';
 import { useDraft } from '@/hooks/useDraft';
 import { CountryPicker } from '@/components/CountryPicker';
 import { api } from '@/lib/api';
@@ -18,7 +18,7 @@ const ALL = INTENTS.map((i) => i.key as string);
 export default function Filters() {
   const { t } = useLang();
   const toast = useToast();
-  const { profile, tier, refresh } = useSession();
+  const { profile, refresh } = useSession();
   const d = useDiscover();
   const [country, setCountry] = useDraft<string>(profile?.country ?? 'SK');
   const [ageMin, setAgeMin] = useDraft(String(profile?.filter_age_min ?? 22));
@@ -27,7 +27,6 @@ export default function Filters() {
   const [verifiedOnly, setVerifiedOnly] = useDraft<boolean>(Boolean(profile?.filter_verified_only));
   const [intents, setIntents] = useDraft<string[]>(profile?.filter_intents ?? ALL);
   const [busy, setBusy] = useState(false);
-  const paid = tier !== 'free';
 
   const apply = async () => {
     const a = Number(ageMin), b = Number(ageMax);
@@ -36,7 +35,7 @@ export default function Filters() {
     setBusy(true);
     try {
       if (country !== profile?.country) await api.saveOnboarding({ country });
-      await api.saveFilters({ ageMin: a, ageMax: b, distance, verifiedOnly: paid && verifiedOnly, intents });
+      await api.saveFilters({ ageMin: a, ageMax: b, distance, verifiedOnly, intents });
       await refresh();
       await d.load();
       toast(t('screens.filters.parametryPrimeneny'));
@@ -64,16 +63,9 @@ export default function Filters() {
       <Slider minimumValue={5} maximumValue={100} step={5} value={distance} onValueChange={setDistance} minimumTrackTintColor={colors.red} maximumTrackTintColor="#ece9e2" thumbTintColor={colors.red} accessibilityLabel={t('screens.filters.rasstoyanie2')} />
       <Between><Tiny>{t('screens.filters.doDistanceKm', { distance })}</Tiny><Tiny>{t('screens.filters.vozrastOgranichenPravilami')}</Tiny></Between>
       <Tiny>{t('screens.filters.rasstoyanieOkruglyaetsyaTo')}</Tiny>
-      <CheckRow disabled={!paid} on={paid && verifiedOnly} onPress={() => setVerifiedOnly(!verifiedOnly)}>
-        <Text style={{ fontSize: 12, color: paid ? colors.ink : '#aaa' }}>{t('screens.filters.pokazyvatTolkoFotoProveren')}</Text>
+      <CheckRow on={verifiedOnly} onPress={() => setVerifiedOnly(!verifiedOnly)}>
+        <Text style={{ fontSize: 12, color: colors.ink }}>{t('screens.filters.pokazyvatTolkoFotoProveren')}</Text>
       </CheckRow>
-      {!paid ? (
-        <View style={{ backgroundColor: colors.redWash, borderRadius: 16, padding: 13 }}>
-          <Bold>{t('screens.filters.rasshirennyeFiltryRenviPlu')}</Bold>
-          <Tiny>{t('screens.filters.vhodyaschieIskryFiltrProve')}</Tiny>
-          <LinkBtn label={t('screens.filters.posmotretPlus')} onPress={() => router.push('/plans')} />
-        </View>
-      ) : null}
       <Eyebrow style={{ marginTop: 12 }}>{t('screens.filters.namerenie')}</Eyebrow>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {INTENTS.map((i) => (

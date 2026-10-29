@@ -13,8 +13,6 @@ jobs:
     timeout-minutes: 30
     env:
       APP_URL: http://127.0.0.1:8081
-      # Not a repository secret: a throw-away value for the local, CI-only stack.
-      REVENUECAT_WEBHOOK_SECRET: ci-local-revenuecat-webhook-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,11 +48,11 @@ jobs:
 
       - name: Serve edge functions
         run: |
-          echo "REVENUECAT_WEBHOOK_SECRET=$REVENUECAT_WEBHOOK_SECRET" > "$RUNNER_TEMP/functions.env"
-          echo "PUSH_WEBHOOK_SECRET=ci-local-push-secret" >> "$RUNNER_TEMP/functions.env"
+          # Not a repository secret: a throw-away value for the local, CI-only stack.
+          echo "PUSH_WEBHOOK_SECRET=ci-local-push-secret" > "$RUNNER_TEMP/functions.env"
           nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" > "$RUNNER_TEMP/functions.log" 2>&1 &
           for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/revenuecat-webhook" || true)
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/push" || true)
             if [ "$code" != "000" ] && [ "$code" != "502" ] && [ "$code" != "503" ]; then exit 0; fi
             sleep 2
           done

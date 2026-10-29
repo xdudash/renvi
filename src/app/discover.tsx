@@ -6,7 +6,7 @@ import { ProfileHero, ProfileMeta } from '@/components/Profile';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useTierLimits } from '@/lib/session';
+import { useSession, useSparkLimit } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 
 // 25 · Главная карточка
@@ -15,8 +15,7 @@ export default function Discover() {
   const toast = useToast();
   const d = useDiscover();
   const { profile } = useSession();
-  const { tier, limits } = useTierLimits();
-  const limit = Number(limits?.daily_likes ?? 20);
+  const limit = useSparkLimit();
   useEffect(() => { d.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const card = d.current;
@@ -36,6 +35,11 @@ export default function Discover() {
   const onPass = async () => {
     try { await d.pass(); toast(t('screens.discover.profilPropuschen')); } catch { router.push('/error-retry'); }
   };
+  // Undo of the last pass is available to everyone.
+  const onUndo = async () => {
+    try { toast((await d.undoPass()) ? t('screens.discover.posledniyPropuskVosstanovl') : t('screens.discover.nechegoVosstanavlivat')); }
+    catch { router.push('/error-retry'); }
+  };
   const onComment = () => {
     if (!card) return;
     d.setTarget({ kind: 'profile', ref: null, label: t('screens.discover.fotoIzAnkety') });
@@ -49,7 +53,7 @@ export default function Discover() {
   else if (!card) body = (
     <>
       <EmptyDiscover />
-      {tier !== 'free' ? <LinkBtn center label={t('screens.discover.otmenitPosledniyPropusk')} onPress={async () => { try { toast((await d.undoPass()) ? t('screens.discover.posledniyPropuskVosstanovl') : t('screens.discover.nechegoVosstanavlivat')); } catch { toast(t('screens.discover.dostupnoVRenviPlus')); } }} /> : null}
+      <LinkBtn center label={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} />
     </>
   );
   else {
@@ -67,9 +71,7 @@ export default function Discover() {
           {common.length ? <Chip label={t('screens.discover.obscheeV', { common: common.join(', ').toLowerCase() })} /> : null}
         </View>
         <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} onProfile={() => router.push({ pathname: '/profile', params: { id: card.profile_id } })} />
-        {tier !== 'free' ? (
-          <LinkBtn label={t('screens.discover.otmenitPosledniyPropusk')} onPress={async () => { try { toast((await d.undoPass()) ? t('screens.discover.posledniyPropuskVosstanovl') : t('screens.discover.nechegoVosstanavlivat')); } catch { toast(t('screens.discover.dostupnoVRenviPlus')); } }} />
-        ) : null}
+        <LinkBtn label={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} />
         {prompt ? (
           <PromptCard question={prompt.question} answer={prompt.answer} onReply={() => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.discover.otvetAnswer', { answer: prompt.answer }) }); router.push('/like-note'); }} />
         ) : null}

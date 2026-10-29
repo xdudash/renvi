@@ -8,7 +8,6 @@ import { ruB } from './strings-b.ts';
 import { ruLib } from './strings-lib.ts';
 import { ruDigest } from './strings-digest.ts';
 import { ruVideo } from './strings-video.ts';
-import { ruBilling } from './strings-billing.ts';
 import { ruClient } from './strings-client.ts';
 import { ruAdmin } from './strings-admin.ts';
 import { ruWeb } from './strings-web.ts';
@@ -32,7 +31,7 @@ const ruBase = {
 } as const;
 
 // Screen and component strings live in strings-a.ts / strings-b.ts (one file per half); feature strings in strings-*.ts.
-export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruBilling, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo } as const;
+export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;

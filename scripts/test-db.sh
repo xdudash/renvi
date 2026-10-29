@@ -23,7 +23,6 @@ run_sql supabase/tests/digest.sql "weekly-digest"
 run_sql supabase/tests/video_calls.sql "video-call"
 run_sql supabase/tests/voice.sql "voice-message"
 run_sql supabase/tests/audit_server.sql "audit server-rules"
-run_sql supabase/tests/billing.sql "billing"
 run_sql supabase/tests/admin.sql "admin-panel"
 run_sql supabase/tests/extensions.sql "extension-portability"
 run_sql supabase/tests/integration.sql "cross-feature"
@@ -33,6 +32,7 @@ run_sql supabase/tests/identity_auth.sql "identity and verified email"
 run_sql supabase/tests/demo_access.sql "demo access"
 run_sql supabase/tests/audit_followups.sql "audit followups"
 run_sql supabase/tests/audit_concurrency.sql "transaction locks"
+run_sql supabase/tests/no_subscriptions.sql "free for everyone (no subscriptions)"
 
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob

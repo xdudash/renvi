@@ -50,14 +50,12 @@ await step('admin bans Tomas from the report queue', async () => {
   if (s !== 'infinity') throw new Error('suspended_until ' + s);
   await shot(ap, 'admin-reports');
 });
-await step('admin lowers Free daily likes to 1 (no rebuild)', async () => {
-  const cur = JSON.parse(psql(`select value from public.app_config where key='tier_limits'`));
-  cur.free.daily_likes = 1;
+await step('admin lowers the anti-abuse daily spark limit to 1 (no rebuild)', async () => {
   await go(ap, '/admin/config');
-  await ap.getByLabel('free daily_likes').fill(String(cur.free.daily_likes));
-  await ap.getByText('Сохранить', { exact: true }).nth(1).click(); // 2nd card: tier limits (1st: documents)
+  await ap.getByLabel('daily_spark_limit').fill('1');
+  await ap.getByText('Сохранить', { exact: true }).nth(1).click(); // 2nd card: daily spark limit (1st: documents)
   await ap.waitForTimeout(1200);
-  if (!psql(`select value->'free'->>'daily_likes' from public.app_config where key='tier_limits'`).startsWith('1')) throw new Error('not saved');
+  if (psql(`select value from public.app_config where key='daily_spark_limit'`) !== '1') throw new Error('not saved');
 });
 await step('banned Tomas sees the ban screen and can appeal', async () => {
   const c = await mk(); const p = await c.newPage();
@@ -74,7 +72,7 @@ await step('banned Tomas sees the ban screen and can appeal', async () => {
   if (psql(`select count(*) from public.appeals where user_id='${tomas.user.id}'`) !== '1') throw new Error('no appeal row');
   await c.close();
 });
-await step('Free user (Daniel) hits the like limit set by admin', async () => {
+await step('Daniel hits the daily spark limit: neutral message, no upgrade offer', async () => {
   const c = await mk(); const p = await c.newPage();
   await go(p, '/signin');
   await p.getByPlaceholder('name@example.com').fill('daniel@renvi.test');
@@ -86,12 +84,14 @@ await step('Free user (Daniel) hits the like limit set by admin', async () => {
   await shot(p, 'discover-limit-config');
   const btn = p.getByLabel('Удержать искру');
   await btn.hover(); await p.mouse.down(); await p.waitForTimeout(700); await p.mouse.up();
-  await p.getByText('Лайки на сегодня закончились').waitFor({ timeout: 10000 });
+  await p.getByText('Лимит на сегодня исчерпан').waitFor({ timeout: 10000 });
+  await p.getByText(/Возвращайтесь завтра/).waitFor();
+  if (await p.getByText(/RENVI Plus|Premium|Подписк|тариф/i).count()) throw new Error('upsell shown on the limit screen');
   await shot(p, 'like-limit');
   await c.close();
 });
 const cctx = await mk('out/anna.json'); const p = await cctx.newPage();
-await step('Plus: pass then undo the pass', async () => {
+await step('pass then undo the pass (no plan needed)', async () => {
   await go(p, '/discover');
   await p.getByLabel('Пропустить').first().click();
   await p.waitForTimeout(1200);
@@ -157,6 +157,6 @@ await step('invite link with a real code attaches the referral', async () => {
   if (psql(`select count(*) from auth.users where email='friend@renvi.test'`) !== '0') throw new Error('account still exists');
   await c.close();
 });
-// restore default limits
-psql(`update public.app_config set value = jsonb_set(value, '{free,daily_likes}', '20') where key='tier_limits'`);
+// restore the default anti-abuse limit
+psql(`update public.app_config set value = '100' where key='daily_spark_limit'`);
 await finish(() => b.close());

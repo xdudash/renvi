@@ -12,10 +12,10 @@ import type { TranslationKey } from '@/i18n';
 type Json = unknown;
 type Obj = Record<string, Json>;
 const asObj = (v: Json): Obj => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : {});
-const KNOWN = ['tier_limits', 'prices_preliminary', 'legal_urls', 'support_email', 'banned_words', 'referral', 'rate_limits', 'digest', 'demo_bots', 'launch_countries', 'countries', 'languages'];
+const KNOWN = ['daily_spark_limit', 'legal_urls', 'support_email', 'banned_words', 'referral', 'rate_limits', 'digest', 'demo_bots', 'launch_countries', 'countries', 'languages'];
 const LEGAL: [string, TranslationKey][] = [
   ['privacy', 'adm.cfg.legalPrivacy'], ['terms', 'adm.cfg.legalTerms'], ['community', 'adm.cfg.legalCommunity'],
-  ['subscriptions', 'adm.cfg.legalSubscriptions'], ['moderation', 'adm.cfg.legalModeration'],
+  ['moderation', 'adm.cfg.legalModeration'],
 ];
 const WEEKDAYS: TranslationKey[] = ['adm.cfg.wd0', 'adm.cfg.wd1', 'adm.cfg.wd2', 'adm.cfg.wd3', 'adm.cfg.wd4', 'adm.cfg.wd5', 'adm.cfg.wd6'];
 const RATE_LABEL: Record<string, TranslationKey> = {
@@ -84,7 +84,7 @@ function LegalEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
     <Editor title={t('adm.cfg.legalTitle')} k={['legal_urls', 'support_email']} note={t('adm.cfg.legalNote')} onSaved={onSaved}
       validate={() => (bad.length ? t('adm.cfg.badUrl', { field: bad.map(([, l]) => t(l)).join(', ') }) : email.trim() && !isEmail(email) ? t('adm.cfg.badEmail') : null)}
       build={() => ({
-        legal_urls: { ...legal, ...Object.fromEntries(LEGAL.map(([k]) => [k, urls[k].trim() || null])) },
+        legal_urls: Object.fromEntries(LEGAL.map(([k]) => [k, urls[k].trim() || null])),
         support_email: email.trim() || null,
       })}>
       {LEGAL.map(([k, l]) => {
@@ -111,56 +111,16 @@ function LegalEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
   );
 }
 
-function TierEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
+// Anti-abuse daily spark limit: one whole number, the same for every user (RENVI has no paid plans).
+function SparkLimitEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
   const { t } = useLang();
-  const tiers = asObj(cfg.tier_limits);
-  const names = ['free', 'plus', 'premium'];
-  const fields = Array.from(new Set(names.flatMap((n) => Object.keys(asObj(tiers[n])))));
-  const [v, setV] = useState<Record<string, Record<string, string | boolean>>>(
-    Object.fromEntries(names.map((n) => [n, Object.fromEntries(fields.map((f) => {
-      const x = asObj(tiers[n])[f];
-      return [f, typeof x === 'boolean' ? x : String(x ?? '')];
-    }))])));
-  const prices = asObj(cfg.prices_preliminary);
+  const cur = typeof cfg.daily_spark_limit === 'number' ? cfg.daily_spark_limit : 100;
+  const [v, setV] = useState(String(cur));
   return (
-    <Editor title={t('adm.cfg.tiersTitle')} k="tier_limits" note={t('adm.cfg.tiersNote')} onSaved={onSaved}
-      validate={() => {
-        for (const n of names) for (const f of fields) {
-          const x = v[n][f];
-          if (typeof x === 'string' && (Number.isNaN(toInt(x)) || toInt(x) > 100000)) return t('adm.cfg.badNumber', { field: `${n}.${f}` });
-        }
-        return null;
-      }}
-      build={() => ({ tier_limits: Object.fromEntries(names.map((n) => [n, Object.fromEntries(fields.map((f) => {
-        const x = v[n][f];
-        return [f, typeof x === 'boolean' ? x : toInt(x)];
-      }))])) })}>
-      <View style={{ flexDirection: 'row', paddingVertical: 4 }}>
-        <Text style={[muted, { width: 160 }]} />
-        {names.map((n) => <Text key={n} style={{ width: 100, fontSize: 12, fontWeight: '800', color: colors.ink, textTransform: 'capitalize' }}>{n}</Text>)}
-      </View>
-      {fields.map((f) => (
-        <View key={f} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5, borderTopWidth: 1, borderTopColor: colors.line }}>
-          <Text style={{ width: 160, fontSize: 12, color: colors.ink }}>{f}</Text>
-          {names.map((n) => {
-            const x = v[n][f];
-            return (
-              <View key={n} style={{ width: 100 }}>
-                {typeof x === 'boolean'
-                  ? <Toggle on={x} label={`${n} ${f}`} onChange={(b) => setV({ ...v, [n]: { ...v[n], [f]: b } })} />
-                  : <Num value={x ?? ''} label={`${n} ${f}`} width={80} onChange={(s) => setV({ ...v, [n]: { ...v[n], [f]: s } })} />}
-              </View>
-            );
-          })}
-        </View>
-      ))}
-      <View style={{ marginTop: 12, padding: 10, borderRadius: 10, backgroundColor: colors.surfaceMuted }}>
-        <Text style={{ fontSize: 12, fontWeight: '800', color: colors.ink }}>{t('adm.cfg.pricesTitle')}</Text>
-        {Object.entries(prices).map(([tier, p]) => (
-          <Text key={tier} style={{ fontSize: 12, color: colors.ink }}>{tier}: {Object.entries(asObj(p)).map(([per, val]) => `${val} € / ${per}`).join(' · ')}</Text>
-        ))}
-        <Text style={muted}>{t('adm.cfg.pricesNote')}</Text>
-      </View>
+    <Editor title={t('adm.cfg.sparkLimitTitle')} k="daily_spark_limit" note={t('adm.cfg.sparkLimitNote')} onSaved={onSaved}
+      validate={() => { const n = toInt(v); return Number.isNaN(n) || n < 1 || n > 100000 ? t('adm.cfg.range', { field: 'daily_spark_limit', min: 1, max: 100000 }) : null; }}
+      build={() => ({ daily_spark_limit: toInt(v) })}>
+      <Row label={t('adm.cfg.sparkLimitLabel')} hint="daily_spark_limit · 1–100000"><Num value={v} label="daily_spark_limit" onChange={setV} /></Row>
     </Editor>
   );
 }
@@ -294,13 +254,13 @@ export default function AdminConfig() {
           <Columns min={420}>
             <View>
               <LegalEditor cfg={c} onSaved={saved} />
-              <TierEditor cfg={c} onSaved={saved} />
+              <SparkLimitEditor cfg={c} onSaved={saved} />
               <CountriesEditor cfg={c} onSaved={saved} />
               <WordsEditor cfg={c} onSaved={saved} />
             </View>
             <View>
               <NumbersEditor cfg={c} k="referral" title={t('adm.cfg.referralTitle')} note={t('adm.cfg.referralNote')} onSaved={saved} fields={[
-                { key: 'goal', label: t('adm.cfg.refGoal'), min: 1, max: 1000 }, { key: 'reward_days', label: t('adm.cfg.refDays'), min: 1, max: 365 }]} />
+                { key: 'goal', label: t('adm.cfg.refGoal'), min: 1, max: 1000 }]} />
               <NumbersEditor cfg={c} k="rate_limits" title={t('adm.cfg.rateTitle')} note={t('adm.cfg.rateNote')} onSaved={saved} extraKeys
                 fields={[...rateFields, ...rateKeys.filter((k) => !rateFields.some((f) => f.key === k)).map((k) => ({ key: k, label: RATE_LABEL[k] ? t(RATE_LABEL[k]) : k, min: 1, max: 100000 }))]} />
               <DigestEditor cfg={c} onSaved={saved} />

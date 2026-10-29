@@ -14,7 +14,7 @@ export default function DeleteAccount() {
       <Card>
         <Text style={{ fontWeight: '700', fontSize: 13 }}>{t('screens.deleteAccount.priUdalenii')}</Text>
         <View style={{ marginTop: 6, gap: 4 }}>
-          {[t('screens.deleteAccount.anketaPerestanetPokazyvats'), t('screens.deleteAccount.pokupkaVAppStore'), t('screens.deleteAccount.srokiUdaleniyaDannyhUkazan')].map((x) => (
+          {[t('screens.deleteAccount.anketaPerestanetPokazyvats'), t('screens.deleteAccount.srokiUdaleniyaDannyhUkazan')].map((x) => (
             <Text key={x} style={{ fontSize: 10, color: colors.muted }}>•  {x}</Text>
           ))}
         </View>

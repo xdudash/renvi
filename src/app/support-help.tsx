@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 
-const TOPICS = [['screens.supportHelp.topicSafety', '/safety'], ['screens.supportHelp.topicLogin', '/signin'], ['screens.supportHelp.topicPurchases', '/plans'], ['screens.supportHelp.topicPrivacy', '/privacy-data'], ['screens.supportHelp.topicMessages', '/support-share']] as const;
+const TOPICS = [['screens.supportHelp.topicSafety', '/safety'], ['screens.supportHelp.topicLogin', '/signin'], ['screens.supportHelp.topicPrivacy', '/privacy-data'], ['screens.supportHelp.topicMessages', '/support-share']] as const;
 
 // 72 · Поддержка
 export default function SupportHelp() {

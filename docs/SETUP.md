@@ -8,7 +8,6 @@
 |---|---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | нет |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | там же, `anon` / publishable key | нет (публичный) |
-| `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY` | RevenueCat → Project → API keys (public SDK keys) | нет |
 | `EXPO_PUBLIC_HCAPTCHA_SITE_KEY` | hCaptcha (если включаете CAPTCHA) | нет |
 | `EXPO_PUBLIC_APP_URL` | домен сайта для ссылок-приглашений (`/invite/КОД`) | нет |
 
@@ -29,8 +28,8 @@
 4. **CAPTCHA** (по желанию): Authentication → Bot and Abuse Protection → hCaptcha + `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без ключа шаг CAPTCHA в регистрации пропускается.
 5. **Edge Functions**:
    ```bash
-   npx supabase functions deploy delete-account export-data revenuecat-webhook push weekly-digest video-call
-   npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=... PUSH_WEBHOOK_SECRET=...
+   npx supabase functions deploy delete-account export-data push weekly-digest video-call
+   npx supabase secrets set PUSH_WEBHOOK_SECRET=...
    # необязательно — видеозвонок перед встречей (раздел 4a):
    npx supabase secrets set DAILY_API_KEY=...
    # необязательно — письмо со ссылкой на выгрузку данных:
@@ -44,16 +43,14 @@
    существующий админ в разделе «Админы» (последнего админа удалить нельзя). Все действия админов — санкции, решения
    по жалобам, апелляциям и селфи, изменения настроек, управление админами — пишутся в `admin_actions`
    (раздел «Журнал действий»); настройки `app_config` меняются только через проверяющий RPC `admin_config_set`.
-8. **Документы**: в админке → «Настройки» → «Документы и поддержка» впишите https-ссылки на политику, условия, правила, подписки, модерацию и e-mail поддержки (дашборд напоминает, пока они пусты).
+8. **Документы**: в админке → «Настройки» → «Документы и поддержка» впишите https-ссылки на политику, условия, правила, модерацию и e-mail поддержки (дашборд напоминает, пока они пусты).
 
-## 3. Подписки (RevenueCat поверх App Store и Google Play)
+## 3. Без подписок: лимит искр
 
-1. В App Store Connect и Google Play создайте подписки Plus и Premium (месяц и год).
-2. RevenueCat: Entitlements `plus` и `premium`; Offering `default` с пакетами **`plus_month`, `plus_year`, `premium_month`, `premium_year`** (идентификаторы пакетов важны — по ним приложение находит тарифы).
-3. RevenueCat → Integrations → Webhooks: URL `https://<ref>.functions.supabase.co/revenuecat-webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_SECRET>`.
-   Вебхук идемпотентен: id обработанных событий хранятся в `billing_events` (миграция 0021), повтор отвечает 200 без изменений; любая ошибка записи в БД отвечает 500, чтобы RevenueCat повторил доставку. Миграцию 0021 нужно применить до деплоя новой версии функции.
-4. Приложение логинит RevenueCat идентификатором пользователя Supabase — так вебхук знает, кому включить тариф. Тестовые (sandbox) покупки дают доступ, но помечены `sandbox` и не считаются платящими в дашборде.
-5. Цены в приложении берутся из магазина; предварительные цены из брифа лежат в `app_config.prices_preliminary` только для справки.
+RENVI бесплатен: покупок, тарифов, RevenueCat и магазинных подписок нет (решение основателя, [RELEASE_4_NO_SUBSCRIPTIONS.md](RELEASE_4_NO_SUBSCRIPTIONS.md)).
+Единственный лимит — защита от спама: `app_config.daily_spark_limit` (по умолчанию 100 искр на пользователя за сутки UTC).
+Сервер отказывает в лишней искре (`send_spark` → `daily limit`, SQLSTATE `P0003`), приложение показывает нейтральный экран «Лимит на сегодня исчерпан» без предложений что-либо купить.
+Значение меняется в админке → «Настройки» → «Дневной лимит искр» (целое число 1–100000, изменение пишется в журнал).
 
 ## 4. Push-уведомления
 
@@ -86,7 +83,7 @@
    $$);
    ```
    Задача запускается каждый час, а функция сама отправляет только в день недели и после часа из настройки (часовой запуск страхует от сбоя одного вызова; повторно никому не уйдёт — работает журнал за 7 дней). Если нужен один запуск в неделю, замените `'5 * * * *'` на `'5 17 * * 0'`.
-3. Настройка времени: в админке «Тарифы и настройки» ключ `digest` → `{"enabled": true, "weekday": 0, "hour_utc": 17}` (`weekday`: 0 — воскресенье … 6 — суббота, время UTC; `enabled: false` выключает рассылку).
+3. Настройка времени: в админке «Настройки» ключ `digest` → `{"enabled": true, "weekday": 0, "hour_utc": 17}` (`weekday`: 0 — воскресенье … 6 — суббота, время UTC; `enabled: false` выключает рассылку).
 4. Проверка вручную (отправит сразу, игнорируя день и час, но с учётом журнала): `curl -X POST "https://<ref>.supabase.co/functions/v1/weekly-digest?force=1" -H "x-digest-secret: $DIGEST_CRON_SECRET"`.
 5. Тексты пушей/писем лежат в `supabase/functions/weekly-digest/text.ts` (карта по языку профиля, запасной — русский).
 
@@ -134,11 +131,11 @@ Workflow-файлы: `.github/workflows/deploy-supabase.yml` и `.github/workflo
 | `SUPABASE_DB_PASSWORD` | пароль БД, заданный при создании проекта (Database → Reset password) |
 
 **Variables (Repository variables, публичные значения, не секреты):**
-`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_REVENUECAT_IOS_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, `EXPO_PUBLIC_APP_URL`. Для облачной сборки workflow на лету копирует их в `env` выбранного профиля `eas.json` (в коммит это не попадает), потому что сборка идёт на серверах EAS и не видит окружение GitHub-раннера.
+`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_APP_URL`. Для облачной сборки workflow на лету копирует их в `env` выбранного профиля `eas.json` (в коммит это не попадает), потому что сборка идёт на серверах EAS и не видит окружение GitHub-раннера.
 
 **Environment `production`:** Settings → Environments → New environment → `production` → Required reviewers (владелец). Тогда деплой Supabase и production-сборки/обновления ждут ручного подтверждения. Environment `preview` создаётся автоматически без защиты.
 
-**Деплой Supabase** (Actions → Deploy Supabase → Run workflow; только ручной запуск — миграции в продакшн применяет человек): сначала `supabase db push --dry-run`, затем `db push` и `functions deploy` для каждой папки в `supabase/functions` (кроме `_shared`). Секреты функций CI **не** выставляет: один раз выполните локально `npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=... PUSH_WEBHOOK_SECRET=...` (и необязательные `RESEND_API_KEY`, `EXPORT_FROM_EMAIL`), см. раздел 2.5. Вебхуки базы (2.6) тоже настраиваются вручную.
+**Деплой Supabase** (Actions → Deploy Supabase → Run workflow; только ручной запуск — миграции в продакшн применяет человек): сначала `supabase db push --dry-run`, затем `db push` и `functions deploy` для каждой папки в `supabase/functions` (кроме `_shared`). Секреты функций CI **не** выставляет: один раз выполните локально `npx supabase secrets set PUSH_WEBHOOK_SECRET=...` (и необязательные `RESEND_API_KEY`, `EXPORT_FROM_EMAIL`), см. раздел 2.5. Вебхуки базы (2.6) тоже настраиваются вручную.
 
 **Разовая подготовка EAS (локально, до первого запуска workflow):**
 1. `npx eas-cli@latest login`, затем `npx eas-cli@latest init` — создаст проект на expo.dev и впишет `extra.eas.projectId` в `app.json`. Мы его не придумываем: **пока `projectId` нет, workflow сборки намеренно падает** с сообщением. Закоммитьте изменённый `app.json`.

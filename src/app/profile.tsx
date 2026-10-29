@@ -5,7 +5,7 @@ import { MediaThumb, ProfileHero, ProfileMeta } from '@/components/Profile';
 import { ErrorRetryState } from '@/components/States';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useTierLimits } from '@/lib/session';
+import { useSession, useSparkLimit } from '@/lib/session';
 import { intentChip } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
@@ -20,14 +20,14 @@ export default function Profile() {
   const { data: card, loading, error, reload } = useProfileCard(id);
   const d = useDiscover();
   const toast = useToast();
-  const { limits } = useTierLimits();
+  const limit = useSparkLimit();
 
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
   if (error) return <Screen><BackLink /><ErrorRetryState onRetry={reload} /></Screen>;
   if (!card) return <Screen><BackLink /><StateBlock icon="↗" title={t('screens.profile.profilNedostupen')} copy={t('screens.profile.anketaSkrytaIliBolshe')} label={t('screens.profile.kZnakomstvam')} onPress={() => router.navigate('/discover')} /></Screen>;
 
   const onSpark = async () => {
-    if (d.likesUsed >= Number(limits?.daily_likes ?? 20)) { router.push('/like-limit'); return; }
+    if (d.likesUsed >= limit) { router.push('/like-limit'); return; }
     try {
       const r = await d.spark(card, { kind: 'profile', ref: null, label: t('screens.profile.fotoIzAnkety') }, null);
       if (!r) return;

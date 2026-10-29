@@ -11,13 +11,12 @@ export class AnalyticsClock {
     return seconds;
   }
 }
-const SCREENS = new Set(['index','welcome','signin','signup','onboarding','discover','likes','matches','chat','profile','settings','privacy-data','date','match','subscription','admin']);
+const SCREENS = new Set(['index','welcome','signin','signup','onboarding','discover','likes','matches','chat','profile','settings','privacy-data','date','match','admin']);
 export function normalizeScreen(path: string) {
  const first = path.split('?')[0].split('/').filter(x => x && !x.startsWith('('))[0] ?? 'index';
  if (first.startsWith('ob-') || first.startsWith('onboarding')) return 'onboarding';
  if (first==='chats') return 'matches';
  if (first==='me') return 'profile';
- if (first==='plans' || first.startsWith('purchase')) return 'subscription';
  if (first.startsWith('date')) return 'date';
  return SCREENS.has(first) ? first : 'other';
 }

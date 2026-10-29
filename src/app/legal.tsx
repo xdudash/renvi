@@ -10,7 +10,6 @@ const DOCS: [string, TranslationKey, TranslationKey][] = [
   ['privacy', 'screens.legal.politikaPrivatnosti', 'screens.legal.kakIspolzuyutsyaDannye'],
   ['terms', 'screens.legal.usloviyaIspolzovaniya', 'screens.legal.pravaIObyazannosti'],
   ['community', 'screens.legal.pravilaSoobschestva', 'screens.legal.uvazhenieIBezopasnost'],
-  ['subscriptions', 'screens.legal.podpiskiIVozvraty', 'screens.legal.upravleniePokupkoyApple'],
   ['moderation', 'screens.legal.resheniyaModeratsii', 'screens.legal.statusIApellyatsiya'],
 ];
 

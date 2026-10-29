@@ -84,7 +84,6 @@ select pg_temp.expect_error(q, 'non-admin denied: ' || q, '42501') from unnest(a
   $q$select public.admin_sanction_user('00000000-0000-0000-0000-0000000000b1', 'ban', 'spam spam', null)$q$,
   $q$select public.admin_lift_sanction('00000000-0000-0000-0000-0000000000b1', 'mistake', null)$q$,
   $q$select public.admin_verification_decide('00000000-0000-0000-0000-0000000000b2', 'approved', null)$q$,
-  $q$select public.admin_reset_free('00000000-0000-0000-0000-0000000000b2', 'test reset')$q$,
   $q$select public.admin_remove_photo(gen_random_uuid(), 'bad photo')$q$,
   $q$select public.admin_report_queue('new', null, null, null, null, 50, 0)$q$,
   $q$select public.admin_report_assign(gen_random_uuid(), true)$q$,
@@ -239,34 +238,40 @@ select public.admin_verification_decide('00000000-0000-0000-0000-0000000000b2', 
 select pg_temp.check((select verification_status from public.profiles where id = '00000000-0000-0000-0000-0000000000b2') = 'rejected'
   and pg_temp.logged('verification.revoke', '00000000-0000-0000-0000-0000000000b2'), 'verification can be revoked (logged)');
 
--- ---------- subscriptions: never granted, reset only when not store-managed ----------
-reset role;
-insert into public.subscriptions (user_id, tier, store, expires_at) values ('00000000-0000-0000-0000-0000000000b1', 'plus', 'app_store', now() + interval '20 days');
-insert into public.subscriptions (user_id, tier, expires_at) values ('00000000-0000-0000-0000-0000000000b2', 'plus', now() + interval '7 days');
+-- ---------- no plans (0029): nothing to grant or reset ----------
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
-select pg_temp.expect_error($q$select public.admin_reset_free('00000000-0000-0000-0000-0000000000b1', 'refund requested')$q$,
-  'store-managed subscription cannot be reset from the admin', '42501');
-select public.admin_reset_free('00000000-0000-0000-0000-0000000000b2', 'referral fraud');
-select pg_temp.check((select tier from public.subscriptions where user_id = '00000000-0000-0000-0000-0000000000b2') = 'free'
-  and pg_temp.logged('subscription.reset_free', '00000000-0000-0000-0000-0000000000b2'), 'promo time can be reset to Free (logged)');
+select pg_temp.check(to_regprocedure('public.admin_reset_free(uuid,text)') is null, 'there is no reset-to-Free admin action');
 select pg_temp.check(not exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace
-  and proname ~ '^admin_.*(grant|set_tier|subscription)'), 'no admin RPC grants a paid tier');
+  and proname ~ '^admin_.*(grant|tier|subscription|reset_free)'), 'no admin RPC deals with tiers or subscriptions');
+select pg_temp.check(not (public.admin_dashboard() ? 'paid_subscribers'), 'dashboard has no paid-subscriber tile');
+select pg_temp.check(not (public.admin_user_detail('00000000-0000-0000-0000-0000000000b1') ? 'subscription'), 'user detail has no subscription section');
+select pg_temp.check(not exists (select 1 from jsonb_array_elements(public.admin_user_search(null, null, null, null, null, 'new', 50, 0)->'rows') r where r ? 'tier'),
+  'user list has no tier column');
 
 -- ---------- config ----------
 select pg_temp.expect_error($q$select public.admin_config_set('legal_urls', '{"privacy":"http://renvi.app/p"}', null)$q$,
   'legal URL must be https', '22023');
 select pg_temp.expect_error($q$select public.admin_config_set('legal_urls', '{"cookies":"https://renvi.app/c"}', null)$q$,
   'unknown legal document rejected', '22023');
-select public.admin_config_set('legal_urls', '{"privacy":"https://renvi.app/privacy","terms":"https://renvi.app/terms","community":null,"subscriptions":null,"moderation":null}', 'fill links');
+select public.admin_config_set('legal_urls', '{"privacy":"https://renvi.app/privacy","terms":"https://renvi.app/terms","community":null,"moderation":null}', 'fill links');
+select pg_temp.expect_error($q$select public.admin_config_set('legal_urls', '{"subscriptions":"https://renvi.app/s"}', null)$q$,
+  'there is no subscriptions document any more', '22023');
 select pg_temp.check((select value->>'privacy' from public.app_config where key = 'legal_urls') = 'https://renvi.app/privacy', 'legal URL saved');
 select pg_temp.check((select details->'new'->>'privacy' = 'https://renvi.app/privacy' and details->'old'->'privacy' = 'null'::jsonb
   from public.admin_actions where action = 'config.set' and target_id = 'legal_urls'), 'config change is logged with old and new value');
 select pg_temp.expect_error($q$select public.admin_config_set('support_email', '"not-an-email"', null)$q$, 'support e-mail validated', '22023');
 select public.admin_config_set('support_email', '"help@renvi.app"', null);
-select pg_temp.expect_error($q$select public.admin_config_set('prices_preliminary', '{}', null)$q$, 'prices are read-only', '42501');
+select pg_temp.expect_error($q$select public.admin_config_set('prices_preliminary', '{}', null)$q$, 'prices key no longer exists', '22023');
 select pg_temp.expect_error($q$select public.admin_config_set('tier_limits', '{"free":{"daily_likes":5}}', null)$q$,
-  'tier_limits needs every tier', '22023');
-select pg_temp.expect_error($q$select public.admin_config_set('referral', '{"goal":0,"reward_days":7}', null)$q$, 'referral goal validated', '22023');
+  'tier_limits key no longer exists', '22023');
+select pg_temp.expect_error($q$select public.admin_config_set('daily_spark_limit', '0', null)$q$, 'spark limit must be at least 1', '22023');
+select pg_temp.expect_error($q$select public.admin_config_set('daily_spark_limit', '2.5', null)$q$, 'spark limit must be a whole number', '22023');
+select pg_temp.expect_error($q$select public.admin_config_set('daily_spark_limit', '{"free":5}', null)$q$, 'spark limit is one number, not per tier', '22023');
+select public.admin_config_set('daily_spark_limit', '150', 'raise limit');
+select pg_temp.check((select value from public.app_config where key = 'daily_spark_limit') = '150'::jsonb
+  and pg_temp.logged('config.set', null), 'spark limit is editable by an admin (logged)');
+select pg_temp.expect_error($q$select public.admin_config_set('referral', '{"goal":0}', null)$q$, 'referral goal validated', '22023');
+select pg_temp.expect_error($q$select public.admin_config_set('referral', '{"goal":5,"reward_days":7}', null)$q$, 'referral has no reward days', '22023');
 select pg_temp.expect_error($q$select public.admin_config_set('digest', '{"enabled":true,"weekday":9,"hour_utc":17}', null)$q$, 'digest weekday validated', '22023');
 select pg_temp.expect_error($q$select public.admin_config_set('whatever', '1', null)$q$, 'unknown config key rejected', '22023');
 select pg_temp.expect_error($q$select public.admin_config_set('launch_countries', '["XX"]', null)$q$, 'launch country must be known', '22023');

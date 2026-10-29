@@ -32,8 +32,6 @@ env:
   # Public values: repository VARIABLES, not secrets.
   EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
   EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-  EXPO_PUBLIC_REVENUECAT_IOS_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_IOS_KEY }}
-  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
   EXPO_PUBLIC_APP_URL: ${{ vars.EXPO_PUBLIC_APP_URL }}
 
 jobs:
@@ -83,14 +81,10 @@ jobs:
           jq --arg p "$PROFILE" \
             --arg a "$EXPO_PUBLIC_SUPABASE_URL" \
             --arg b "$EXPO_PUBLIC_SUPABASE_ANON_KEY" \
-            --arg c "$EXPO_PUBLIC_REVENUECAT_IOS_KEY" \
-            --arg d "$EXPO_PUBLIC_REVENUECAT_ANDROID_KEY" \
             --arg e "$EXPO_PUBLIC_APP_URL" \
             '.build[$p].env = {
                EXPO_PUBLIC_SUPABASE_URL: $a,
                EXPO_PUBLIC_SUPABASE_ANON_KEY: $b,
-               EXPO_PUBLIC_REVENUECAT_IOS_KEY: $c,
-               EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: $d,
                EXPO_PUBLIC_APP_URL: $e
              }' eas.json > eas.ci.json
           mv eas.ci.json eas.json

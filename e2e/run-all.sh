@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end run against a Supabase project (local `supabase start` or staging) and the web build.
-# Required env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL, REVENUECAT_WEBHOOK_SECRET, APP_URL
+# Required env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL, APP_URL
 # Optional: PROTOTYPE_HTML (path to the private iOS prototype) to also produce side-by-side screenshots.
 #
 # Setup must succeed (set -e). The test scripts all run even if one fails, but the run exits non-zero
