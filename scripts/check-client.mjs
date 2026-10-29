@@ -102,4 +102,13 @@ await ok('reconcile drops delivered items (C5)', () => {
   assert.deepEqual(r.delivered, ['c2']);
 });
 
+// Resend cooldown from the Auth rate-limit answer
+{
+  const { resendWaitSeconds } = await load('authRate');
+  await ok('resend 429 reads seconds', () => assert.equal(resendWaitSeconds({ status: 429, message: 'For security purposes, you can only request this after 42 seconds.' }), 42));
+  await ok('resend rate code without seconds → 60', () => assert.equal(resendWaitSeconds({ code: 'over_email_send_rate_limit', message: 'Email rate limit exceeded' }), 60));
+  await ok('resend other error → null', () => assert.equal(resendWaitSeconds({ status: 400, message: 'Invalid email' }), null));
+  await ok('resend no error → null', () => assert.equal(resendWaitSeconds(null), null));
+}
+
 console.log(`client checks ok (${n})`);

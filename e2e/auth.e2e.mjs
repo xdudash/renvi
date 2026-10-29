@@ -26,6 +26,9 @@ await step('resend email and confirm on fresh device',async()=>{
   const after=Date.now();
   await page.goto(APP+'/confirmation?email='+encodeURIComponent(email),{waitUntil:'networkidle'});
   // Capture the Auth answer to the resend: a missing e-mail must be explained (status + error code), never guessed.
+  // A real person cannot tap within the Auth minimum interval between e-mails (local config: max_frequency = 1s).
+  // Clicking faster raced it and made this step flaky (#24); a refusal is now reported below, not hidden.
+  await page.waitForTimeout(1500);
   const answer=page.waitForResponse(r=>r.url().includes('/auth/v1/resend'),{timeout:15000});
   await page.getByText('Отправить ещё раз',{exact:true}).click();
   const r=await answer;

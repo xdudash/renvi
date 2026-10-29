@@ -131,6 +131,8 @@ export const ruB = {
   'screens.confirmation.otpravlyaem': 'Отправляем…',
   'screens.confirmation.pismoOtpravleno': 'Письмо отправлено',
   'screens.confirmation.pismoOtpravlenoEscheRaz': 'Письмо отправлено ещё раз',
+  'screens.confirmation.resendIn': 'Отправить ещё раз через {n} с',
+  'screens.confirmation.waitBeforeResend': 'Письмо уже в пути. Повторно отправить можно через {n} с.',
   'screens.confirmation.vernutsyaKoVhodu': 'Вернуться ко входу',
   'screens.dateAccepted.doVstrechiNemnogo': 'До встречи — немного',
   'screens.dateAccepted.izmenitPlan': 'Изменить план',
