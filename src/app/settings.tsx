@@ -37,6 +37,11 @@ export default function Settings() {
         <CheckRow on={prefs.larger_text} onPress={() => toggle('larger_text')}><Text style={{ fontSize: 12 }}>{t('screens.settings.largerText')}</Text></CheckRow>
         <Tiny>{t('screens.settings.iosNote')}</Tiny>
       </Card>
+      {/* App Review 5.1.1(v): account deletion must be easy to find from settings, not only via Privacy. */}
+      <Card tight>
+        <Row label={t('screens.me.rowPrivacy')} sub={t('screens.me.rowPrivacySub')} onPress={() => router.push('/privacy-data')} />
+        <Row label={t('screens.privacyData.udalitAkkaunt')} sub={t('screens.privacyData.udalenieBezPovtornogoPredl')} onPress={() => router.push('/delete-account')} />
+      </Card>
       <Btn kind="ghost" label={t('screens.settings.openIos')} onPress={() => Linking.openSettings().catch(() => toast(t('screens.settings.openManually')))} />
       <Btn kind="ghost" label={t('screens.settings.signOut')} onPress={async () => { await signOut(); router.replace('/'); }} />
     </Screen>

@@ -115,6 +115,8 @@ npx eas build --profile development --platform ios   # dev-клиент
 npx eas build --profile production --platform all
 npx eas submit --platform ios
 ```
+Отправка в App Store: тексты, ответы на анкеты, release-gate (`npm run release:check`) и чек-лист основателя — в `docs/APP_STORE.md`.
+
 Bundle id / package сейчас `com.renvi.app` — **решить до первой публикации** (бриф: название RENVI юридически не проверено, bundle id нельзя сменить после выхода).
 
 ## Деплой и сборки через GitHub

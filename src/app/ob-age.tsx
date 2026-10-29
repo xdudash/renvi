@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Btn, CheckRow, Field, SafeBanner, Screen, Sheet, useToast } from '@/components/ui';
+import { router } from 'expo-router';
+import { Btn, CheckRow, Field, LinkBtn, SafeBanner, Screen, Sheet, useToast } from '@/components/ui';
 import { useDraft } from '@/hooks/useDraft';
 import { OnbHeader, useStepSave } from '@/components/Onboarding';
 import { useSession } from '@/lib/session';
@@ -38,6 +39,11 @@ export default function ObAge() {
       <Text style={{fontSize:12,color:'#706862'}}>{t(birthdateLocked?'identity.birthdayLocked':'identity.locked')}</Text>
       <CheckRow left on={adult} onPress={() => setAdult(!adult)}><Text style={{ fontSize: 12 }}>{t('screens.obAge.mneUzheIspolnilos18')}</Text></CheckRow>
       <CheckRow left on={terms} onPress={() => setTerms(!terms)}><Text style={{ fontSize: 12 }}>{t('screens.obAge.yaPrinimayuUsloviyaI')}</Text></CheckRow>
+      {/* The accepted documents must be one tap away (App Review 1.2: users agree to terms with no tolerance for abuse). */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
+        <LinkBtn label={t('screens.legal.pravilaSoobschestva')} onPress={() => router.push('/community-rules')} />
+        <LinkBtn label={t('screens.me.rowLegal')} onPress={() => router.push('/legal')} />
+      </View>
       <SafeBanner>{t('screens.obAge.dataRozhdeniyaNeBudet')}</SafeBanner>
       <Btn label={t('screens.obAge.prodolzhit')} onPress={next} busy={busy} />
       <View><Btn kind="ghost" label={t('screens.obAge.sohranitChernovikIVyyti')} onPress={() => saveDraftAndExit(name.trim() ? { display_name: name.trim() } : {})} /></View>

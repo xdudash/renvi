@@ -16,9 +16,16 @@
       "android": { "buildType": "apk" }
     },
     "production": {
+      "environment": "production",
+      "distribution": "store",
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "ios": { "resourceClass": "default" }
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {
+      "ios": {}
+    }
+  }
 }

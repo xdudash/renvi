@@ -17,6 +17,8 @@ export default function AccountSuspended() {
       {until ? <Card tight><Text style={{ fontSize: 12 }}>{t('screens.accountSuspended.until', { until })}</Text></Card> : null}
       <AppealOutcome />
       <Btn kind="ghost" label={t('screens.accountSuspended.appeal')} onPress={() => router.push('/appeal')} />
+      {/* Deletion stays available under any sanction (App Review 5.1.1(v); gateRoutes RESTRICTED_OK). */}
+      <Btn kind="ghost" label={t('screens.privacyData.udalitAkkaunt')} onPress={() => router.push('/delete-account')} />
     </Screen>
   );
 }

@@ -27,6 +27,9 @@ jobs:
       - name: Client logic checks
         if: ${{ !cancelled() }}
         run: scripts/ci-annotate.sh client node scripts/check-client.mjs
+      - name: App Store release gate
+        if: ${{ !cancelled() }}
+        run: scripts/ci-annotate.sh release node scripts/check-release.mjs
       - name: Identity and feature logic checks
         if: ${{ !cancelled() }}
         run: node scripts/check-identity.mjs && node --test scripts/tests/*.test.mjs
