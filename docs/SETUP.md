@@ -173,3 +173,19 @@ Workflow-файлы: `.github/workflows/deploy-supabase.yml` и `.github/workflo
 3. **Повторная проверка:** снова `check-no-demo-bots.sql`. Должна пройти без строк и ошибок.
 4. **Storage:** если в бакете `profile-media` остались папки `<bot_id>/…` (фото ботов), удалите их через Storage в дашборде Supabase или Storage API, по id из шага 2. Прямой `DELETE` из `storage.objects` Supabase не разрешает.
 5. **Админка:** откройте `/admin` и убедитесь, что число пользователей и анкет совпадает с реальными аккаунтами, а демо-профилей в списках нет.
+
+## Веб-версия: автоматическая публикация (GitHub Pages)
+
+Workflow `.github/workflows/web-deploy.yml` собирает веб-версию (`expo export --platform web`) и публикует её при **каждом** push в `main`, то есть после каждого слитого PR. Адрес: `https://<владелец>.github.io/renvi/`.
+
+Один раз:
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.** Без этого шаг публикации падает.
+2. **Settings → Secrets and variables → Actions → Variables** (публичные значения, встраиваются в сборку): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`; по желанию `EXPO_PUBLIC_APP_URL` (по умолчанию адрес Pages), `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без адреса и ключа Supabase сайт откроется с экраном «Сервер не подключён».
+3. Supabase → Authentication → URL Configuration: добавьте адрес сайта в Site URL / Redirect URLs (вход, восстановление пароля).
+4. Свой домен: Settings → Pages → Custom domain, затем переменная `WEB_BASE_URL` = `/`.
+
+Как это работает:
+- Подпуть `/renvi` задаётся только в сборке для сайта (`app.config.js` + `EXPO_BASE_URL`); нативные сборки и локальная разработка не меняются.
+- Прямые ссылки (`/renvi/admin`, `/renvi/invite/КОД`) работают: `404.html` — копия `index.html`.
+- В `version.json` лежит коммит сборки. Открытая вкладка раз в 5 минут и при возврате на вкладку сравнивает его со своим и показывает «Вышла новая версия RENVI · Обновить».
+- Админка открывается по адресу `/renvi/admin`; доступ проверяет сервер (`is_admin`).
