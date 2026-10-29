@@ -35,7 +35,7 @@ export function ProfileMeta({ card }: { card: Pick<DiscoverCard, 'profile_id' | 
             <Text style={s.title}>{card.display_name}, {card.age}</Text>
             {card.verified ? <Text accessibilityLabel={t('components.Profile.podtverzhdennyyProfil')}>{'  '}<Text style={s.check}> ✓ </Text></Text> : null}
           </Text>
-          <Text style={s.meta}>{card.city} · {card.distance} <Text style={{ fontSize: 10, color: colors.muted }}>ⓘ</Text></Text>
+          <Text style={s.meta}>{card.city} · {card.distance}</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.deystviyaSProfilem')} onPress={() => setOpen(true)} style={s.more}><Text>···</Text></Pressable>
       </View>
