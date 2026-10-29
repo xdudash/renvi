@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 import { supabase } from './supabase';
 import { authRedirect } from './identity';
 import { planRecovery } from './recovery';
@@ -8,7 +9,10 @@ import { planRecovery } from './recovery';
  * Expo Go, which must also be listed in Auth → Redirect URLs). Web: <origin><base path>/reset-password.
  */
 export function recoveryRedirectUrl(): string {
-  return authRedirect('reset-password',Platform.OS==='web' && typeof window!=='undefined'?window.location.origin:undefined,process.env.EXPO_PUBLIC_BASE_PATH??'');
+  // Native: Linking.createURL gives renvi://reset-password in store/TestFlight builds and exp://…/--/reset-password in Expo Go,
+  // so the e-mail button reopens whichever app sent it.
+  if (Platform.OS!=='web') return Linking.createURL('reset-password');
+  return authRedirect('reset-password',typeof window!=='undefined'?window.location.origin:undefined,process.env.EXPO_PUBLIC_BASE_PATH??'');
 }
 
 /**

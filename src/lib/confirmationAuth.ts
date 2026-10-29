@@ -1,9 +1,13 @@
 import { Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 import { supabase } from './supabase';
 import { authRedirect, planEmailConfirmation } from './identity';
 
 export function confirmationRedirectUrl():string {
-  return authRedirect('auth-callback',Platform.OS==='web' && typeof window!=='undefined'?window.location.origin:undefined,process.env.EXPO_PUBLIC_BASE_PATH??'');
+  // Native: Linking.createURL gives renvi://auth-callback in store/TestFlight builds and exp://…/--/auth-callback in Expo Go,
+  // so the e-mail button reopens whichever app sent it.
+  if (Platform.OS!=='web') return Linking.createURL('auth-callback');
+  return authRedirect('auth-callback',typeof window!=='undefined'?window.location.origin:undefined,process.env.EXPO_PUBLIC_BASE_PATH??'');
 }
 const attempts=new Map<string,Promise<boolean>>();
 export function establishConfirmationSession(url:string|null):Promise<boolean> {
