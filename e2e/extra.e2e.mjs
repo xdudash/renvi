@@ -5,7 +5,9 @@ import { createRunner } from './steps.mjs';
 const b = await chromium.launch();
 const mk = async (state) => b.newContext({ viewport: { width: 393, height: 852 }, ...(state ? { storageState: state } : {}) });
 let n = 60;
-const { step, finish } = createRunner({ label: 'extra' });
+let cur = null; // page used by the running step, for failure context
+const diagnose = async () => cur ? `url=${cur.url().replace(APP, '')} text="${(await cur.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 400)}"` : '';
+const { step, finish } = createRunner({ label: 'extra', diagnose });
 const anna = await signIn('anna@renvi.test', 'renvi-test-1');
 const tomas = await signIn('tomas@renvi.test', 'renvi-test-1');
 const daniel = await signIn('daniel@renvi.test', 'renvi-test-1');
@@ -16,7 +18,7 @@ let admin;
 try { admin = await signUp('admin@renvi.test', 'renvi-admin-1'); } catch { admin = await signIn('admin@renvi.test', 'renvi-admin-1'); }
 psql(`insert into public.admins values ('${admin.user.id}') on conflict do nothing`);
 const actx = await mk(); const ap = await actx.newPage();
-const go = async (p, path) => { await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(900); };
+const go = async (p, path) => { cur = p; await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(900); };
 const shot = async (p, name) => { await p.waitForTimeout(600); await p.screenshot({ path: `out/flow/${++n}-${name}.png` }); };
 
 await step('admin signs in through the UI', async () => {
@@ -26,7 +28,7 @@ await step('admin signs in through the UI', async () => {
   await ap.getByText('Войти', { exact: true }).last().click();
   await ap.waitForTimeout(2500);
   await go(ap, '/admin');
-  await ap.getByText('По странам').waitFor();
+  await ap.getByText('По странам').first().waitFor(); // dashboard heading and table both say it
   await shot(ap, 'admin-dashboard');
 });
 await step('admin approves Anna selfie', async () => {

@@ -1,6 +1,6 @@
 // Shared step runner for the e2e scripts. A failing step is recorded and the remaining independent steps keep
 // running (unless `stopOnFail`), but finish() always exits non-zero when any step failed.
-export function createRunner({ label = 'e2e', onFail, stopOnFail = false } = {}) {
+export function createRunner({ label = 'e2e', onFail, diagnose, stopOnFail = false } = {}) {
   const passed = [];
   const failed = [];
   let stopped = false;
@@ -17,10 +17,14 @@ export function createRunner({ label = 'e2e', onFail, stopOnFail = false } = {})
       return true;
     } catch (e) {
       const message = String(e?.message ?? e).split('\n')[0];
+      // Optional page context (URL, JS errors, visible text) so a failure is diagnosable from the annotation alone.
+      let diag = '';
+      try { diag = (await diagnose?.()) ?? ''; } catch { /* diagnostics must never hide the failure */ }
       failed.push({ name, message });
       console.log('FAIL', name, message);
       // In GitHub Actions, surface each real failure as an annotation (visible on the PR page and via the API).
-      if (process.env.GITHUB_ACTIONS) console.log(`::error title=E2E ${label}::${name}: ${message.replace(/[\r\n%]/g, ' ')}`);
+      if (diag) console.log('  context:', diag);
+      if (process.env.GITHUB_ACTIONS) console.log(`::error title=E2E ${label}::${name}: ${message} ${diag ? '| ' + diag : ''}`.replace(/[\r\n%]/g, ' ').slice(0, 1800));
       if (stopOnFail) stopped = true;
       try { await onFail?.(name, e); } catch { /* artifact capture must never hide the failure */ }
       return false;

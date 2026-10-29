@@ -9,7 +9,10 @@ p.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 let n = 20;
 const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({ path: `out/flow/${String(++n).padStart(2, '0')}-${name}.png` }); };
 const click = async (text) => { await p.getByText(text, { exact: true }).last().click(); };
-const { step, finish } = createRunner({ label: 'main', onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
+const consoleErr = [];
+p.on('console', (m) => { if (m.type() === 'error') consoleErr.push(m.text().slice(0, 200)); });
+const diagnose = async () => `url=${p.url().replace(APP, '')} js=[${[...errors, ...consoleErr].slice(-3).join(' ; ')}] text="${(await p.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 400)}"`;
+const { step, finish } = createRunner({ label: 'main', diagnose, onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 const go = async (path) => { await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(800); };
 
 const anna = await signIn('anna@renvi.test', 'renvi-test-1');
@@ -86,7 +89,9 @@ await step('chats list', async () => { await go('/chats'); await shot('chats'); 
 await step('Plus via store webhook unlocks incoming list', async () => {
   await rpc(daniel.access_token, 'send_spark', { p_to: anna.user.id, p_kind: 'profile', p_ref: null, p_comment: null });
   const r = await fetch('' + API + '/functions/v1/revenuecat-webhook', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.REVENUECAT_WEBHOOK_SECRET, 'content-type': 'application/json' },
-    body: JSON.stringify({ event: { type: 'INITIAL_PURCHASE', app_user_id: anna.user.id, entitlement_ids: ['plus'], store: 'APP_STORE', environment: 'SANDBOX', expiration_at_ms: Date.now() + 30 * 864e5 } }) });
+    // Same shape RevenueCat sends: every event carries a unique id and timestamp (the webhook is idempotent on id).
+    body: JSON.stringify({ event: { id: crypto.randomUUID(), event_timestamp_ms: Date.now(), type: 'INITIAL_PURCHASE', app_user_id: anna.user.id, original_app_user_id: anna.user.id, aliases: [anna.user.id], product_id: 'renvi_plus_month', entitlement_ids: ['plus'], store: 'APP_STORE', environment: 'SANDBOX', purchased_at_ms: Date.now(), expiration_at_ms: Date.now() + 30 * 864e5 } }) });
+  if (!r.ok) console.log('  webhook body:', await r.clone().text());
   if (!r.ok) throw new Error('webhook ' + r.status);
   await go('/likes');
   await p.getByText('Уже выбрали вас').waitFor({ timeout: 10000 });

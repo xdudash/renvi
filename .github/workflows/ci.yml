@@ -16,9 +16,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Typecheck and lint
-        run: npm run check
+      - name: TypeScript
+        run: scripts/ci-annotate.sh TypeScript npx tsc --noEmit --pretty false
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: scripts/ci-annotate.sh Lint npx expo lint
+      - name: i18n keys
+        if: ${{ !cancelled() }}
+        run: scripts/ci-annotate.sh i18n node scripts/check-i18n.mjs
+      - name: Client logic checks
+        if: ${{ !cancelled() }}
+        run: scripts/ci-annotate.sh client node scripts/check-client.mjs
       - name: Production web bundle
+        if: ${{ !cancelled() }}
         run: npx expo export --platform web
 
   db:
