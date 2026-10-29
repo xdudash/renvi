@@ -6,6 +6,7 @@ import { useDraft } from '@/hooks/useDraft';
 import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { INTENTS } from '@/lib/catalog';
 import { useLang } from '@/lib/lang';
@@ -15,8 +16,9 @@ export default function EditProfile() {
   const { t } = useLang();
   const toast = useToast();
   const { profile, refresh } = useSession();
-  const { items } = useMyPhotos();
-  const { items: prompts } = useMyPrompts();
+  const { items, reload: reloadPhotos } = useMyPhotos();
+  const { items: prompts, reload: reloadPrompts } = useMyPrompts();
+  useReloadOnFocus(() => { reloadPhotos(); reloadPrompts(); }); // summaries after edit-media / edit-prompts
   const [name, setName] = useDraft<string>(profile?.display_name ?? '');
   const [bio, setBio] = useDraft<string>(profile?.bio ?? '');
   const [intent, setIntent] = useDraft<string>(profile?.intent ?? 'serious');

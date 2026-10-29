@@ -40,7 +40,7 @@ export default function ObDone() {
           <Avatar uri={items[0]?.url} />
           <View style={{ flex: 1 }}>
             <Text style={{ fontWeight: '700', fontSize: 13 }}>{profile?.display_name ?? ''}{profile?.age ? `, ${profile.age}` : ''}</Text>
-            <Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{t('screens.obDone.predprosmotrAnketyV', { intent: intentChip(profile?.intent) })}</Text>
+            <Text style={{ fontSize: 10, color: '#706862', marginTop: 3 }}>{t('screens.obDone.predprosmotrAnketyV', { intent: intentChip(profile?.intent, t) })}</Text>
           </View>
           <Text style={{ color: '#aaa' }}>›</Text>
         </Pressable>

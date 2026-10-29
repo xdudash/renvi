@@ -19,7 +19,11 @@ export const INTENTS: { key: Intent; label: string; desc: string; chip: string; 
   { key: 'friends', label: 'Новые друзья', desc: 'Расширить круг близких по духу людей.', chip: 'Новые друзья', filter: 'Друзья', labelKey: 'catalog.intent.friends.label', descKey: 'catalog.intent.friends.desc', chipKey: 'catalog.intent.friends.chip', filterKey: 'catalog.intent.friends.filter' },
   { key: 'unsure', label: 'Пока не знаю', desc: 'Открыт(а) к разным вариантам.', chip: 'Сначала посмотрим', filter: 'Не решил(а)', labelKey: 'catalog.intent.unsure.label', descKey: 'catalog.intent.unsure.desc', chipKey: 'catalog.intent.unsure.chip', filterKey: 'catalog.intent.unsure.filter' },
 ];
-export const intentChip = (k?: string | null) => INTENTS.find((i) => i.key === k)?.chip ?? '';
+// Pass `t` for the selected language; without it the Russian chip is returned (kept for non-UI callers).
+export const intentChip = (k?: string | null, t?: TFunction) => {
+  const i = INTENTS.find((x) => x.key === k);
+  return i ? (t ? t(i.chipKey) : i.chip) : '';
+};
 
 export const INTERESTS = ['Архитектура', 'Кофе', 'Книги', 'Музыка', 'Путешествия', 'Кино', 'Плавание', 'Кулинария', 'Дизайн'];
 // INTERESTS values are stored on the profile as-is; these keys only translate how they are displayed.

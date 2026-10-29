@@ -5,6 +5,7 @@ import { Card, Field, Loading, SafeBanner, Screen, Segmented, Title } from '@/co
 import { ErrorRetryState } from '@/components/States';
 import { EmptyChats } from '@/components/EmptyChats';
 import { useAsync } from '@/hooks/useAsync';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { ChatRow } from '@/components/ChatRow';
 import { colors } from '@/theme/tokens';
@@ -14,6 +15,7 @@ import { useLang } from '@/lib/lang';
 export default function Chats() {
   const { t } = useLang();
   const { data, loading, error, reload } = useAsync(() => api.matches(), []);
+  useReloadOnFocus(reload); // unread counts / last message after coming back from a conversation
   const [seg, setSeg] = useState('all');
   const [q, setQ] = useState('');
   const list = useMemo(() => {

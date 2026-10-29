@@ -39,6 +39,9 @@ export type IncomingSpark = {
   target_kind: 'profile' | 'photo' | 'prompt';
   target_ref: string | null;
   created_at: string;
+  /** Cover photo path and verification (migration 0030); undefined on an older database. */
+  photo?: string | null;
+  verified?: boolean;
 };
 
 export type MatchRow = {
@@ -52,6 +55,9 @@ export type MatchRow = {
   muted: boolean;
   archived: boolean;
   created_at: string;
+  /** Partner cover photo path and verification (migration 0030); undefined on an older database. */
+  partner_photo?: string | null;
+  partner_verified?: boolean;
 };
 
 export type MessageRow = {

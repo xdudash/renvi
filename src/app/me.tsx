@@ -5,6 +5,7 @@ import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
 import { useAsync } from '@/hooks/useAsync';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { completeness } from '@/lib/completeness';
 import { colors } from '@/theme/tokens';
@@ -31,9 +32,11 @@ const VERIFY: Record<string, readonly [TranslationKey, string]> = {
 export default function Me() {
   const { t } = useLang();
   const { profile, tier } = useSession();
-  const { items } = useMyPhotos();
-  const { items: prompts } = useMyPrompts();
+  const { items, reload: reloadPhotos } = useMyPhotos();
+  const { items: prompts, reload: reloadPrompts } = useMyPrompts();
   const incoming = useAsync(() => api.incoming(), [tier]);
+  // Back from edit-media / edit-prompts / likes: avatar, completeness and counters must be current.
+  useReloadOnFocus(() => { reloadPhotos(); reloadPrompts(); incoming.reload(); });
   const pct = completeness(profile, items.length, prompts.length);
   const v = VERIFY[profile?.verification_status ?? 'none'];
   return (

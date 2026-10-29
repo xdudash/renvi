@@ -7,12 +7,13 @@ import { PROMPTS } from '@/lib/catalog';
 import { useMyPrompts, type MyPrompt } from '@/hooks/usePrompts';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import { ErrorRetryState } from '@/components/States';
 
 // 66 · Редактор ответов
 export default function EditPrompts() {
   const { t } = useLang();
   const toast = useToast();
-  const { items, saveAll } = useMyPrompts();
+  const { items, saveAll, error, reload } = useMyPrompts();
   const [edited, setDraft] = useState<MyPrompt[] | null>(null);
   const [busy, setBusy] = useState(false);
   const draft: MyPrompt[] = edited ?? items;
@@ -26,6 +27,8 @@ export default function EditPrompts() {
     setBusy(true);
     try { await saveAll(draft); toast(t('screens.editPrompts.izmeneniyaSohraneny')); router.navigate('/me'); } catch { toast(t('screens.editPrompts.neUdalosSohranit')); } finally { setBusy(false); }
   };
+  // Without the saved answers, "save" would replace them with whatever is on screen.
+  if (error && !edited) return <Screen tabs="me"><BackLink /><ErrorRetryState onRetry={reload} /></Screen>;
   return (
     <Screen tabs="me">
       <BackLink />

@@ -66,6 +66,9 @@ await step('propose a date', async () => {
   await go('/date-create?match=' + matchId); await shot('date-create');
   await click('Продолжить');
   await p.getByText('Когда вам удобно?').waitFor();
+  // Next week: every day and time slot is ahead regardless of the CI clock (today's passed times are not offered).
+  await click('Следующая');
+  await p.getByRole('button', { name: /^Пн/ }).first().click();
   await click('18:00');
   await shot('date-time');
   await click('Отправить приглашение');

@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 import { localeOf } from '@/i18n/current';
+import { ErrorRetryState } from '@/components/States';
 
 type BlockedRow = { blocked_id: string; created_at: string };
 
@@ -15,7 +16,7 @@ type BlockedRow = { blocked_id: string; created_at: string };
 export default function Blocked() {
   const { t } = useLang();
   const toast = useToast();
-  const { data, loading, reload } = useAsync(async () => {
+  const { data, loading, error, reload } = useAsync(async () => {
     const { data: rows, error } = await supabase.from('blocks').select('blocked_id, created_at').order('created_at', { ascending: false });
     if (error) throw error;
     return (rows ?? []) as BlockedRow[];
@@ -24,7 +25,7 @@ export default function Blocked() {
     <Screen>
       <BackLink onPress={() => router.navigate('/privacy-data')} />
       <Title kicker={t('screens.blocked.zablokirovannye')} heading={t('screens.blocked.kogoVyIsklyuchili')} sub={t('screens.blocked.profiliIzEtogoSpiska')} />
-      {loading ? <Loading /> : (
+      {loading ? <Loading /> : error ? <ErrorRetryState onRetry={reload} /> : (
         <Card>
           {(data ?? []).length ? (data ?? []).map((b) => (
             <BlockedItem key={b.blocked_id} row={b} onUnblock={async () => { try { await api.unblock(b.blocked_id); toast(t('screens.blocked.profilRazblokirovan')); reload(); } catch { toast(t('screens.blocked.neUdalosRazblokirovat')); } }} />
