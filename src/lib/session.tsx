@@ -74,21 +74,29 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [applyProfileLang]);
   const seq = useRef(0);
   // Only the newest load is applied, so a slow older response cannot overwrite fresher state.
+  // `ready` means the newest load for the current account has been applied. It must not turn true when an
+  // older, discarded load finishes: the gate would then see "signed in, no profile" and send an existing
+  // user to onboarding (race between the first load and the INITIAL_SESSION auth event).
   const refresh = useCallback(async () => {
     const id = ++seq.current;
-    const snap = await loadSnapshot();
-    if (id === seq.current) apply(snap);
+    try {
+      const snap = await loadSnapshot();
+      if (id === seq.current) apply(snap);
+    } finally {
+      if (id === seq.current) setReady(true);
+    }
   }, [apply]);
 
   useEffect(() => {
     if (!isBackendConfigured) return;
-    refresh().finally(() => setReady(true));
+    refresh();
     const { data } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       // A different account must never see the previous account's profile while its own loads.
       if ((s?.user.id ?? null) !== held.current.userId) {
         held.current = { userId: null, profile: null, tier: 'free', productId: null };
         setProfile(null); setTier('free'); setProductId(null);
+        setReady(false); // the gate waits for this account's own profile before routing
       }
       refresh();
     });
