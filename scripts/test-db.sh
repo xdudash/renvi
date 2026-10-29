@@ -28,6 +28,12 @@ run_sql supabase/tests/admin.sql "admin-panel"
 run_sql supabase/tests/extensions.sql "extension-portability"
 run_sql supabase/tests/integration.sql "cross-feature"
 
+run_sql supabase/tests/analytics.sql "analytics"
+run_sql supabase/tests/identity_auth.sql "identity and verified email"
+run_sql supabase/tests/demo_access.sql "demo access"
+run_sql supabase/tests/audit_followups.sql "audit followups"
+run_sql supabase/tests/audit_concurrency.sql "transaction locks"
+
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob
 tests=(supabase/tests/*.test.ts)

@@ -55,6 +55,7 @@ export type RecoveryPlan =
 export function planRecovery(url: string | null | undefined): RecoveryPlan {
   const p = parseRecoveryUrl(url);
   if (p.error) return { kind: 'invalid', reason: p.error };
+  if (p.type && p.type !== 'recovery') return { kind: 'none' };
   if (p.code) return { kind: 'exchange', code: p.code };
   if (p.tokenHash && (!p.type || p.type === 'recovery')) return { kind: 'verify', tokenHash: p.tokenHash };
   if (p.accessToken && p.refreshToken && (!p.type || p.type === 'recovery')) {

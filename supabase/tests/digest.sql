@@ -37,6 +37,7 @@ update public.profiles set incognito = true where id = pg_temp.uid(6);
 update public.profiles set paused = true where id = pg_temp.uid(7);
 update public.profiles set published_at = now() - interval '10 days' where id = pg_temp.uid(8);
 update public.profiles set suspended_until = now() + interval '1 day' where id = pg_temp.uid(11);
+insert into public.private_profile(user_id,birthdate) values (pg_temp.uid(13),((now() at time zone 'UTC')::date-interval '60 years')::date);
 update public.profiles set age = 60 where id = pg_temp.uid(13);
 -- user 9 seeks women; recipient is a man -> not mutual
 insert into public.blocks (blocker_id, blocked_id) values (pg_temp.uid(1), pg_temp.uid(5));

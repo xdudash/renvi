@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { planRecovery } from '../src/lib/recovery.ts';
+// A signup token must never establish a password-reset session, even when it carries a PKCE code.
+assert.equal(planRecovery('renvi://reset-password?code=x&type=signup').kind, 'none');
+const { birthdateFromParts, ageOnDate, planEmailConfirmation, authRedirect } = await import('../src/lib/identity.ts');
+assert.equal(birthdateFromParts('29','2','2008'), '2008-02-29');
+for (const parts of [['29','2','2007'],['31','4','2000'],['0','1','2000'],['1','13','2000'],['1','1','0000']]) assert.equal(birthdateFromParts(...parts), null);
+assert.equal(ageOnDate('2008-10-29', new Date('2026-10-29T00:00:00Z')),18);
+assert.equal(ageOnDate('2008-10-30', new Date('2026-10-29T23:59:00Z')),17);
+assert.equal(ageOnDate('2008-02-29', new Date('2026-02-28T12:00:00Z')),17);
+assert.equal(ageOnDate('2008-02-29', new Date('2026-03-01T00:00:00Z')),18);
+assert.equal(ageOnDate('2027-01-01', new Date('2026-10-29T00:00:00Z')),null);
+assert.deepEqual(planEmailConfirmation('renvi://auth-callback?token_hash=h&type=signup'),{kind:'verify',tokenHash:'h',type:'signup'});
+assert.equal(planEmailConfirmation('renvi://auth-callback?token_hash=h&type=recovery').kind,'invalid');
+assert.equal(planEmailConfirmation('https://host/renvi/auth-callback#error=access_denied&error_code=otp_expired').kind,'invalid');
+assert.deepEqual(planEmailConfirmation('renvi://auth-callback#access_token=a&refresh_token=r&type=signup'),{kind:'setSession',accessToken:'a',refreshToken:'r'});
+assert.deepEqual(planEmailConfirmation('https://host/renvi/auth-callback?code=c'),{kind:'exchange',code:'c'});
+assert.equal(authRedirect('auth-callback','https://host','/renvi/'),'https://host/renvi/auth-callback');
+assert.equal(authRedirect('reset-password'),'renvi://reset-password');
+console.log('18 identity/auth client checks passed');

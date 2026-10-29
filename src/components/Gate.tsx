@@ -22,7 +22,7 @@ export function Gate() {
 
   useEffect(() => {
     if (!ready || !configured) return;
-    const to = gateTarget(path, !!session, profile, loadError);
+    const to = gateTarget(path, !!session, profile, loadError, new Date(), !!session?.user.email_confirmed_at);
     if (to) router.replace(to as never);
   }, [ready, configured, session, profile, loadError, path]);
 

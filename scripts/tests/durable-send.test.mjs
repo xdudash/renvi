@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { durableSend } from '../../src/lib/durableSend.ts';
+let cleared=0,network=0;
+assert.equal(await durableSend(async()=>{throw Error('storage full')},async()=>{network++;return true},()=>cleared++),false);
+assert.equal(cleared,0,'failed persistence must preserve composer');
+assert.equal(network,0,'do not send without durable copy');
+const order=[];
+assert.equal(await durableSend(async()=>order.push('stored'),async()=>{order.push('request');return false},()=>order.push('clear')),false);
+assert.deepEqual(order,['stored','clear','request']);
+assert.equal(await durableSend(async()=>{},async()=>true),true);
+console.log('durable send: 3 scenarios passed');

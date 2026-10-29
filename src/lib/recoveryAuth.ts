@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
-import * as Linking from 'expo-linking';
 import { supabase } from './supabase';
+import { authRedirect } from './identity';
 import { planRecovery } from './recovery';
 
 /**
@@ -8,12 +8,7 @@ import { planRecovery } from './recovery';
  * Expo Go, which must also be listed in Auth → Redirect URLs). Web: <origin><base path>/reset-password.
  */
 export function recoveryRedirectUrl(): string {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    // The web build may live under a sub-path (GitHub Pages: /renvi), set by the deploy workflow.
-    const base = (process.env.EXPO_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
-    return `${window.location.origin}${base}/reset-password`;
-  }
-  return Linking.createURL('/reset-password');
+  return authRedirect('reset-password',Platform.OS==='web' && typeof window!=='undefined'?window.location.origin:undefined,process.env.EXPO_PUBLIC_BASE_PATH??'');
 }
 
 /**

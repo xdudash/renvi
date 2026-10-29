@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ const NAV: [string, TranslationKey][] = [
   ['/admin', 'adm.nav.dashboard'], ['/admin/reports', 'adm.nav.reports'], ['/admin/appeals', 'adm.nav.appeals'],
   ['/admin/verification', 'adm.nav.verification'], ['/admin/users', 'adm.nav.users'], ['/admin/config', 'adm.nav.config'],
   ['/admin/referrals', 'adm.nav.referrals'], ['/admin/audit', 'adm.nav.audit'], ['/admin/admins', 'adm.nav.admins'],
-  ['/admin/errors', 'adm.nav.errors'],
+  ['/admin/errors', 'adm.nav.errors'], ['/admin/analytics', 'analytics.title'], ['/admin/demo', 'adm.nav.demo'],
 ];
 
 export const STATUS_TONE = { active: 'green', suspended: 'amber', banned: 'red' } as const;
@@ -90,7 +90,7 @@ export function AdminPage({ title, sub, right, children }: { title: string; sub?
           })}
         </ScrollView>
       </View>
-      <ScrollView contentContainerStyle={s.body}>
+      <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
         {header}
         {children}
       </ScrollView>
@@ -156,7 +156,7 @@ export function KV({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <View style={s.kv}>
       <Text style={s.kvK}>{k}</Text>
-      {typeof v === 'string' || typeof v === 'number' ? <Text style={s.kvV} selectable>{v}</Text> : <View style={{ flex: 1 }}>{v}</View>}
+      {typeof v === 'string' || typeof v === 'number' ? <Text style={s.kvV} selectable>{v}</Text> : <View style={{ flex: 1, minWidth: 0 }}>{v}</View>}
     </View>
   );
 }
@@ -293,8 +293,9 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
   };
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
-      <View style={s.scrim}>
-        <View style={s.dialog} accessibilityViewIsModal>
+      <SafeAreaView style={s.scrim}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%', maxWidth: 520, maxHeight: '100%' }}>
+        <ScrollView style={s.dialog} contentContainerStyle={{ padding: 18 }} keyboardShouldPersistTaps="handled" accessibilityViewIsModal>
           <Text style={s.dialogTitle} accessibilityRole="header">{spec.title}</Text>
           {spec.body ? <Text style={s.dialogBody}>{spec.body}</Text> : null}
           {spec.days !== undefined ? (
@@ -323,9 +324,9 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
             </View>
           ) : null}
           {spec.extra ? (
-            <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: extra }} onPress={() => setExtra(!extra)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: extra }} onPress={() => setExtra(!extra)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, marginBottom: 10 }}>
               <View style={[s.box, extra && { backgroundColor: colors.ink }]}>{extra ? <Text style={{ color: colors.paper, fontSize: 11 }}>✓</Text> : null}</View>
-              <Text style={{ fontSize: 13, color: colors.ink }}>{spec.extra.label}</Text>
+              <Text style={{ flex: 1, fontSize: 13, color: colors.ink }}>{spec.extra.label}</Text>
             </Pressable>
           ) : null}
           {error ? <Text style={[s.errorText, { marginBottom: 10 }]} accessibilityRole="alert">{error}</Text> : null}
@@ -333,8 +334,9 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
             <Act label={t('adm.dialog.cancel')} tone="ghost" onPress={onClose} disabled={busy} />
             <Act label={busy ? t('adm.dialog.working') : spec.confirmLabel} tone={spec.tone ?? 'ink'} onPress={submit} disabled={busy} />
           </View>
-        </View>
-      </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -344,7 +346,7 @@ const s = StyleSheet.create({
   word: { fontSize: 20, fontWeight: '900', letterSpacing: -1, color: colors.ink },
   link: { fontSize: 12, fontWeight: '700', color: colors.redDark },
   nav: { paddingHorizontal: 12, paddingVertical: 10, gap: 6 },
-  tab: { borderWidth: 1, borderColor: colors.ink, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
+  tab: { minHeight: 44, justifyContent: 'center', borderWidth: 1, borderColor: colors.ink, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
   tabOn: { backgroundColor: colors.ink },
   tabText: { fontSize: 11, fontWeight: '700', color: colors.ink },
   side: { width: 220, borderRightWidth: 1, borderRightColor: colors.line, paddingHorizontal: 14, paddingVertical: 20 },
@@ -359,17 +361,17 @@ const s = StyleSheet.create({
   td: { paddingVertical: 10, paddingRight: 12 },
   th: { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow },
   cell: { fontSize: 12, color: colors.ink },
-  act: { borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6, alignSelf: 'flex-start' },
-  actText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  act: { minHeight: 44, minWidth: 44, justifyContent: 'center', maxWidth: '100%', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6, alignSelf: 'flex-start' },
+  actText: { textAlign: 'center', flexShrink: 1, color: '#fff', fontSize: 11, fontWeight: '700' },
   badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
   badgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
   section: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14, marginBottom: 16 },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.ink },
   kv: { flexDirection: 'row', gap: 10, paddingVertical: 5, borderTopWidth: 1, borderTopColor: colors.line },
-  kvK: { width: 150, fontSize: 12, color: colors.sub },
-  kvV: { flex: 1, fontSize: 12, color: colors.ink },
+  kvK: { width: '42%', maxWidth: 150, flexShrink: 1, fontSize: 12, color: colors.sub },
+  kvV: { flex: 1, minWidth: 0, fontSize: 12, color: colors.ink },
   filterLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow, marginBottom: 5 },
-  chip: { borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: colors.white },
+  chip: { minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: colors.white },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontSize: 12, color: colors.ink, fontWeight: '600' },
   search: { borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 14, color: colors.ink, backgroundColor: colors.white, marginBottom: 10 },
@@ -378,7 +380,7 @@ const s = StyleSheet.create({
   errorText: { color: colors.redDark, fontSize: 13, fontWeight: '600' },
   banner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 14 },
   scrim: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  dialog: { width: '100%', maxWidth: 520, backgroundColor: colors.paper, borderRadius: 16, padding: 18 },
+  dialog: { width: '100%', maxWidth: 520, backgroundColor: colors.paper, borderRadius: 16 },
   dialogTitle: { fontSize: 20, fontWeight: '800', color: colors.ink, marginBottom: 6 },
   dialogBody: { fontSize: 13, color: colors.sub, marginBottom: 12 },
   box: { width: 18, height: 18, borderWidth: 1, borderColor: colors.ink, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },

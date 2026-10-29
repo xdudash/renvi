@@ -84,6 +84,26 @@ jobs:
       - name: Run e2e
         run: npm run test:e2e
 
+      # Only fictitious local CI fixtures. Keep screenshots in bounded CI artifacts;
+      # never commit them to a public screenshots branch.
+      - name: Capture mobile web layouts
+        if: success()
+        working-directory: e2e
+        run: |
+          node layout-audit.test.mjs
+          MOBILE_QA_OUTPUT=out/screens/public node screens.mjs --public --strict-targets
+          MOBILE_QA_OUTPUT=out/screens/fixtures node screens.mjs --fixtures --strict-targets
+          MOBILE_QA_OUTPUT=out/screens/seeded node screens.mjs --report-only
+
+      - name: Upload mobile layout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-web-layouts
+          path: e2e/out/screens
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload e2e artifacts
         if: failure()
         uses: actions/upload-artifact@v4

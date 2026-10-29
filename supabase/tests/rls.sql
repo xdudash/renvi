@@ -153,6 +153,7 @@ select pg_temp.check((select count(*) from public.error_events) = 0, 'users cann
 -- ---------- paid plan from the server unlocks the incoming list ----------
 select pg_temp.as_admin_db();
 insert into public.sparks (from_id, to_id) values ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001') on conflict do nothing;
+insert into public.private_profile(user_id,birthdate) values ('00000000-0000-0000-0000-000000000004',((now() at time zone 'UTC')::date-interval '19 years')::date);
 update public.profiles set onboarding_done = true, age = 19, terms_accepted_at = now(), adult_confirmed_at = now(), sensitive_consent_at = now() where id = '00000000-0000-0000-0000-000000000004';
 insert into public.subscriptions (user_id, tier) values ('00000000-0000-0000-0000-000000000001', 'plus');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');

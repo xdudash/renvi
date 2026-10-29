@@ -152,7 +152,9 @@ export const api = {
     }
     const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
     if (error) throw toAppError(error);
-    return data;
+    if (!data) return null;
+    const identity=await rpc<Record<string,unknown>|null>('my_identity');
+    return {...data,...identity};
   },
   myPhotos: async (profileId: string) => {
     const { data, error } = await supabase

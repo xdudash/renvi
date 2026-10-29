@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Platform, Text } from 'react-native';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
+import { useAuthLink } from '@/hooks/useAuthLink';
 import { Btn, Field, Loading, Screen, StateBlock, Title, useToast } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { validatePassword } from '@/lib/validate';
@@ -15,7 +16,7 @@ export default function ResetPassword() {
   const { t } = useLang();
   const toast = useToast();
   const { refresh } = useSession();
-  const linkUrl = Linking.useLinkingURL();
+  const linkUrl = useAuthLink();
   const [phase, setPhase] = useState<'checking' | 'ready' | 'invalid'>('checking');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');

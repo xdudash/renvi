@@ -52,11 +52,11 @@ jobs:
 
       - name: Dry run of migrations
         if: github.event_name == 'push' || inputs.push_migrations
-        run: supabase db push --dry-run
+        run: supabase db push --linked --dry-run
 
       - name: Apply migrations
         if: github.event_name == 'push' || inputs.push_migrations
-        run: supabase db push
+        run: supabase db push --linked
 
       - name: Deploy Edge Functions
         if: github.event_name == 'push' || inputs.deploy_functions

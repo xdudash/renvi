@@ -69,6 +69,22 @@ export default function Chat() {
     }
   };
 
+  // Local outbox remains accessible on a cold offline start, without pretending we loaded the partner's profile.
+  if (!c && chat.items.some((m) => m.state !== 'sent')) return (
+    <Wrap>
+      <BackLink onPress={() => router.navigate('/chats')} />
+      <ScrollView contentContainerStyle={s.main}>
+        <SafeBanner>{t('chatOffline.saved')}</SafeBanner>
+        {chat.items.filter((m) => m.state !== 'sent').map((m) => (
+          <Card key={m.client_id}>
+            <Text selectable>{m.body ?? t('chatOffline.photo')}</Text>
+            <LinkBtn label={t('common.retry')} onPress={() => { chat.retry(m.client_id); ctx.reload(); }} />
+          </Card>
+        ))}
+        <LinkBtn label={t('common.retry')} onPress={ctx.reload} />
+      </ScrollView>
+    </Wrap>
+  );
   if (ctx.loading) return <Wrap><BackLink onPress={() => router.navigate('/chats')} /><Loading /></Wrap>;
   if (!c) return <Wrap><BackLink onPress={() => router.navigate('/chats')} /><ErrorRetryState onRetry={ctx.reload} /></Wrap>;
 

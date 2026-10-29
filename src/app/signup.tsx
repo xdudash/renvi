@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { router } from 'expo-router';
-import { BackLink, Btn, CheckRow, Field, Screen, Tiny, Title, useToast } from '@/components/ui';
+import { BackLink, Btn, CheckRow, Field, Screen, Tiny, Title } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { validateEmail, validatePassword } from '@/lib/validate';
 import { captchaEnabled } from '@/lib/captcha';
 import { pendingInvite } from '@/lib/referral';
 import { setPendingSignup } from '@/lib/pendingSignup';
+import { confirmationRedirectUrl } from '@/lib/confirmationAuth';
 import { useLang } from '@/lib/lang';
 
 // 04 · Создать аккаунт
 export default function SignUp() {
   const { t } = useLang();
-  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [adult, setAdult] = useState(false);
@@ -24,15 +24,15 @@ export default function SignUp() {
     if (e) { setError(e); return; }
     if (captchaEnabled()) { setPendingSignup({ email: email.trim(), password }); router.push('/captcha'); return; }
     setBusy(true); setError(null);
-    const { data, error: err } = await supabase.auth.signUp({
+    const { error: err } = await supabase.auth.signUp({
       email: email.trim(), password,
-      options: { data: { invite_code: await pendingInvite() } },
+      options: { emailRedirectTo: confirmationRedirectUrl(), data: { invite_code: await pendingInvite() } },
     });
     setBusy(false);
     if (err) { setError(err.message.includes('registered') ? t('screens.signup.etotAdresUzheZaregistrirov') : t('screens.signup.neUdalosSozdatAkkaunt')); return; }
-    if (!data.session) { router.replace({ pathname: '/confirmation', params: { email: email.trim() } }); return; }
-    toast(t('screens.signup.akkauntSozdan'));
-    router.replace('/ob-age');
+    // An accidentally disabled hosted Confirm Email setting must not skip the confirmation screen.
+    await supabase.auth.signOut();
+    router.replace({ pathname: '/confirmation', params: { email: email.trim() } });
   };
 
   return (

@@ -27,6 +27,9 @@ jobs:
       - name: Client logic checks
         if: ${{ !cancelled() }}
         run: scripts/ci-annotate.sh client node scripts/check-client.mjs
+      - name: Identity and feature logic checks
+        if: ${{ !cancelled() }}
+        run: node scripts/check-identity.mjs && node --test scripts/tests/*.test.mjs
       - name: Production web bundle
         if: ${{ !cancelled() }}
         run: npx expo export --platform web
@@ -55,5 +58,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - uses: oven-sh/setup-bun@v2
       - name: Migrations and tests
         run: bash scripts/test-db.sh
