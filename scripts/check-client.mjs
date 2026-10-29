@@ -38,11 +38,12 @@ await ok('gate no profile row -> onboarding', () => assert.equal(gateTarget('/di
 await ok('restricted list has no duplicates', () => assert.equal(new Set(RESTRICTED_OK).size, RESTRICTED_OK.length));
 
 // C7: snapshot merge keeps last good state for the same user only
-const held = { userId: 'u1', profile: { id: 'u1', onboarding_done: true }, tier: 'plus' };
+const held = { userId: 'u1', profile: { id: 'u1', onboarding_done: true }, tier: 'plus', productId: 'renvi_plus_year' };
 await ok('merge failure keeps profile+tier', () => assert.deepEqual(mergeSnapshot(held, { userId: 'u1', failed: true }), { ...held, loadError: true }));
 await ok('merge partial failure', () => assert.deepEqual(mergeSnapshot(held, { userId: 'u1', profile: { id: 'u1', n: 2 }, failed: true }).tier, 'plus'));
-await ok('merge other user drops old data', () => assert.deepEqual(mergeSnapshot(held, { userId: 'u2', failed: true }), { userId: 'u2', profile: null, tier: 'free', loadError: true }));
-await ok('merge sign-out clears', () => assert.deepEqual(mergeSnapshot(held, { userId: null, failed: false }), { userId: null, profile: null, tier: 'free', loadError: false }));
+await ok('merge other user drops old data', () => assert.deepEqual(mergeSnapshot(held, { userId: 'u2', failed: true }), { userId: 'u2', profile: null, tier: 'free', productId: null, loadError: true }));
+await ok('merge sign-out clears', () => assert.deepEqual(mergeSnapshot(held, { userId: null, failed: false }), { userId: null, profile: null, tier: 'free', productId: null, loadError: false }));
+await ok('merge failure keeps productId (billing period)', () => assert.equal(mergeSnapshot(held, { userId: 'u1', failed: true }).productId, 'renvi_plus_year'));
 await ok('merge success replaces', () => assert.equal(mergeSnapshot(held, { userId: 'u1', profile: null, tier: 'free', failed: false }).profile, null));
 
 // C4: mutex serialises tasks; C3: add-before-send / remove-on-confirm; C12: per-user keys
