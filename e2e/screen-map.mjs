@@ -26,11 +26,11 @@ export async function buildScreenMap() {
     'ob-review': ['/ob-review', 1], 'verification-pending': ['/verification-pending', 1], 'verification-approved': ['/verification-approved', 1],
     'verification-rejected': ['/verification-rejected', 1], 'ob-done': ['/ob-done', 1],
     discover: ['/discover', 1], profile: [`/profile?id=${marek.user.id}`, 1], 'media-viewer': [`/media-viewer?id=${marek.user.id}&at=1`, 1], 'like-note': [`/like-note?id=${daniel.user.id}`, 1],
-    filters: ['/filters', 1], 'empty-discover': ['/empty-discover', 1], 'location-permission': ['/location-permission', 1], 'like-limit': ['/like-limit', 1],
+    filters: ['/filters', 1], 'location-permission': ['/location-permission', 1], 'like-limit': ['/like-limit', 1],
     offline: ['/offline', 1], 'error-retry': ['/error-retry', 1], likes: ['/likes', 1],
     'incoming-profile': [`/incoming-profile?id=${daniel.user.id}`, 1], match: ['/match', 1],
-    chats: ['/chats', 1], 'empty-chats': ['/empty-chats', 1], icebreakers: [`/icebreakers?${M}`, 1], 'push-prompt': [`/push-prompt?${M}`, 1], chat: [`/chat?${M}`, 1],
-    'chat-history': [`/chat?${M}&history=1`, 1], 'photo-consent': [`/photo-consent?${M}`, 1], 'photo-failed': [`/photo-failed?${M}`, 1],
+    chats: ['/chats', 1], icebreakers: [`/icebreakers?${M}`, 1], 'push-prompt': [`/push-prompt?${M}`, 1], chat: [`/chat?${M}`, 1],
+    'photo-consent': [`/photo-consent?${M}`, 1], 'photo-failed': [`/photo-failed?${M}`, 1],
     'message-failed': [`/message-failed?${M}&client=x&body=${encodeURIComponent('Могу показать место у набережной.')}`, 1], 'message-deleted': [`/message-deleted?${M}`, 1],
     'message-actions': [`/message-actions?${M}&id=${mine?.id}&mine=1&body=${encodeURIComponent(mine?.body ?? '')}`, 1], archive: ['/archive', 1], muted: [`/muted?${M}`, 1],
     unmatch: [`/unmatch?${M}`, 1], 'support-share': [`/support-share?${M}`, 1],
@@ -43,7 +43,7 @@ export async function buildScreenMap() {
     'purchase-state': ['/purchase-state', 1], 'purchase-success': ['/purchase-success', 1], referral: ['/referral', 1], 'referral-info': ['/referral-info', 1],
     'share-sheet': ['/share-sheet?url=https%3A%2F%2Frenvi.app%2Finvite%2FAN-1234', 1],
     safety: ['/safety', 1], report: [`/report?profile=${daniel.user.id}`, 1], 'report-status': [`/report-status?id=${report}`, 1], appeal: [`/appeal?id=${report}`, 1],
-    'community-rules': ['/community-rules', 1], loading: ['/loading', 1], 'not-found': ['/not-found', 1], 'account-warning': ['/account-warning', 1],
+    'community-rules': ['/community-rules', 1], 'not-found': ['/not-found', 1], 'account-warning': ['/account-warning', 1],
     'account-suspended': ['/account-suspended', 1], 'account-banned': ['/account-banned', 1],
   };
   return map;

@@ -20,10 +20,10 @@ import { localeOf } from '@/i18n/current';
 
 const DEFAULT_STARTERS = [['screens.chat.starter1Label', 'screens.chat.starter1Text'], ['screens.chat.starter2Label', 'screens.chat.starter2Text']] as const;
 
-// 44 · Диалог · переписка (also 45 · История сообщений via ?history=1)
+// 44 · Диалог · переписка
 export default function Chat() {
   const { t } = useLang();
-  const { match, history } = useLocalSearchParams<{ match: string; history?: string }>();
+  const { match } = useLocalSearchParams<{ match: string }>();
   const { session } = useSession();
   const me = session?.user.id;
   const toast = useToast();
@@ -37,7 +37,6 @@ export default function Chat() {
   const videoOn = useVideoAvailable() === true;
   const video = useVideoCall(match, videoOn);
 
-  useEffect(() => { if (history) chat.loadOlder(); }, [history]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDraft(match, text); }, [match, text]);
 
   const lastMine = useMemo(() => [...chat.items].reverse().find((m) => m.sender_id === me && m.state === 'sent'), [chat.items, me]);
@@ -94,7 +93,7 @@ export default function Chat() {
   return (
     <Wrap>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView ref={scroll} contentContainerStyle={s.main} onContentSizeChange={() => !history && scroll.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scroll} contentContainerStyle={s.main} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled">
           <BackLink onPress={() => router.navigate('/chats')} />
           <ChatHeader c={c} activeToday={!!activeToday} onDate={() => router.push({ pathname: '/date-create', params: { match } })} onMore={() => setSheet(true)}
             onVideo={videoOn ? () => router.push({ pathname: '/video-call', params: { match } }) : undefined} />

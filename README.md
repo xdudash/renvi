@@ -9,7 +9,7 @@ iOS и Android из одного кода (Expo / React Native + TypeScript), с
 
 | Путь | Что это |
 |---|---|
-| `src/app/` | Все 94 экрана iOS-прототипа (Expo Router, файл = экран) и веб-админка `src/app/admin/` |
+| `src/app/` | Экраны приложения (Expo Router, файл = экран) и веб-админка `src/app/admin/` |
 | `src/components/` | Дизайн-система: кнопки, карточки, поля, чекбоксы, листы, таб-бар, иконки и знак RENVI из прототипа |
 | `src/theme/tokens.ts` | Цвета бренда: Signal `#DA302B`, Porcelain `#F7F5F2`, Ink `#201E1D`, Blush `#F0D6D0` и статусы |
 | `src/lib/` | Клиент Supabase, API-обёртки над RPC, сессия, чат с офлайн-очередью, покупки (RevenueCat), push |
