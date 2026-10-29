@@ -5,6 +5,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
 import { localeOf } from '@/i18n/current';
+import { AppealOutcome } from '@/components/AppealOutcome';
 
 type ReportRow = { id: string; status: 'open' | 'actioned' | 'dismissed'; decision: string | null; created_at: string; decided_at: string | null };
 
@@ -35,6 +36,7 @@ export default function ReportStatus() {
         <Text style={{ fontSize: 12, marginBottom: 8 }}>{data.status === 'open' ? t('screens.reportStatus.proveryaetsyaModeratorom') : t('screens.reportStatus.reshenieV', { when: when(data.decided_at ?? data.created_at) })}</Text>
         <Text style={{ fontSize: 12 }}>{data.status === 'open' ? t('screens.reportStatus.reshenieIUvedomleniePoyavy') : data.decision === 'warning' ? t('screens.reportStatus.polzovatelPoluchilPredupre') : data.decision === 'suspension' ? t('screens.reportStatus.akkauntVremennoOgranichen') : data.decision === 'ban' ? t('screens.reportStatus.akkauntZablokirovan') : t('screens.reportStatus.myProveriliZhalobu')}</Text>
       </Card>
+      <AppealOutcome reportId={data.id} />
       <Btn kind="tertiary" label={t('screens.reportStatus.svyazatsyaSPodderzhkoy')} onPress={() => router.push('/support-help')} />
       <Btn kind="ghost" label={t('screens.reportStatus.osporitReshenie')} onPress={() => router.push({ pathname: '/appeal', params: { id: data.id } })} />
     </Screen>
