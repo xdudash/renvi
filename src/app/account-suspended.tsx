@@ -4,6 +4,7 @@ import { Btn, Card, Screen, StateBlock } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 import { localeOf } from '@/i18n/current';
+import { AppealOutcome } from '@/components/AppealOutcome';
 
 // 93 · Временная приостановка
 export default function AccountSuspended() {
@@ -14,6 +15,7 @@ export default function AccountSuspended() {
     <Screen>
       <StateBlock icon="Ⅱ" title={t('screens.accountSuspended.title')} copy={t('screens.accountSuspended.copy')} label={t('screens.accountSuspended.check')} onPress={() => router.push('/support-help')} />
       {until ? <Card tight><Text style={{ fontSize: 12 }}>{t('screens.accountSuspended.until', { until })}</Text></Card> : null}
+      <AppealOutcome />
       <Btn kind="ghost" label={t('screens.accountSuspended.appeal')} onPress={() => router.push('/appeal')} />
     </Screen>
   );

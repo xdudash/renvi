@@ -25,12 +25,13 @@ await step('admin signs in through the UI', async () => {
   await ap.getByText('Войти', { exact: true }).last().click();
   await ap.waitForTimeout(2500);
   await go(ap, '/admin');
-  await ap.getByText('Опубликованные анкеты').waitFor();
+  await ap.getByText('По странам').waitFor();
   await shot(ap, 'admin-dashboard');
 });
 await step('admin approves Anna selfie', async () => {
   await go(ap, '/admin/verification');
   await ap.getByText('Подтвердить', { exact: true }).first().click();
+  await ap.getByText('Подтвердить', { exact: true }).last().click(); // confirmation dialog
   await ap.waitForTimeout(1500);
   const st = psql(`select verification_status from public.profiles where id='${anna.user.id}'`);
   if (st !== 'approved') throw new Error('status ' + st);
@@ -39,6 +40,8 @@ await step('admin approves Anna selfie', async () => {
 await step('admin bans Tomas from the report queue', async () => {
   await go(ap, '/admin/reports');
   await ap.getByText('Блокировка', { exact: true }).first().click();
+  await ap.locator('textarea').last().fill('Просит деньги — мошенничество подтверждено'); // required moderator note
+  await ap.getByText('Блокировка', { exact: true }).last().click();
   await ap.waitForTimeout(1500);
   const s = psql(`select suspended_until from public.profiles where id='${tomas.user.id}'`);
   if (s !== 'infinity') throw new Error('suspended_until ' + s);
@@ -48,9 +51,8 @@ await step('admin lowers Free daily likes to 1 (no rebuild)', async () => {
   const cur = JSON.parse(psql(`select value from public.app_config where key='tier_limits'`));
   cur.free.daily_likes = 1;
   await go(ap, '/admin/config');
-  const box = ap.locator('textarea').first();
-  await box.fill(JSON.stringify(cur, null, 2));
-  await ap.getByText('Сохранить', { exact: true }).first().click();
+  await ap.getByLabel('free daily_likes').fill(String(cur.free.daily_likes));
+  await ap.getByText('Сохранить', { exact: true }).nth(1).click(); // 2nd card: tier limits (1st: documents)
   await ap.waitForTimeout(1200);
   if (!psql(`select value->'free'->>'daily_likes' from public.app_config where key='tier_limits'`).startsWith('1')) throw new Error('not saved');
 });
