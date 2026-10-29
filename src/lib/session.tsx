@@ -107,7 +107,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const uid = session?.user.id ?? null;
   const lastUid = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    if (lastUid.current !== undefined && lastUid.current !== uid) resetUserState();
+    // Reset on sign-out or a switch to another account — not when the session first appears (null → id on
+    // page load), which would wipe drafts a screen has just filled (e.g. the date invitation draft).
+    if (lastUid.current && lastUid.current !== uid) resetUserState();
     lastUid.current = uid;
   }, [uid]);
 

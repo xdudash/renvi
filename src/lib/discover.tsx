@@ -64,14 +64,9 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
     setCards([]); setIndex(0); setLoading(false); setLoadingMore(false); setLoaded(false); setExhausted(false);
     setError(null); setMoreError(null); setLikesUsed(0); setTarget(initialTarget()); setLastMatch(null);
   }
-  useEffect(() => {
-    epoch.current++;
-    busyIds.current.clear();
-    moreInFlight.current = false;
-    cardsRef.current = [];
-  }, [uid]);
-
+  const wanted = useRef(false);          // a screen asked for cards (re-run for the new account after a switch)
   const load = useCallback(async () => {
+    wanted.current = true;
     const my = epoch.current;
     setLoading(true); setError(null); setMoreError(null);
     try {
@@ -105,6 +100,20 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
       if (my === epoch.current) { moreInFlight.current = false; setLoadingMore(false); }
     }
   }, []);
+
+  // Only a real account change starts a new epoch. (This effect runs after the screen's own mount effect,
+  // so bumping on mount would discard the first load and leave the feed stuck on "loading".)
+  const lastUid = useRef(uid);
+  useEffect(() => {
+    if (lastUid.current === uid) return;
+    lastUid.current = uid;
+    epoch.current++;
+    busyIds.current.clear();
+    moreInFlight.current = false;
+    cardsRef.current = [];
+    setLoading(false); setLoadingMore(false);
+    if (uid && wanted.current) load();
+  }, [uid, load]);
 
   const current = cards[index] ?? null;
   const remaining = cards.length - index;
