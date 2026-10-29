@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Avatar, Card, IconButton, LinkBtn, Meter, Screen, Title } from '@/components/ui';
+import { Avatar, Btn, Card, IconButton, LinkBtn, Meter, Screen, Title } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
@@ -31,7 +31,7 @@ const VERIFY: Record<string, readonly [TranslationKey, string]> = {
 // 63 · Мой профиль
 export default function Me() {
   const { t } = useLang();
-  const { profile } = useSession();
+  const { profile, signOut } = useSession();
   const { items, reload: reloadPhotos } = useMyPhotos();
   const { items: prompts, reload: reloadPrompts } = useMyPrompts();
   const incoming = useAsync(() => api.incoming(), []);
@@ -64,6 +64,7 @@ export default function Me() {
         {ROWS.map(([a, b, c]) => <Row key={c} label={t(a)} sub={t(b)} onPress={() => router.push(c as never)} />)}
         <Row label={t(v[0])} sub={t('screens.me.selfieCheck')} onPress={() => router.push(v[1] as never)} />
       </Card>
+      <Btn kind="ghost" label={t('screens.settings.signOut')} onPress={async () => { await signOut(); router.replace('/'); }} />
     </Screen>
   );
 }
