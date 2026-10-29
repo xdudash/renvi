@@ -73,6 +73,11 @@ jobs:
 
       - run: npm ci
 
+      # Store builds only: legal URLs, support e-mail and backend config must be live (docs/APP_STORE.md).
+      - name: App Store release gate (strict)
+        if: inputs.profile == 'production'
+        run: scripts/ci-annotate.sh release node scripts/check-release.mjs --strict
+
       # The build runs on EAS servers, which do not see this runner's env.
       # Copy the public EXPO_PUBLIC_* values into the chosen profile's env in eas.json
       # (CI checkout only, never committed).

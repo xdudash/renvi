@@ -18,6 +18,7 @@ const ROWS = [
   ['screens.me.rowPlans', 'screens.me.rowPlansSub', '/plans'],
   ['screens.me.rowReferral', 'screens.me.rowReferralSub', '/referral'],
   ['screens.me.rowSafety', 'screens.me.rowSafetySub', '/safety'],
+  ['screens.me.rowSupport', 'screens.me.rowSupportSub', '/support-help'],
   ['screens.me.rowLegal', 'screens.me.rowLegalSub', '/legal'],
 ] as const;
 const VERIFY: Record<string, readonly [TranslationKey, string]> = {
