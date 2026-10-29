@@ -15,13 +15,16 @@ export default function OpeningMoves() {
   const toast = useToast();
   const { session } = useSession();
   const uid = session?.user.id;
-  const [moves, setMoves] = useState<string[]>([]);
+  // null = nothing saved yet: the suggestions are derived from t() at render time, so `t` is not an effect dependency.
+  const [saved, setSaved] = useState<string[] | null>(null);
+  const [edited, setMoves] = useState<string[] | null>(null);
+  const moves = edited ?? saved ?? SUGGESTED.map((k) => t(k));
   const [editing, setEditing] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!uid) return;
     supabase.from('opening_moves').select('text, position').eq('profile_id', uid).order('position')
-      .then(({ data }) => setMoves(data?.length ? data.map((d) => d.text) : SUGGESTED.map((k) => t(k))));
+      .then(({ data }) => setSaved(data?.length ? data.map((d) => d.text) : null));
   }, [uid]);
   const add = () => {
     if (moves.length >= 3) { toast(t('screens.openingMoves.mozhnoDobavitDoTreh')); return; }

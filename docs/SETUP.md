@@ -20,6 +20,11 @@
 2. `npx supabase link --project-ref <ref>` → `npx supabase db push` — применит `supabase/migrations/*` (схема, RLS, функции, бакет `profile-media` с правилами доступа, публикация Realtime для `messages`).
 3. **Authentication → Providers → Email**: включён. Подтверждение почты — по решению команды (экран «Письмо отправлено» поддерживает оба режима).
    **URL Configuration**: Site URL = адрес сайта; Redirect URLs: `renvi://**` и адрес сайта.
+   **Восстановление пароля** (экран `/reset-password`): письмо ведёт на `renvi://reset-password` (нативное приложение) или `<адрес сайта>/reset-password` (веб). Добавьте в Redirect URLs именно их:
+   - `renvi://reset-password` (достаточно `renvi://**`);
+   - `https://<адрес сайта>/reset-password` и `http://localhost:8081/reset-password` для локальной веб-разработки;
+   - для Expo Go / dev-клиента — `exp://**` (адрес вида `exp://<ip>:8081/--/reset-password`, его печатает `Linking.createURL`).
+   Приложение понимает все три формата ссылки (PKCE `?code=`, `?token_hash=&type=recovery`, неявный `#access_token=&refresh_token=`). `detectSessionInUrl` в `src/lib/supabase.ts` оставлен `false`: ссылку разбирает сам экран `/reset-password`, чтобы не конкурировать с роутером. Для веба хостинг должен отдавать `index.html` на любой путь (SPA-fallback), иначе `/reset-password` даст 404.
    **Rate limits** — оставить включёнными.
 4. **CAPTCHA** (по желанию): Authentication → Bot and Abuse Protection → hCaptcha + `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`. Без ключа шаг CAPTCHA в регистрации пропускается.
 5. **Edge Functions**:

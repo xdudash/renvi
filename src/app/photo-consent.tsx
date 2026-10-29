@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Avatar, BackLink, Btn, Card, Line, Loading, Row, Screen, Title, useToast } from '@/components/ui';
+import { ErrorRetryState } from '@/components/States';
 import { useAsync } from '@/hooks/useAsync';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { useMyPhotos } from '@/hooks/usePhotos';
@@ -18,7 +19,9 @@ export default function PhotoConsent() {
   const theirs = useSignedUrl(ctx.data?.partner.photo);
   const { items } = useMyPhotos();
   const [busy, setBusy] = useState(false);
-  if (ctx.loading || !ctx.data) return <Screen tabs="chats"><BackLink /><Loading /></Screen>;
+  if (ctx.loading) return <Screen tabs="chats"><BackLink /><Loading /></Screen>;
+  // Load error (or no such match): show a retry instead of an endless spinner.
+  if (ctx.error || !ctx.data) return <Screen tabs="chats"><BackLink /><ErrorRetryState onRetry={ctx.reload} /></Screen>;
   const mine = ctx.data.my_photo_consent, them = ctx.data.their_photo_consent;
   const toggle = async () => {
     setBusy(true);

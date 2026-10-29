@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Screen, StateBlock, useToast } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { recoveryRedirectUrl } from '@/lib/recoveryAuth';
 
 // 06 · Подтверждение аккаунта
 export default function Confirmation() {
@@ -14,7 +15,7 @@ export default function Confirmation() {
     if (!email) { router.replace('/signin'); return; }
     setBusy(true);
     const { error } = kind === 'reset'
-      ? await supabase.auth.resetPasswordForEmail(email)
+      ? await supabase.auth.resetPasswordForEmail(email, { redirectTo: recoveryRedirectUrl() })
       : await supabase.auth.resend({ type: 'signup', email });
     setBusy(false);
     toast(error ? t('screens.confirmation.neUdalosOtpravitPismo') : t('screens.confirmation.pismoOtpravlenoEscheRaz'));

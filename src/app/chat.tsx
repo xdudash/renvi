@@ -32,6 +32,7 @@ export default function Chat() {
   const [text, setText] = useState(getDraft(match));
   const [sheet, setSheet] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
+  const storing = useRef(false);
   const c = ctx.data;
   const videoOn = useVideoAvailable() === true;
   const video = useVideoCall(match, videoOn);
@@ -45,8 +46,11 @@ export default function Chat() {
   const send = async () => {
     const v = text.trim();
     if (!v) { toast(t('screens.chat.enterMessage')); return; }
-    setText(''); setDraft(match, '');
-    const ok = await chat.send(v);
+    if (storing.current) return; // double tap while the message is being stored
+    storing.current = true;
+    // The composer is cleared only once the message is in the offline outbox (chat.send stores it before the request).
+    const ok = await chat.send(v, null, () => { setText(''); setDraft(match, ''); storing.current = false; });
+    storing.current = false;
     if (!ok) toast(t('screens.chat.sendFailed'));
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50);
   };

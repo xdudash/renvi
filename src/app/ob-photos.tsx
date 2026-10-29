@@ -20,7 +20,7 @@ export default function ObPhotos() {
   return (
     <Screen>
       <OnbHeader step={5} kicker={t('screens.obPhotos.pervyyVzglyad')} heading={t('screens.obPhotos.dobavteFotografii')} sub={t('screens.obPhotos.nuzhnoMinimum2Foto')} />
-      <PhotoGrid items={items} onAdd={onAdd} onRemove={(id) => remove(id)} busy={busy} />
+      <PhotoGrid items={items} onAdd={onAdd} onRemove={async (id) => { if ((await remove(id)) === 'error') toast(t('client.photos.deleteFailed')); }} busy={busy} />
       <SafeBanner>{t('screens.obPhotos.vyVybiraeteSamiFoto')}</SafeBanner>
       <Btn label={t('screens.obPhotos.prodolzhit')} busy={saving} onPress={() => (items.filter((i) => i.kind === 'photo').length >= 2 ? save({}) : toast(t('screens.obPhotos.dobavteMinimum2Foto')))} />
       <Btn kind="ghost" label={t('screens.obPhotos.pochemuMinimumDvaFoto')} onPress={() => router.push('/community-rules')} />
