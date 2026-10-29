@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BrandMark } from '@/components/BrandMark';
 import { Btn, LinkBtn, Screen, Tiny } from '@/components/ui';
@@ -21,6 +21,16 @@ export default function Welcome() {
     // this the welcome screen showed only "sign up / sign in" and signing in returned here in a loop.
     else if (!profile && !loadError && session.user.email_confirmed_at) router.replace(nextOnboardingRoute(null) as never);
   }, [ready, session, profile, loadError]);
+
+  // Web: when Auth falls back to the Site URL (redirect not allow-listed) the confirmation tokens land on the home
+  // page. Hand them to the callback screen instead of silently dropping them.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const { hash, search, pathname } = window.location;
+    if (/access_token=|error_description=/.test(hash) || /[?&](token_hash|code)=/.test(search)) {
+      window.location.replace(`${pathname.replace(/\/+$/, '')}/auth-callback${search}${hash}`);
+    }
+  }, []);
 
   const draft = session && profile && !profile.onboarding_done ? nextOnboardingRoute(profile) : null;
 

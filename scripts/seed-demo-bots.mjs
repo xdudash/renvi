@@ -99,6 +99,17 @@ const SAMPLE_WOMEN = ['profile-3.jpg', 'profile-4.jpg', 'profile-6.jpg'];
 const SAMPLE_MEN = ['profile-1.jpg', 'profile-2.jpg', 'profile-5.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg'];
 const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png' };
 const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr, i) => arr[i % arr.length];
+const EXTRA_ANSWERS = {
+  'Моё идеальное первое свидание —': ['кофе, прогулка без маршрута и ещё один кофе', 'выставка, а потом спорить о ней за ужином'],
+  'Небольшая радость недели —': ['кофе на набережной до работы', 'первый тёплый вечер на балконе'],
+  'Зелёный флаг для меня —': ['интерес к миру и доброта к официанту', 'умение посмеяться над собой'],
+  'Навык, который мало кто ожидает —': ['пеку хлеб на закваске', 'говорю на четырёх языках'],
+  'На повторе сейчас —': ['старый джаз по вечерам', 'подкаст про историю Европы'],
+  'Хочу однажды —': ['проехать поездом через всю Европу', 'увидеть северное сияние'],
+  'Небольшое удовольствие —': ['свежие круассаны в субботу', 'книга и плед в дождь'],
+  default: ['кофе и хороший разговор', 'прогулка по Старому городу'],
+};
 
 // Optional local photo pool: scripts/demo-photos/*.jpg|png (gitignored). Falls back to repo sample images.
 function loadPhotoPool() {
@@ -142,6 +153,13 @@ async function makeBot(i, woman) {
     interests, music_title: music, language: 'RU', onboarding_step: 99, onboarding_done: true,
     terms_accepted_at: now, adult_confirmed_at: now, sensitive_consent_at: now,
     verification_status: i % 3 === 2 ? 'none' : 'approved',
+    // "Подробнее обо мне" (migration 0031)
+    height_cm: woman ? 158 + ((i * 3) % 20) : 172 + ((i * 3) % 20),
+    languages: pick([['sk', 'en'], ['ru', 'sk', 'en'], ['sk', 'cs', 'en'], ['uk', 'sk', 'en'], ['sk', 'de']], i),
+    kids: pick(['want', 'dont_want', 'open', 'have'], i), smoking: pick(['no', 'no', 'sometimes', 'yes'], i + 1),
+    drinking: pick(['socially', 'no', 'socially', 'often'], i), workout: pick(['sometimes', 'often', 'never'], i),
+    education: pick(['bachelor', 'master', 'college', 'school', 'phd'], i), pets: pick(['none', 'dog', 'cat', 'other'], i + 2),
+    zodiac: pick(['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'], i * 5),
   });
   if (r.error) throw r.error;
   r = await db.from('private_profile').upsert({
@@ -159,6 +177,12 @@ async function makeBot(i, woman) {
   }
   r = await db.from('profile_prompts').insert({ profile_id: id, question_key: PROMPT_KEYS[promptIdx], answer, position: 0 });
   if (r.error) throw r.error;
+  // Two more answers so the card shows several (questions different from the first one).
+  for (let k = 1; k <= 2; k++) {
+    const key = PROMPT_KEYS[(promptIdx + k * 2) % PROMPT_KEYS.length];
+    r = await db.from('profile_prompts').insert({ profile_id: id, question_key: key, answer: pick(EXTRA_ANSWERS[key] ?? EXTRA_ANSWERS.default, i), position: k });
+    if (r.error) throw r.error;
+  }
   r = await db.from('demo_bots').insert({ user_id: id });
   if (r.error) throw r.error;
   return 'created';

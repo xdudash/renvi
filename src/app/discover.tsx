@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { ActionSet, Between, Chip, Eyebrow, LinkBtn, PromptCard, SafeBanner, Screen, Tiny, useToast } from '@/components/ui';
-import { ProfileHero, ProfileMeta } from '@/components/Profile';
+import { ActionSet, Between, Chip, Eyebrow, LinkBtn, SafeBanner, Screen, Tiny, useToast } from '@/components/ui';
+import { DetailsGrid, ProfileHero, ProfileMeta, StoryBody } from '@/components/Profile';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
 import { useDiscover } from '@/lib/discover';
@@ -58,31 +58,32 @@ export default function Discover() {
     </>
   );
   else {
-    const prompt = card.prompts[0];
     body = (
       <>
-        <Between style={{ marginBottom: 8 }}>
+        <Between style={{ marginBottom: 4 }}>
           <Tiny>{t('screens.discover.vIzLimitLaykov', { left: Math.max(0, limit - d.likesUsed), limit })}</Tiny>
           <Tiny>{t('screens.discover.zatsepiloNachniteSOtveta')}</Tiny>
         </Between>
-        <ProfileHero path={card.photos[0]?.path} count={card.photos.length} verified={card.verified} label={t('screens.discover.portretDisplayName', { display_name: card.display_name })} />
+        <ProfileHero key={card.profile_id} photos={card.photos} count={card.photos.length} verified={card.verified}
+          name={card.display_name} age={card.age} sub={`${card.city} · ${card.distance}`}
+          label={t('screens.discover.portretDisplayName', { display_name: card.display_name })} />
         <ProfileMeta card={card} />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {card.interests.map((x, i) => <Chip key={x} label={interestLabel(t, x)} tone={i === 0 ? 'red' : 'plain'} />)}
-          {common.length ? <Chip label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /> : null}
-        </View>
+        {common.length ? <View style={{ flexDirection: 'row' }}><Chip tone="green" icon="🤝" label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /></View> : null}
         <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} onProfile={() => router.push({ pathname: '/profile', params: { id: card.profile_id } })} />
         <LinkBtn label={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} />
-        {prompt ? (
-          <PromptCard question={prompt.question} answer={prompt.answer} onReply={() => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.discover.otvetAnswer', { answer: prompt.answer }) }); router.push('/like-note'); }} />
-        ) : null}
+        <StoryBody card={card}
+          onReply={(prompt) => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.discover.otvetAnswer', { answer: prompt.answer }) }); router.push('/like-note'); }}
+          onPhoto={(at) => router.push({ pathname: '/media-viewer', params: { id: card.profile_id, at: String(at) } })} />
+        <DetailsGrid details={card.details} />
+        {/* End of the profile: decide here too, without scrolling back up. */}
+        {card.prompts.length + card.photos.length > 2 ? <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} /> : null}
         <SafeBanner>{t('screens.discover.rasstoyanieOkruglenoTochny')}</SafeBanner>
       </>
     );
   }
 
   return (
-    <Screen tabs="discover">
+    <Screen tabs="discover" key={card?.profile_id ?? 'none'}>
       <Between style={{ marginTop: 1, marginBottom: 5 }}>
         <Eyebrow>{t('screens.discover.segodnyaVV', { city: (profile?.city ?? '').toUpperCase() })}</Eyebrow>
         <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />

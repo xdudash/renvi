@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Avatar, Bold, Card, Loading, Screen, Segmented, Tiny, Title } from '@/components/ui';
+import { Card, Loading, Screen, Segmented, Tiny, Title, VerifiedBadge } from '@/components/ui';
+import { BrandMark } from '@/components/BrandMark';
+import { ChatRow } from '@/components/ChatRow';
 import { ErrorRetryState } from '@/components/States';
 import { useAsync } from '@/hooks/useAsync';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -27,20 +30,16 @@ export default function Likes() {
     <Screen tabs="likes">
       <Title kicker={t('screens.likes.kicker')} heading={t('screens.likes.heading')} sub={t('screens.likes.sub')} />
       <Segmented items={[{ key: 'new', label: t('screens.likes.segNew', { count }) }, { key: 'matches', label: t('screens.likes.segMatches') }]} value={seg} onChange={setSeg} />
-      <Card>
-        {seg === 'new'
-          ? items.length ? items.map((it) => <IncomingRow key={it.profile_id} it={it} />) : <Tiny>{t('screens.likes.noNew')}</Tiny>
-          : (matches.data ?? []).length ? (matches.data ?? []).map((m) => (
-              <Pressable key={m.match_id} accessibilityRole="button" onPress={() => router.push({ pathname: '/chat', params: { match: m.match_id } })} style={{ paddingVertical: 11, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Bold>{m.partner_name}, {m.partner_age}</Bold><Text style={{ color: '#aaa' }}>›</Text>
-              </Pressable>
-            )) : <Tiny>{t('screens.likes.noMatches')}</Tiny>}
-      </Card>
+      {seg === 'new'
+        ? items.length ? <View style={st.grid}>{items.map((it) => <IncomingTile key={it.profile_id} it={it} />)}</View> : <Card><Tiny>{t('screens.likes.noNew')}</Tiny></Card>
+        : (matches.data ?? []).length
+          ? <Card style={{ paddingHorizontal: 6, paddingVertical: 6 }}>{(matches.data ?? []).map((m) => <ChatRow key={m.match_id} m={m} />)}</Card>
+          : <Card><Tiny>{t('chats.matchesEmpty')}</Tiny></Card>}
     </Screen>
   );
 }
 
-function IncomingRow({ it }: { it: IncomingSpark }) {
+function IncomingTile({ it }: { it: IncomingSpark }) {
   const { t } = useLang();
   // incoming_sparks returns photo + verified (0030); profile_card per row only for an older database.
   const fromList = it.photo !== undefined;
@@ -49,13 +48,27 @@ function IncomingRow({ it }: { it: IncomingSpark }) {
   const verified = fromList ? !!it.verified : !!card.data?.verified;
   const what = it.target_kind === 'prompt' ? t('screens.likes.sparkOnPrompt') : it.target_kind === 'photo' ? t('screens.likes.sparkOnPhoto') : t('screens.likes.spark');
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/incoming-profile', params: { id: it.profile_id } })} style={{ flexDirection: 'row', gap: 11, alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.line }}>
-      <Avatar uri={url} />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700', fontSize: 13 }}>{it.name}, {it.age} {verified ? '✓' : ''}</Text>
-        <Text style={{ fontSize: 10, color: colors.sub, marginTop: 3 }}>{it.city} · {what}</Text>
-      </View>
-      <Text style={{ color: '#aaa' }}>›</Text>
+    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/incoming-profile', params: { id: it.profile_id } })} style={st.tile}>
+      {url ? <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.blush }]} />}
+      <View style={st.spark}><BrandMark color="#fff" size={14} /></View>
+      <LinearGradient colors={['rgba(20,16,14,0)', 'rgba(20,16,14,0.8)']} style={st.shade}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Text style={st.name} numberOfLines={1}>{it.name}, {it.age}</Text>
+          {verified ? <VerifiedBadge size={15} /> : null}
+        </View>
+        <Text style={st.what} numberOfLines={1}>{what}</Text>
+        {it.comment ? <Text style={st.comment} numberOfLines={2}>«{it.comment}»</Text> : null}
+      </LinearGradient>
     </Pressable>
   );
 }
+
+const st = StyleSheet.create({
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
+  tile: { width: '48.4%', aspectRatio: 0.72, borderRadius: 20, overflow: 'hidden', backgroundColor: '#e7e1da' },
+  spark: { position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  shade: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 11, paddingTop: 40, paddingBottom: 11 },
+  name: { flexShrink: 1, color: '#fff', fontWeight: '900', fontSize: 16, letterSpacing: -0.4 },
+  what: { color: 'rgba(255,255,255,0.88)', fontSize: 11, marginTop: 2, fontWeight: '600' },
+  comment: { color: '#fff', fontSize: 11, marginTop: 4, fontStyle: 'italic' },
+});

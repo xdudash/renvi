@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { validateEmail, validatePassword } from '@/lib/validate';
 import { captchaEnabled } from '@/lib/captcha';
 import { pendingInvite } from '@/lib/referral';
-import { setPendingSignup } from '@/lib/pendingSignup';
+import { setAwaitingConfirmation, setPendingSignup } from '@/lib/pendingSignup';
 import { confirmationRedirectUrl } from '@/lib/confirmationAuth';
 import { useLang } from '@/lib/lang';
 import { isNetworkAuthError } from '@/lib/authErrors';
@@ -33,6 +33,7 @@ export default function SignUp() {
     if (err) { setError(isNetworkAuthError(err) ? t('lib.errors.offline') : err.message.includes('registered') ? t('screens.signup.etotAdresUzheZaregistrirov') : t('screens.signup.neUdalosSozdatAkkaunt')); return; }
     // An accidentally disabled hosted Confirm Email setting must not skip the confirmation screen.
     await supabase.auth.signOut();
+    setAwaitingConfirmation({ email: email.trim(), password });
     router.replace({ pathname: '/confirmation', params: { email: email.trim() } });
   };
 

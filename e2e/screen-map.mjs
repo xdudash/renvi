@@ -45,7 +45,7 @@ export async function buildScreenMap() {
     'date-create': [`/date-create?${M}`, 1], 'date-place': [`/date-place?${M}`, 1], 'date-time': [`/date-time?${M}`, 1], 'date-pending': [`/date-pending?${M}&date=${dAcc}`, 1],
     'date-incoming': [`/date-incoming?${M}&date=${dDec}`, 1], 'date-accepted': [`/date-accepted?${M}&date=${dAcc}`, 1], 'date-declined': [`/date-declined?${M}`, 1], 'date-cancelled': [`/date-cancelled?${M}`, 1],
     me: ['/me', 1], 'edit-profile': ['/edit-profile', 1], 'edit-media': ['/edit-media', 1], 'edit-prompts': ['/edit-prompts', 1], 'opening-moves': ['/opening-moves', 1],
-    'edit-music': ['/edit-music', 1], 'privacy-visibility': ['/privacy-visibility', 1], settings: ['/settings', 1], 'privacy-data': ['/privacy-data', 1],
+    'edit-music': ['/edit-music', 1], 'edit-details': ['/edit-details', 1], 'privacy-visibility': ['/privacy-visibility', 1], settings: ['/settings', 1], 'privacy-data': ['/privacy-data', 1],
     'support-help': ['/support-help', 1], 'notification-settings': ['/notification-settings', 1], legal: ['/legal', 1], 'data-export': ['/data-export', 1],
     'delete-account': ['/delete-account', 1], 'delete-confirm': ['/delete-confirm', 1], blocked: ['/blocked', 1],
     referral: ['/referral', 1], 'referral-info': ['/referral-info', 1],

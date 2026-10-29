@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Field, Screen, StateBlock, useToast } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -8,13 +9,14 @@ import { validateEmail } from '@/lib/validate';
 import { useSession } from '@/lib/session';
 import { recoveryRedirectUrl } from '@/lib/recoveryAuth';
 import { resendWaitSeconds } from '@/lib/authRate';
+import { getAwaitingConfirmation, setAwaitingConfirmation } from '@/lib/pendingSignup';
 
 // 06 · Подтверждение аккаунта
 export default function Confirmation() {
   const { t } = useLang();
   const { email, kind } = useLocalSearchParams<{ email?: string; kind?: string }>();
   const toast = useToast();
-  const {session}=useSession();
+  const {session,refresh}=useSession();
   const [address,setAddress]=useState(email??session?.user.email??'');
   const [busy, setBusy] = useState(false);
   // Auth allows one e-mail per address per interval (hosted default 60 s). When it refuses, show a countdown
@@ -27,6 +29,28 @@ export default function Confirmation() {
     return () => clearInterval(id);
   }, [waitUntil]);
   const left = Math.max(0, Math.ceil((waitUntil - now) / 1000));
+  // Confirmed in the mail app or a browser (the link may open there instead of the app): when the user comes back,
+  // sign in with the credentials kept in memory since sign-up and continue to the profile, no manual sign-in.
+  useEffect(() => {
+    if (kind === 'reset') return;
+    let alive = true, trying = false;
+    const attempt = async () => {
+      const creds = getAwaitingConfirmation();
+      if (!alive || trying || !creds) return;
+      trying = true;
+      const { error } = await supabase.auth.signInWithPassword(creds).catch(() => ({ error: true }));
+      trying = false;
+      if (!alive || error) return;
+      setAwaitingConfirmation(null);
+      await refresh();
+      router.replace('/');
+    };
+    const sub = AppState.addEventListener('change', (st) => { if (st === 'active') attempt(); });
+    const id = setInterval(attempt, 20000); // auth rate limits: at most 15 tries per 5 minutes
+    return () => { alive = false; sub.remove(); clearInterval(id); };
+  }, [kind, refresh]);
+  // The confirmation link opened this app and signed it in: nothing left to wait for.
+  useEffect(() => { if (kind !== 'reset' && session?.user.email_confirmed_at) router.replace('/'); }, [kind, session]);
   const resend = async () => {
     if (left > 0 || busy) return;
     const invalid=validateEmail(address); if(invalid){toast(invalid);return;}

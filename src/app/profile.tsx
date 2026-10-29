@@ -1,7 +1,7 @@
 import { Linking, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActionSet, BackLink, Card, Chip, Eyebrow, IconButton, LinkBtn, Loading, PromptCard, Row, Screen, StateBlock, useToast } from '@/components/ui';
-import { MediaThumb, ProfileHero, ProfileMeta } from '@/components/Profile';
+import { ActionSet, BackLink, Card, Chip, Eyebrow, IconButton, LinkBtn, Loading, Row, Screen, StateBlock, useToast } from '@/components/ui';
+import { DetailsGrid, ProfileHero, ProfileMeta, StoryBody } from '@/components/Profile';
 import { ErrorRetryState } from '@/components/States';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useDiscover } from '@/lib/discover';
@@ -35,27 +35,25 @@ export default function Profile() {
       router.replace(r.status === 'match' ? '/match' : '/discover');
     } catch { router.push('/error-retry'); }
   };
-  const prompt = card.prompts[0];
-  const rest = card.photos.slice(1, 4);
+  const reply = isSelf ? undefined : (prompt: { id?: string; answer: string }) => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.profile.otvetAnswer', { answer: prompt.answer }) }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); };
 
   return (
     <Screen>
       <BackLink />
-      <ProfileHero path={card.photos[0]?.path} count={card.photos.length} verified={card.verified} label={t('screens.profile.fotoProfilyaDisplayName', { display_name: card.display_name })} overlay={t('screens.profile.foto1Length', { length: card.photos.length })} />
-      <ProfileMeta card={card} />
+      <ProfileHero photos={card.photos} count={card.photos.length} verified={card.verified}
+        name={card.display_name} age={card.age} sub={`${card.city} · ${card.distance}`}
+        label={t('screens.profile.fotoProfilyaDisplayName', { display_name: card.display_name })} />
+      <ProfileMeta card={card} showInterests={false} />
       {card.bio ? (<View><Text style={st.section}>{t('screens.profile.oCheloveke')}</Text><Text style={st.lede}>{card.bio}</Text></View>) : null}
+      <DetailsGrid details={card.details} />
       {card.interests.length ? (
         <View>
           <Text style={st.section}>{t('screens.profile.obschieInteresy')}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{card.interests.map((x) => <Chip key={x} label={interestLabel(t, x)} tone="red" />)}</View>
         </View>
       ) : null}
-      {rest.length ? (
-        <View style={{ flexDirection: 'row', gap: 7, marginVertical: 12 }}>
-          {rest.map((p, i) => <MediaThumb key={p.id} path={p.path} video={p.kind === 'video'} onPress={() => router.push({ pathname: '/media-viewer', params: { id: card.profile_id, at: String(i + 1) } })} />)}
-        </View>
-      ) : null}
-      {prompt ? <PromptCard question={prompt.question} answer={prompt.answer} onReply={isSelf ? undefined : () => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.profile.otvetAnswer', { answer: prompt.answer }) }); router.push({ pathname: '/like-note', params: { id: card.profile_id } }); }} /> : null}
+      <View style={{ height: 8 }} />
+      <StoryBody card={card} onReply={reply} onPhoto={(at) => router.push({ pathname: '/media-viewer', params: { id: card.profile_id, at: String(at) } })} />
       {card.music_title ? (
         <Card>
           <Eyebrow>{t('screens.profile.muzykaSeychas')}</Eyebrow>
@@ -85,8 +83,8 @@ export default function Profile() {
 }
 
 const st = {
-  section: { fontSize: 24, fontWeight: '800' as const, letterSpacing: -1, color: colors.ink, marginTop: 23, marginBottom: 8 },
-  lede: { fontSize: 13, lineHeight: 20, color: colors.sub },
+  section: { fontSize: 24, fontWeight: '800' as const, letterSpacing: -1, color: colors.ink, marginTop: 20, marginBottom: 8 },
+  lede: { fontSize: 15, lineHeight: 22, color: '#4a4541' },
   sub: { fontSize: 10, color: colors.sub, marginTop: 3 },
   bold: { fontSize: 13, fontWeight: '700' as const, color: colors.ink },
   tile: { flex: 1, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 17, padding: 12 },
