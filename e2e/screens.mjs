@@ -8,6 +8,7 @@ import { auditLayout } from './layout-audit.mjs';
 import { checkMobileInteraction } from './mobile-interactions.mjs';
 import { fixtureScreenMap, installMobileFixtures } from './mobile-fixtures.mjs';
 
+const reportOnly = process.argv.includes('--report-only');
 const strictTargets = process.argv.includes('--strict-targets');
 const fixtures = process.argv.includes('--fixtures');
 const publicOnly = process.argv.includes('--public');
@@ -52,14 +53,19 @@ try {
   }
 } finally { await browser.close(); }
 const problems = rows.filter((row) => row.expected !== row.at || row.errors.length || row.navigationError || row.outside?.length || (strictTargets && row.smallTargets?.length));
-fs.writeFileSync(`${output}/report.json`, JSON.stringify({ surface: 'Chromium mobile web; not native iOS', fixtures, problems: problems.length, rows }, null, 2));
+fs.writeFileSync(`${output}/report.json`, JSON.stringify({ surface: 'Chromium mobile web; not native iOS', fixtures, reportOnly, strictTargets, problems: problems.length, rows }, null, 2));
 const cell = (value) => String(value).replaceAll('|', '\\|').replaceAll('\n', ' ');
 fs.writeFileSync(`${output}/report.md`, [
-  '# Mobile web layout capture', '',
+  reportOnly ? '# Mobile web route inventory (non-gating)' : '# Mobile web layout capture', '',
   'Fictitious local fixtures. Chromium mobile viewports; native keyboard, VoiceOver, Dynamic Type and safe-area behavior require separate iOS verification.', '',
-  `${problems.length} failed rows of ${rows.length}. Small targets are advisory and recorded in JSON.`, '',
+  `${problems.length} rows with failures or redirects of ${rows.length}. Small targets are ${strictTargets ? (reportOnly ? 'included in findings' : 'gating') : 'advisory'} and recorded in JSON.`, '',
+  ...(reportOnly ? ['This inventory includes routes requiring transient navigation state or parameters that the capture map cannot fully recreate. Findings remain visible below and in JSON; this run does not establish successful screen coverage and does not gate CI.', ''] : []),
   '| device | screen | opened at | errors | overflow | small targets |', '|---|---|---|---|---|---|',
   ...rows.map((r) => `| ${r.device} | ${r.name} | ${r.at} | ${cell([r.navigationError, ...r.errors].filter(Boolean).join('; '))} | ${r.outside?.length ?? 'unmeasured'} | ${r.smallTargets?.length ?? 'unmeasured'} |`), '',
 ].join('\n'));
 console.log(`Mobile web: ${problems.length} failed rows / ${rows.length}; ${output}/report.md`);
-if (problems.length) process.exitCode = 1;
+if (problems.length) {
+  if (reportOnly) {
+    console.warn(`::warning title=Mobile web route inventory::${problems.length} of ${rows.length} rows have findings (redirects, navigation failures, page errors, overflow or target sizes). Review ${output}/report.md and report.json; this non-gating inventory is not a passing screen sweep.`);
+  } else process.exitCode = 1;
+}

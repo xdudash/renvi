@@ -1,3 +1,4 @@
+import { waitForAuthEmail } from './mail.mjs';
 import { chromium } from 'playwright';
 import { APP, ASSETS, URL as API, rest, rpc, signIn, signUp } from './api.mjs';
 import { execSync } from 'node:child_process';
@@ -23,7 +24,14 @@ await step('invite link with a real code attaches the referral', async () => {
   await q.getByPlaceholder('name@example.com').fill('friend@renvi.test');
   await q.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await q.getByRole('checkbox', { name: /Мне исполнилось 18 лет/ }).click();
+  const sentAt=Date.now();
   await q.getByText('Продолжить', { exact: true }).last().click();
+  await q.getByText('Письмо отправлено', { exact: true }).waitFor({ timeout: 15000 });
+  const {link}=await waitForAuthEmail('friend@renvi.test',{after:sentAt});
+  await q.goto(link,{waitUntil:'networkidle'});
+  await q.getByText('Почта подтверждена',{exact:true}).first().waitFor({timeout:15000});
+  // The authenticated callback does not change the signup metadata containing the invite code.
+  await go(q,'/ob-age');
   await q.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
   const cnt = psql(`select count(*) from public.referral_signups s join auth.users u on u.id = s.invited_user where u.email='friend@renvi.test'`);
   if (cnt !== '1') throw new Error('referral not attached');

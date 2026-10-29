@@ -1,5 +1,6 @@
+import { waitForAuthEmail } from './mail.mjs';
 import { chromium } from 'playwright';
-import { APP, ASSETS, URL as API, rest, rpc, signIn, signUp } from './api.mjs';
+import { APP, ASSETS, URL as API, rest, rpc, signIn, signUp, ensureConfirmedFixture } from './api.mjs';
 import { execSync } from 'node:child_process';
 import { createRunner } from './steps.mjs';
 const b = await chromium.launch();
@@ -14,8 +15,7 @@ const daniel = await signIn('daniel@renvi.test', 'renvi-test-1');
 const psql = (sql) => execSync(`psql "${process.env.DATABASE_URL}" -tAc "${sql}"`).toString().trim();
 
 // Admin account (granted directly in the database, as documented in SETUP).
-let admin;
-try { admin = await signUp('admin@renvi.test', 'renvi-admin-1'); } catch { admin = await signIn('admin@renvi.test', 'renvi-admin-1'); }
+const admin = await ensureConfirmedFixture('admin@renvi.test', 'renvi-admin-1');
 psql(`insert into public.admins values ('${admin.user.id}') on conflict do nothing`);
 const actx = await mk(); const ap = await actx.newPage();
 const go = async (p, path) => { cur = p; await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(900); };
@@ -138,7 +138,14 @@ await step('invite link with a real code attaches the referral', async () => {
   await q.getByPlaceholder('name@example.com').fill('friend@renvi.test');
   await q.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await q.getByRole('checkbox', { name: /Мне исполнилось 18 лет/ }).click();
+  const sentAt=Date.now();
   await q.getByText('Продолжить', { exact: true }).last().click();
+  await q.getByText('Письмо отправлено', { exact: true }).waitFor({ timeout: 15000 });
+  const {link}=await waitForAuthEmail('friend@renvi.test',{after:sentAt});
+  await q.goto(link,{waitUntil:'networkidle'});
+  await q.getByText('Почта подтверждена',{exact:true}).first().waitFor({timeout:15000});
+  // The authenticated callback does not change the signup metadata containing the invite code.
+  await go(q,'/ob-age');
   await q.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
   const cnt = psql(`select count(*) from public.referral_signups s join auth.users u on u.id = s.invited_user where u.email='friend@renvi.test'`);
   if (cnt !== '1') throw new Error('referral not attached');

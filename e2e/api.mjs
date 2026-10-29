@@ -21,9 +21,22 @@ export async function rest(token, path, method = 'GET', body) {
 export async function upload(token, path, file) {
   return j(await fetch(URL + '/storage/v1/object/profile-media/' + path, { method: 'POST', headers: { apikey: ANON, authorization: 'Bearer ' + token, 'content-type': 'image/jpeg' }, body: fs.readFileSync(file) }));
 }
+// Service-only preconditions for unrelated scenarios; actual registration tests consume real local email.
+export async function ensureConfirmedFixture(email,password) {
+  if (!/^[^@]+@renvi[.]test$/.test(email) || (!/^https?:\/\/(127[.]0[.]0[.]1|localhost)(:\d+)?$/.test(URL) && process.env.E2E_ALLOW_RESET!=='1')) throw new Error('Confirmed fixtures require local/staging @renvi.test identities');
+  if (!SERVICE) throw new Error('Fixture service key is missing');
+  const headers={apikey:SERVICE,authorization:'Bearer '+SERVICE,'content-type':'application/json'};
+  const created=await fetch(URL+'/auth/v1/admin/users',{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true})});
+  if (!created.ok) {
+    const list=await j(await fetch(URL+'/auth/v1/admin/users?per_page=1000',{headers}));
+    const user=list.users?.find(u=>u.email===email);
+    if (!user) throw new Error('Fixture creation failed ('+created.status+')');
+    await j(await fetch(URL+'/auth/v1/admin/users/'+user.id,{method:'PUT',headers,body:JSON.stringify({password,email_confirm:true})}));
+  }
+  return signIn(email,password);
+}
 export async function makeProfile({ email, password, patch, photos, prompts }) {
-  let s;
-  try { s = await signUp(email, password); } catch { s = await signIn(email, password); }
+  const s = await ensureConfirmedFixture(email, password);
   const t = s.access_token, uid = s.user.id;
   await rpc(t, 'save_onboarding', { p_patch: { ...patch, adult_confirmed: true, terms_accepted: true, sensitive_consent: true } });
   const have = await rest(t, 'profile_photos?select=id&profile_id=eq.' + uid);

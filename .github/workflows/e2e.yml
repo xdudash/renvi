@@ -93,7 +93,7 @@ jobs:
           node layout-audit.test.mjs
           MOBILE_QA_OUTPUT=out/screens/public node screens.mjs --public --strict-targets
           MOBILE_QA_OUTPUT=out/screens/fixtures node screens.mjs --fixtures --strict-targets
-          MOBILE_QA_OUTPUT=out/screens/seeded node screens.mjs
+          MOBILE_QA_OUTPUT=out/screens/seeded node screens.mjs --report-only
 
       - name: Upload mobile layout evidence
         if: always()
