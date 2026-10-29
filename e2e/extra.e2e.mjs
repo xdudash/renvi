@@ -63,7 +63,7 @@ await step('banned Tomas sees the ban screen and can appeal', async () => {
   await p.getByPlaceholder('name@example.com').fill('tomas@renvi.test');
   await p.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await p.getByText('Войти', { exact: true }).last().click();
-  await p.getByText('Аккаунт заблокирован').waitFor({ timeout: 15000 });
+  await p.getByText('Аккаунт заблокирован', { exact: true }).first().waitFor({ timeout: 15000 }); // title; the copy starts with the same words
   await shot(p, 'account-banned');
   await p.getByText('Подать апелляцию', { exact: true }).click();
   await p.getByPlaceholder('Опишите причину пересмотра').fill('Это недоразумение, я не просил денег.');

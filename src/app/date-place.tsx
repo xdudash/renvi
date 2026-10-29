@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Choice, Field, Screen, Title, useToast } from '@/components/ui';
@@ -15,12 +15,12 @@ export default function DatePlace() {
   const [custom, setCustom] = useState(getDateDraft().custom);
   const [q, setQ] = useState('');
   // Names and districts in the selected language (the catalog's `name` / `sub` fields are the Russian originals).
-  const label = (p: (typeof DATE_PLACES)[number]) => ({ name: 'nameKey' in p ? t(p.nameKey) : p.name, sub: t(p.subKey) });
+  const label = useCallback((p: (typeof DATE_PLACES)[number]) => ({ name: 'nameKey' in p ? t(p.nameKey) : p.name, sub: t(p.subKey) }), [t]);
   const list = useMemo(() => DATE_PLACES.filter((p) => {
     if (p.key === 'custom' || !q.trim()) return true;
-    const l = 'nameKey' in p ? `${t(p.nameKey)} ${t(p.subKey)}` : `${p.name} ${t(p.subKey)}`;
-    return l.toLowerCase().includes(q.trim().toLowerCase());
-  }), [q, t]);
+    const l = label(p);
+    return `${l.name} ${l.sub}`.toLowerCase().includes(q.trim().toLowerCase());
+  }), [q, label]);
   const next = () => {
     if (place === 'custom' && (custom.trim().length < 2 || custom.trim().length > 60)) { toast(t('screens.datePlace.ukazhitePublichnoeMesto2')); return; }
     setDateDraft({ place, custom: custom.trim() });

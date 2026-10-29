@@ -27,7 +27,8 @@ await step('marek sparks anna on her answer (API)', async () => {
   const r = await rpc(marek.access_token, 'send_spark', { p_to: anna.user.id, p_kind: 'prompt', p_ref: annaPrompt.id, p_comment: 'Доброта к официанту — лучший тест.' });
   if (r.status !== 'sent') throw new Error(JSON.stringify(r));
 });
-await step('likes tab on Free shows only the count', async () => { await go('/likes'); await p.getByText(/новая искра|новые искры|новых искр/).waitFor(); await shot('likes-free'); });
+// RENVI is free for everyone (0029): the incoming list shows who sparked you, with no plan.
+await step('likes tab shows who sparked you (no plan needed)', async () => { await go('/likes'); await p.getByText('Уже выбрали вас').waitFor(); await p.getByText(/Марек, \d+/).first().waitFor(); await shot('likes'); });
 await step('full profile of Marek', async () => { await go('/profile?id=' + marek.user.id); await p.getByText('О человеке').waitFor(); await shot('profile'); });
 await step('media viewer', async () => { await go(`/media-viewer?id=${marek.user.id}&at=1`); await shot('media-viewer'); });
 await step('hold spark → mutual match', async () => {
