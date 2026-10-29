@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { APP, ASSETS, URL as API, rest, rpc, signIn } from './api.mjs';
+import { createRunner } from './steps.mjs';
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, storageState: 'out/anna.json' });
 const p = await ctx.newPage();
@@ -8,7 +9,7 @@ p.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 let n = 20;
 const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({ path: `out/flow/${String(++n).padStart(2, '0')}-${name}.png` }); };
 const click = async (text) => { await p.getByText(text, { exact: true }).last().click(); };
-const step = async (name, fn) => { try { await fn(); console.log('ok', name); } catch (e) { console.log('FAIL', name, e.message.split('\n')[0]); await shot('FAIL-' + name); } };
+const { step, finish } = createRunner({ label: 'main', onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 const go = async (path) => { await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(800); };
 
 const anna = await signIn('anna@renvi.test', 'renvi-test-1');
@@ -42,8 +43,14 @@ await step('start conversation', async () => {
   await p.getByText('Привет! Какую выставку посоветуешь на выходные?').waitFor();
   await shot('chat-sent');
 });
-await step('reply from Marek arrives (API + reload)', async () => {
+await step('Realtime: reply from Marek appears live (no reload)', async () => {
+  // The page stays on the open chat; only a Realtime postgres_changes event can deliver the message.
+  await p.waitForTimeout(2500); // let the channel reach SUBSCRIBED before the insert
   await rpc(marek.access_token, 'send_message', { p_match: matchId, p_client_id: crypto.randomUUID(), p_body: 'Словацкая национальная галерея — и кофе рядом.', p_photo_path: null });
+  await p.getByText('Словацкая национальная галерея — и кофе рядом.').waitFor({ timeout: 10000 });
+  await shot('chat-live');
+});
+await step('reply from Marek persists after reload (not a Realtime test)', async () => {
   await go('/chat?match=' + matchId);
   await p.getByText('Словацкая национальная галерея — и кофе рядом.').waitFor();
   await shot('chat');
@@ -106,4 +113,4 @@ await step('data export via function', async () => {
 await ctx.storageState({ path: 'out/anna.json' });
 console.log(JSON.stringify({ matchId }));
 if (errors.length) console.log(errors.slice(0, 8).join('\n'));
-await b.close();
+await finish(() => b.close());

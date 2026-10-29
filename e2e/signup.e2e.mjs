@@ -1,5 +1,6 @@
 import { APP, ASSETS, URL as API } from './api.mjs';
 import { chromium } from 'playwright';
+import { createRunner } from './steps.mjs';
 const A = ASSETS;
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, geolocation: { latitude: 48.1486, longitude: 17.1077 }, permissions: ['geolocation'] });
@@ -9,7 +10,8 @@ p.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 let n = 0;
 const shot = async (name) => { await p.waitForTimeout(700); await p.screenshot({ path: `out/flow/${String(++n).padStart(2, '0')}-${name}.png` }); };
 const click = async (text) => { await p.getByText(text, { exact: true }).last().click(); };
-const step = async (name, fn) => { try { await fn(); console.log('ok', name); } catch (e) { console.log('FAIL', name, e.message.split('\n')[0]); await shot('FAIL-' + name); throw e; } };
+// Signup steps are sequential and depend on each other, so stop at the first failure (later steps count as failed).
+const { step, finish } = createRunner({ label: 'signup', stopOnFail: true, onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 
 await p.goto(APP + '/', { waitUntil: 'networkidle' });
 await step('welcome', async () => { await shot('welcome'); await click('Начать знакомство'); });
@@ -83,4 +85,4 @@ await step('ob-done', async () => { await shot('ob-done'); await click('Пере
 await step('discover', async () => { await shot('discover'); });
 await ctx.storageState({ path: 'out/anna.json' });
 if (errors.length) console.log(errors.slice(0, 5).join('\n'));
-await b.close();
+await finish(() => b.close());

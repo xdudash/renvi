@@ -25,6 +25,7 @@ run_sql supabase/tests/voice.sql "voice-message"
 run_sql supabase/tests/audit_server.sql "audit server-rules"
 run_sql supabase/tests/billing.sql "billing"
 run_sql supabase/tests/admin.sql "admin-panel"
+run_sql supabase/tests/extensions.sql "extension-portability"
 
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob
