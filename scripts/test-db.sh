@@ -35,6 +35,7 @@ run_sql supabase/tests/audit_concurrency.sql "transaction locks"
 run_sql supabase/tests/no_subscriptions.sql "free for everyone (no subscriptions)"
 run_sql supabase/tests/bugfixes.sql "bug hunt 2026-10-29"
 run_sql supabase/tests/profile_details.sql "profile details"
+run_sql supabase/tests/detail_filters.sql "detail filters + analytics retention"
 
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob

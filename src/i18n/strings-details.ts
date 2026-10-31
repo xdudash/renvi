@@ -2,6 +2,16 @@
 // Spread into the Russian base dictionary in src/i18n/ru.ts.
 export const ruDetails = {
   'details.section': 'Подробнее обо мне',
+  'details.profileNudge': 'Заполнено {count} из 9. Рост, языки, дети и привычки помогают найти общее — всё необязательно.',
+  'details.profileNudgeCta': 'Дополнить анкету',
+  'details.filterHeading': 'Подробнее о человеке',
+  'details.filterHeight': 'Рост, см',
+  'details.filterHeightFrom': 'Рост от, сантиметры',
+  'details.filterHeightTo': 'Рост до, сантиметры',
+  'details.filterHeightBad': 'Рост — от 120 до 230 см, «от» не больше «до»',
+  'details.filterKeepUnset': 'Кто не указал это в анкете, остаётся в подборе. Ничего не выбрано — значит «любой».',
+  'details.filterLanguagesMax': 'Можно выбрать до 6 языков',
+  'details.filterFailed': 'Не удалось сохранить дополнительные фильтры',
   'details.editHeading': 'Подробнее обо мне',
   'details.editKicker': 'АНКЕТА',
   'details.editSub': 'Всё необязательно. Заполненное видно в вашей анкете — так проще найти общее.',

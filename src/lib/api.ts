@@ -191,6 +191,9 @@ export const api = {
   },
   saveFilters: (f: { ageMin: number; ageMax: number; distance: number; verifiedOnly: boolean; intents: string[] }) =>
     rpc<void>('save_filters', { p_age_min: f.ageMin, p_age_max: f.ageMax, p_distance: f.distance, p_verified: f.verifiedOnly, p_intents: f.intents }),
+  /** Feed filters by "Подробнее обо мне" (migration 0032). Empty list / null = no restriction. */
+  saveFilterDetails: (f: { heightMin: number | null; heightMax: number | null; kids: string[]; smoking: string[]; languages: string[] }) =>
+    rpc<void>('save_filter_details', { p_height_min: f.heightMin, p_height_max: f.heightMax, p_kids: f.kids, p_smoking: f.smoking, p_languages: f.languages }),
   profileCard: (id: string) => rpc<(DiscoverCard & { bio: string; music_url: string | null }) | null>('profile_card', { p_id: id }),
   matchContext: (matchId: string) => rpc<MatchContext | null>('match_context', { p_match: matchId }),
   supportChat: (matchId: string | null, body: string, includeHistory: boolean) =>
