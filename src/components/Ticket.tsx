@@ -9,7 +9,7 @@ export function Ticket({ place, day, time, status, tone }: { place: string; day:
   return (
     <View style={s.ticket}>
       <BrandMark size={34} />
-      <Text style={s.title}>{t('components.Ticket.kofeDavayteUvidimsya')}</Text>
+      <Text style={s.title}>{t('components.Ticket.title')}</Text>
       <Text style={s.meta}>{place}</Text>
       <View style={s.line} />
       <View style={s.between}><Text style={s.b}>{day}</Text><Text style={s.b}>{time}</Text></View>
