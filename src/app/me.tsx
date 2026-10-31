@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Avatar, Btn, Card, IconButton, LinkBtn, Meter, Screen, Title } from '@/components/ui';
+import { Avatar, Btn, Card, IconButton, LinkBtn, Meter, Screen, Tiny, Title } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
@@ -8,6 +8,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { completeness } from '@/lib/completeness';
+import { filledCount } from '@/lib/details';
 import { colors } from '@/theme/tokens';
 import { Row } from '@/components/Row';
 import type { TranslationKey } from '@/i18n';
@@ -38,6 +39,7 @@ export default function Me() {
   // Back from edit-media / edit-prompts / likes: avatar, completeness and counters must be current.
   useReloadOnFocus(() => { reloadPhotos(); reloadPrompts(); incoming.reload(); });
   const pct = completeness(profile, items.length, prompts.length);
+  const detailsDone = filledCount(profile);
   const v = VERIFY[profile?.verification_status ?? 'none'];
   return (
     <Screen tabs="me">
@@ -54,6 +56,14 @@ export default function Me() {
         <View style={{ marginTop: 12 }}><Meter value={pct} /></View>
         <LinkBtn label={t('screens.me.improve')} onPress={() => router.push('/edit-profile')} />
       </Card>
+      {detailsDone < 9 && (
+        <Card tight>
+          <Text style={{ fontWeight: '700', fontSize: 13, color: colors.ink }}>{t('details.section')}</Text>
+          <Tiny>{t('details.profileNudge', { count: detailsDone })}</Tiny>
+          <View style={{ marginTop: 10 }}><Meter value={Math.round((detailsDone / 9) * 100)} /></View>
+          <LinkBtn label={t('details.profileNudgeCta')} onPress={() => router.push('/edit-details')} />
+        </Card>
+      )}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/likes')} style={tile}>
           <Text style={eyebrow}>{t('screens.me.newSparks')}</Text><Text style={metric}>{incoming.data?.count ?? 0}</Text><Text style={tiny}>{t('screens.me.view')}</Text>
