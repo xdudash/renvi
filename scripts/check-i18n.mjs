@@ -7,6 +7,11 @@ for (const l of ['sk', 'cs', 'en', 'ua']) {
   for (const [k, v] of Object.entries(d)) {
     if (!(k in ru)) { console.error(`i18n: ${l}.ts has unknown key "${k}"`); bad++; }
     if (typeof v !== 'string') { console.error(`i18n: ${l}.ts "${k}" is not a string`); bad++; }
+    else if (k in ru) {
+      // Same {placeholders} as the Russian source, otherwise a value would render as a literal "{name}" or be dropped.
+      const ph = (x) => (String(x).match(/\{\w+\}/g) ?? []).sort().join(',');
+      if (ph(v) !== ph(ru[k])) { console.error(`i18n: ${l}.ts "${k}" placeholders differ from ru: ${ph(v)} vs ${ph(ru[k])}`); bad++; }
+    }
   }
 }
 if (bad) process.exit(1);
