@@ -492,6 +492,7 @@ export const ruA = {
   'screens.settings.iosNote': 'Приложение также учитывает Reduce Motion и размер текста в настройках iOS.',
   'screens.settings.openIos': 'Открыть уведомления iOS',
   'screens.settings.openManually': 'Откройте настройки телефона вручную',
+  'screens.me.signOutSub': 'Вы сможете войти снова по почте и паролю',
   'screens.settings.signOut': 'Выйти из аккаунта',
   'screens.signin.enterPassword': 'Введите пароль',
   'screens.signin.confirmEmail': 'Подтвердите почту по ссылке из письма.',

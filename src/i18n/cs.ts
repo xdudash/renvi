@@ -509,6 +509,7 @@ export const cs: Dictionary = {
   "screens.settings.iosNote": "Aplikace respektuje také Reduce Motion a velikost textu v nastavení iOS.",
   "screens.settings.openIos": "Otevřít oznámení iOS",
   "screens.settings.openManually": "Otevři nastavení telefonu ručně",
+  "screens.me.signOutSub": "Přihlásit se můžeš znovu e-mailem a heslem",
   "screens.settings.signOut": "Odhlásit se",
   "screens.signin.enterPassword": "Zadej heslo",
   "screens.signin.confirmEmail": "Potvrď e-mail přes odkaz v e-mailu, který jsme ti poslali.",

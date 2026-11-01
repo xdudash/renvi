@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Avatar, Btn, Card, IconButton, LinkBtn, Meter, Screen, Tiny, Title } from '@/components/ui';
+import { Avatar, Card, IconButton, LinkBtn, Meter, Screen, Tiny, Title } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { useMyPhotos } from '@/hooks/usePhotos';
 import { useMyPrompts } from '@/hooks/usePrompts';
@@ -73,8 +73,8 @@ export default function Me() {
       <Card tight>
         {ROWS.map(([a, b, c]) => <Row key={c} label={t(a)} sub={t(b)} onPress={() => router.push(c as never)} />)}
         <Row label={t(v[0])} sub={t('screens.me.selfieCheck')} onPress={() => router.push(v[1] as never)} />
+        <Row label={t('screens.settings.signOut')} sub={t('screens.me.signOutSub')} right="⎋" onPress={async () => { await signOut(); router.replace('/'); }} />
       </Card>
-      <Btn kind="ghost" label={t('screens.settings.signOut')} onPress={async () => { await signOut(); router.replace('/'); }} />
     </Screen>
   );
 }
