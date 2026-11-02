@@ -392,6 +392,7 @@ export const ruB = {
   'screens.obReview.selfiOtpravleno': 'Селфи отправлено',
   'screens.obVerify.fotoNeStanetChastyu': 'Фото не станет частью анкеты. Проверка проходит вручную.',
   'screens.obVerify.nachatProverku': 'Начать проверку',
+  'screens.obVerify.skip': 'Пропустить — пройду позже',
   'screens.obVerify.neUdalosOtpravitSelfi': 'Не удалось отправить селфи. Повторите попытку.',
   'screens.obVerify.pochemuEtoVazhno': 'Почему это важно?',
   'screens.obVerify.podtverzhdenie': 'ПОДТВЕРЖДЕНИЕ',

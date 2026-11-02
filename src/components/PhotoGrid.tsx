@@ -15,10 +15,13 @@ export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
         if (!it) {
           return (
             <Pressable key={n} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.add')} disabled={busy} onPress={onAdd} style={[s.slot, s.add]}>
-              {busy && n === items.length ? <Text style={s.plus}>…</Text> : (
-                // Drawn, not the ＋ glyph: the font's baseline put it at the bottom of the tile on iOS.
-                <View style={s.plusBox}><View style={s.plusH} /><View style={s.plusV} /></View>
-              )}
+              {/* Centred in an absolute overlay: on iOS the tile's aspectRatio height was applied after its
+                  children were laid out, so flex centring left the ＋ near the bottom edge. */}
+              <View pointerEvents="none" style={s.center}>
+                {busy && n === items.length ? <Text style={s.plus}>…</Text> : (
+                  <View style={s.plusBox}><View style={s.plusH} /><View style={s.plusV} /></View>
+                )}
+              </View>
             </Pressable>
           );
         }
@@ -39,6 +42,7 @@ const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   slot: { width: '31.6%', aspectRatio: 0.78, borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
   add: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#e2b9b1', backgroundColor: colors.white },
+  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   plus: { fontSize: 22, color: '#8e8980' },
   plusBox: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.redWash, alignItems: 'center', justifyContent: 'center' },
   plusH: { position: 'absolute', width: 14, height: 2.4, borderRadius: 2, backgroundColor: colors.red },

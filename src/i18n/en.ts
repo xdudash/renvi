@@ -964,6 +964,7 @@ export const en: Dictionary = {
   "screens.obReview.selfiOtpravleno": "Selfie sent",
   "screens.obVerify.fotoNeStanetChastyu": "The photo won't become part of your profile. The check is done manually.",
   "screens.obVerify.nachatProverku": "Start check",
+  "screens.obVerify.skip": "Skip — I'll do it later",
   "screens.obVerify.neUdalosOtpravitSelfi": "Couldn't send the selfie. Try again.",
   "screens.obVerify.pochemuEtoVazhno": "Why does it matter?",
   "screens.obVerify.podtverzhdenie": "VERIFICATION",

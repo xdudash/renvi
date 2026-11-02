@@ -13,7 +13,7 @@ export default function ObVerify() {
   const { t } = useLang();
   const toast = useToast();
   const { session, refresh } = useSession();
-  const { save } = useStepSave('ob-verify');
+  const { save, busy: saving } = useStepSave('ob-verify');
   const [busy, setBusy] = useState(false);
   const start = async () => {
     if (!session) return;
@@ -34,6 +34,8 @@ export default function ObVerify() {
       </View>
       <Card tight><Bold>{t('screens.obVerify.ponadobitsyaKamera')}</Bold><Tiny>{t('screens.obVerify.fotoNeStanetChastyu')}</Tiny></Card>
       <Btn label={t('screens.obVerify.nachatProverku')} busy={busy} onPress={start} />
+      {/* Selfie is optional: the server never requires it to publish, and it can be done later from the profile. */}
+      <Btn kind="ghost" label={t('screens.obVerify.skip')} busy={saving} onPress={() => save({})} />
       <Btn kind="ghost" label={t('screens.obVerify.pochemuEtoVazhno')} onPress={() => router.push('/safety')} />
     </Screen>
   );

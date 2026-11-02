@@ -964,6 +964,7 @@ export const cs: Dictionary = {
   "screens.obReview.selfiOtpravleno": "Selfie odesláno",
   "screens.obVerify.fotoNeStanetChastyu": "Fotka se nestane součástí profilu. Kontrola probíhá ručně.",
   "screens.obVerify.nachatProverku": "Začít ověření",
+  "screens.obVerify.skip": "Přeskočit — udělám později",
   "screens.obVerify.neUdalosOtpravitSelfi": "Selfie se nepodařilo odeslat. Zkus to znovu.",
   "screens.obVerify.pochemuEtoVazhno": "Proč je to důležité?",
   "screens.obVerify.podtverzhdenie": "OVĚŘENÍ",
