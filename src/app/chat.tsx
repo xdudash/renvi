@@ -161,7 +161,7 @@ function Chat({ match }: { match: string }) {
 
 function Wrap({ children }: { children: React.ReactNode }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }} edges={['top']}>
       <TopBar />
       <View style={{ flex: 1 }}>{children}</View>
       <TabBar active="chats" />

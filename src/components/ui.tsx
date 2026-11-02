@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { router, usePathname } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/tokens';
 import { BrandMark } from './BrandMark';
 import { useLang } from '@/lib/lang';
@@ -69,7 +69,9 @@ export function Screen({ children, scroll = true, tabs, style }: {
     <View style={[styles.main, styles.mainFill, style]}>{children}</View>
   );
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    // With the tab bar, the bar itself pads for the home indicator (TabBar); otherwise the safe area adds it below
+    // the bar too and the tabs float above an empty strip.
+    <SafeAreaView style={styles.safe} edges={showTabs ? ['top'] : ['top', 'bottom']}>
       <TopBar compact={compactBar} />
       {body}
       {showTabs ? <TabBar active={tabs ?? tabFor(path)} /> : null}
@@ -137,8 +139,10 @@ function useIncomingCount() {
 export function TabBar({ active }: { active?: string }) {
   const { t } = useLang();
   const incoming = useIncomingCount();
+  const { bottom } = useSafeAreaInsets();
+  // iOS layout: icons and labels in the top ~50 pt, then the home-indicator inset (a little tighter, like the system bar).
   return (
-    <View style={styles.tabs} accessibilityRole="tablist">
+    <View style={[styles.tabs, { paddingBottom: bottom > 0 ? Math.max(bottom - 12, 8) : 8 }]} accessibilityRole="tablist">
       {TABS.map((tab) => {
         const on = active === tab.key;
         return (
@@ -538,7 +542,7 @@ const styles = StyleSheet.create({
   barActions: { flexDirection: 'row', gap: 6 },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   iconBtnText: { fontSize: 11, fontWeight: '800', color: colors.ink },
-  tabs: { height: 76, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: 10 },
+  tabs: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 4 },
   tab: { width: '24%', height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 },
   tabIcon: { height: 23, alignItems: 'center', justifyContent: 'center' },
   tabBadge: { position: 'absolute', right: 16, top: 6, backgroundColor: colors.red, borderRadius: 8, paddingHorizontal: 4, paddingVertical: 1 },

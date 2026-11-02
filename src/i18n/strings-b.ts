@@ -390,6 +390,8 @@ export const ruB = {
   'screens.obReview.prodolzhitOformlenie': 'Продолжить оформление',
   'screens.obReview.proverka': 'ПРОВЕРКА',
   'screens.obReview.selfiOtpravleno': 'Селфи отправлено',
+  'screens.obReview.skippedTitle': 'Почти готово',
+  'screens.obReview.skippedSub': 'Селфи можно пройти позже в профиле — после проверки появится значок подтверждения.',
   'screens.obVerify.fotoNeStanetChastyu': 'Фото не станет частью анкеты. Проверка проходит вручную.',
   'screens.obVerify.nachatProverku': 'Начать проверку',
   'screens.obVerify.skip': 'Пропустить — пройду позже',

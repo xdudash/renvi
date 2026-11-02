@@ -962,6 +962,8 @@ export const ua: Dictionary = {
   "screens.obReview.prodolzhitOformlenie": "Продовжити оформлення",
   "screens.obReview.proverka": "ПЕРЕВІРКА",
   "screens.obReview.selfiOtpravleno": "Селфі надіслано",
+  "screens.obReview.skippedTitle": "Майже готово",
+  "screens.obReview.skippedSub": "Селфі можна пройти пізніше в профілі — після перевірки з’явиться значок підтвердження.",
   "screens.obVerify.fotoNeStanetChastyu": "Фото не стане частиною анкети. Перевірка відбувається вручну.",
   "screens.obVerify.nachatProverku": "Почати перевірку",
   "screens.obVerify.skip": "Пропустити — пройду пізніше",

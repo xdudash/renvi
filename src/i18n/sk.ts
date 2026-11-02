@@ -962,6 +962,8 @@ export const sk: Dictionary = {
   "screens.obReview.prodolzhitOformlenie": "Pokračovať v úprave",
   "screens.obReview.proverka": "KONTROLA",
   "screens.obReview.selfiOtpravleno": "Selfie odoslané",
+  "screens.obReview.skippedTitle": "Takmer hotovo",
+  "screens.obReview.skippedSub": "Selfie môžeš urobiť neskôr v profile — po kontrole sa zobrazí odznak overenia.",
   "screens.obVerify.fotoNeStanetChastyu": "Fotka nebude súčasťou profilu. Kontrola prebieha manuálne.",
   "screens.obVerify.nachatProverku": "Spustiť overenie",
   "screens.obVerify.skip": "Preskočiť — urobím neskôr",

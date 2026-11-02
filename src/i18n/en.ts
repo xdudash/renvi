@@ -962,6 +962,8 @@ export const en: Dictionary = {
   "screens.obReview.prodolzhitOformlenie": "Continue setup",
   "screens.obReview.proverka": "CHECK",
   "screens.obReview.selfiOtpravleno": "Selfie sent",
+  "screens.obReview.skippedTitle": "Almost done",
+  "screens.obReview.skippedSub": "You can take the selfie later in your profile — the verified badge appears after the check.",
   "screens.obVerify.fotoNeStanetChastyu": "The photo won't become part of your profile. The check is done manually.",
   "screens.obVerify.nachatProverku": "Start check",
   "screens.obVerify.skip": "Skip — I'll do it later",
