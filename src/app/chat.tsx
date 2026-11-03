@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, type ScrollViewInstance } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, type ScrollViewInstance } from 'react-native';
+import { Photo } from '@/components/Photo';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -161,7 +162,7 @@ function Chat({ match }: { match: string }) {
 
 function Wrap({ children }: { children: React.ReactNode }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }} edges={['top']}>
       <TopBar />
       <View style={{ flex: 1 }}>{children}</View>
       <TabBar active="chats" />
@@ -240,7 +241,7 @@ function Bubble({ m, mine, showDay, onLong, onRetry }: { m: ChatItem; mine: bool
         style={[s.bubble, mine && s.mine, deleted && s.note]}
       >
         {deleted ? <Text style={{ fontSize: 10, color: '#7d7971' }}>{mine ? t('screens.chat.youDeleted') : t('screens.chat.deleted')}</Text> : null}
-        {!deleted && photo ? <Image source={{ uri: photo }} style={{ width: 200, height: 200, borderRadius: 12 }} accessibilityLabel={t('screens.chat.photoInChat')} /> : null}
+        {!deleted && photo ? <Photo source={{ uri: photo }} style={{ width: 200, height: 200, borderRadius: 12 }} accessibilityLabel={t('screens.chat.photoInChat')} /> : null}
         {!deleted && m.body ? <Text style={[s.bubbleText, mine && { color: '#fff' }]}>{m.body}</Text> : null}
         {!deleted && m.state === 'sent' ? <Text style={[s.stamp, mine && { color: 'rgba(255,255,255,0.75)' }]}>{time(m.created_at)}</Text> : null}
         {mine && !deleted && m.state !== 'sent' ? (

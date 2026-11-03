@@ -1,22 +1,23 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Photo } from './Photo';
 import type { MyMedia } from '@/hooks/usePhotos';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import { useGridTile } from '@/hooks/useGridTile';
 
 // 3-column grid of 6 slots; filled slots show × to remove, empty slots show ＋.
 export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
   items: MyMedia[]; onAdd: () => void; onRemove: (id: string) => void; onCover?: (id: string) => void; busy?: boolean;
 }) {
   const { t } = useLang();
+  const size = useGridTile(3, 7, 0.78);
   return (
     <View style={s.grid}>
       {Array.from({ length: 6 }).map((_, n) => {
         const it = items[n];
         if (!it) {
           return (
-            <Pressable key={n} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.add')} disabled={busy} onPress={onAdd} style={[s.slot, s.add]}>
-              {/* Centred in an absolute overlay: on iOS the tile's aspectRatio height was applied after its
-                  children were laid out, so flex centring left the ＋ near the bottom edge. */}
+            <Pressable key={n} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.add')} disabled={busy} onPress={onAdd} style={[s.slot, size, s.add]}>
               <View pointerEvents="none" style={s.center}>
                 {busy && n === items.length ? <Text style={s.plus}>…</Text> : (
                   <View style={s.plusBox}><View style={s.plusH} /><View style={s.plusV} /></View>
@@ -26,9 +27,9 @@ export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
           );
         }
         return (
-          <View key={it.id} style={s.slot}>
+          <View key={it.id} style={[s.slot, size]}>
             {onCover && n > 0 ? <Pressable style={StyleSheet.absoluteFill} onPress={() => onCover(it.id)} accessibilityRole="button" accessibilityLabel={t('components.photoGrid.makeCover')} /> : null}
-            {it.url ? <Image pointerEvents="none" source={{ uri: it.url }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={n === 0 ? t('components.photoGrid.cover') : t('components.photoGrid.photo')} /> : null}
+            {it.url ? <Photo pointerEvents="none" source={{ uri: it.url }} style={StyleSheet.absoluteFill} accessibilityLabel={n === 0 ? t('components.photoGrid.cover') : t('components.photoGrid.photo')} /> : null}
             <Pressable accessibilityRole="button" accessibilityLabel={t('components.photoGrid.remove')} onPress={() => onRemove(it.id)} style={s.x}><Text style={{ color: '#fff' }}>×</Text></Pressable>
             {it.kind === 'video' ? <View style={s.video}><Text style={{ fontSize: 10 }}>{t('components.photoGrid.video')}</Text></View> : null}
             {n === 0 && onCover ? <View style={[s.video, { right: 4, left: undefined }]}><Text style={{ fontSize: 10 }}>{t('components.photoGrid.coverBadge')}</Text></View> : null}
@@ -40,7 +41,7 @@ export function PhotoGrid({ items, onAdd, onRemove, onCover, busy }: {
 }
 const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  slot: { width: '31.6%', aspectRatio: 0.78, borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
+  slot: { borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
   add: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#e2b9b1', backgroundColor: colors.white },
   center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   plus: { fontSize: 22, color: '#8e8980' },

@@ -33,6 +33,8 @@ export default function Welcome() {
   }, []);
 
   const draft = session && profile && !profile.onboarding_done ? nextOnboardingRoute(profile) : null;
+  // Signed in with a finished profile: the redirect above is on its way, do not flash the sign-up screen.
+  if (ready && session && profile?.onboarding_done) return <Screen><View /></Screen>;
 
   return (
     <Screen>

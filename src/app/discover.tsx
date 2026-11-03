@@ -1,40 +1,53 @@
-import { useEffect } from 'react';
-import { View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { ActionSet, Between, Chip, Eyebrow, LinkBtn, SafeBanner, Screen, Tiny, useToast } from '@/components/ui';
-import { DetailsGrid, ProfileHero, ProfileMeta, StoryBody } from '@/components/Profile';
+import * as Haptics from 'expo-haptics';
+import { ActionSet, Between, Chip, Eyebrow, LinkBtn, Screen, Tiny, useToast } from '@/components/ui';
+import { ProfileHero, ProfileMeta } from '@/components/Profile';
+import { SwipeCard, type SwipeCardHandle } from '@/components/SwipeCard';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
 import { useDiscover } from '@/lib/discover';
 import { useSession, useSparkLimit } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 import { interestLabel } from '@/lib/catalog';
+import { colors } from '@/theme/tokens';
+import type { DiscoverCard } from '@/lib/api';
 
-// 25 · Главная карточка
+// 25 · Главная карточка. The card fills one screen (photo, name, a line of chips, the buttons); everything else —
+// answers, more photos, details — is on the full profile ("Профиль" or a tap on the name).
 export default function Discover() {
   const { t } = useLang();
   const toast = useToast();
   const d = useDiscover();
   const { profile } = useSession();
   const limit = useSparkLimit();
-  useEffect(() => { d.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const swipe = useRef<SwipeCardHandle>(null);
+  useEffect(() => { d.ensure(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const card = d.current;
   const mine: string[] = profile?.interests ?? [];
   const common = card ? card.interests.filter((x) => mine.includes(x)) : [];
+  const left = Math.max(0, limit - d.likesUsed);
 
-  const onSpark = async () => {
+  const openProfile = (c: DiscoverCard) => router.push({ pathname: '/profile', params: { id: c.profile_id } });
+
+  // `flung`: the card already left the screen (swipe); otherwise the button press animates it out first.
+  const doSpark = async (flung: boolean) => {
     if (!card) return;
-    if (d.likesUsed >= limit) { router.push('/like-limit'); return; }
+    if (d.likesUsed >= limit) { swipe.current?.reset(); router.push('/like-limit'); return; }
+    if (!flung) await swipe.current?.fling('right');
     try {
       const r = await d.spark(card, { kind: 'profile', ref: null, label: t('screens.discover.fotoIzAnkety') }, null);
-      if (!r) return;
-      toast(t('screens.discover.iskraOtpravlena'));
+      if (!r) { swipe.current?.reset(); return; }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (r.status === 'match') router.push('/match');
-    } catch { router.push('/error-retry'); }
+      else toast(t('screens.discover.iskraOtpravlena'));
+    } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
-  const onPass = async () => {
-    try { await d.pass(); toast(t('screens.discover.profilPropuschen')); } catch { router.push('/error-retry'); }
+  const doPass = async (flung: boolean) => {
+    if (!flung) await swipe.current?.fling('left');
+    try { await d.pass(); } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
   // Undo of the last pass is available to everyone.
   const onUndo = async () => {
@@ -60,35 +73,43 @@ export default function Discover() {
   else {
     body = (
       <>
-        <Between style={{ marginBottom: 4 }}>
-          <Tiny>{t('screens.discover.vIzLimitLaykov', { left: Math.max(0, limit - d.likesUsed), limit })}</Tiny>
-          <Tiny>{t('screens.discover.zatsepiloNachniteSOtveta')}</Tiny>
-        </Between>
-        <ProfileHero key={card.profile_id} photos={card.photos} count={card.photos.length} verified={card.verified}
-          name={card.display_name} age={card.age} sub={`${card.city} · ${card.distance}`}
-          label={t('screens.discover.portretDisplayName', { display_name: card.display_name })} />
-        <ProfileMeta card={card} />
-        {common.length ? <View style={{ flexDirection: 'row' }}><Chip tone="green" icon="🤝" label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /></View> : null}
-        <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} onProfile={() => router.push({ pathname: '/profile', params: { id: card.profile_id } })} />
-        <LinkBtn label={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} />
-        <StoryBody card={card}
-          onReply={(prompt) => { d.setTarget({ kind: 'prompt', ref: prompt.id ?? null, label: t('screens.discover.otvetAnswer', { answer: prompt.answer }) }); router.push('/like-note'); }}
-          onPhoto={(at) => router.push({ pathname: '/media-viewer', params: { id: card.profile_id, at: String(at) } })} />
-        <DetailsGrid details={card.details} />
-        {/* End of the profile: decide here too, without scrolling back up. */}
-        {card.prompts.length + card.photos.length > 2 ? <ActionSet onPass={onPass} onComment={onComment} onSpark={onSpark} /> : null}
-        <SafeBanner>{t('screens.discover.rasstoyanieOkruglenoTochny')}</SafeBanner>
+        <SwipeCard key={card.profile_id} ref={swipe} labels={{ left: t('screens.discover.stampPass'), right: t('screens.discover.stampSpark') }}
+          onSwipe={(dir) => { void (dir === 'right' ? doSpark(true) : doPass(true)); }}>
+          <ProfileHero fill photos={card.photos} count={card.photos.length} verified={card.verified}
+            name={card.display_name} age={card.age} sub={`${card.city} · ${card.distance}`}
+            label={t('screens.discover.portretDisplayName', { display_name: card.display_name })}
+            onOpen={() => openProfile(card)} openLabel={t('screens.discover.openProfile')} />
+        </SwipeCard>
+        {/* Outside the swipe area: the chip line scrolls sideways itself. */}
+        <ProfileMeta compact card={card}
+          extra={common.length ? <Chip tone="green" icon="heart" label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /> : null} />
+        <ActionSet onPass={() => { void doPass(false); }} onComment={onComment} onSpark={() => { void doSpark(false); }} onProfile={() => openProfile(card)} />
       </>
     );
   }
 
   return (
-    <Screen tabs="discover" key={card?.profile_id ?? 'none'}>
-      <Between style={{ marginTop: 1, marginBottom: 5 }}>
+    <Screen tabs="discover" scroll={false}>
+      <Between style={{ marginTop: 1, marginBottom: 4, flexWrap: 'nowrap' }}>
         <Eyebrow>{t('screens.discover.segodnyaVV', { city: (profile?.city ?? '').toUpperCase() })}</Eyebrow>
-        <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />
+        <View style={st.headerActions}>
+          {card ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} hitSlop={8} style={st.undo}>
+              <Text style={st.undoText}>↶</Text>
+            </Pressable>
+          ) : null}
+          <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />
+        </View>
       </Between>
+      {/* Only when it matters: the daily limit is close. */}
+      {card && left <= 3 ? <Tiny>{t('screens.discover.vIzLimitLaykov', { left, limit })}</Tiny> : null}
       {body}
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  undo: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  undoText: { fontSize: 20, color: colors.redDark, fontWeight: '700' },
+});

@@ -1,12 +1,11 @@
 // Shared building blocks. Each one mirrors a class in the approved prototype CSS.
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View,
-  ViewStyle, StyleProp, AccessibilityInfo, Image,
-} from 'react-native';
+import { ActivityIndicator, Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, StyleProp, AccessibilityInfo } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Photo } from './Photo';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { router, usePathname } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/tokens';
 import { BrandMark } from './BrandMark';
 import { useLang } from '@/lib/lang';
@@ -32,22 +31,38 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={show}>
       {children}
-      {text ? (
-        <View pointerEvents="none" style={styles.toast} accessibilityLiveRegion="polite">
-          <Text style={styles.toastText}>{text}</Text>
-        </View>
-      ) : null}
+      {text ? <ToastBubble key={text} text={text} /> : null}
     </ToastCtx.Provider>
   );
 }
 export const useToast = () => useContext(ToastCtx);
+function ToastBubble({ text }: { text: string }) {
+  const v = useState(() => new Animated.Value(0))[0];
+  useEffect(() => { Animated.spring(v, { toValue: 1, useNativeDriver: true, speed: 16, bounciness: 8 }).start(); }, [v, text]);
+  const translateY = v.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  return (
+    <Animated.View pointerEvents="none" style={[styles.toast, { opacity: v, transform: [{ translateY }] }]} accessibilityLiveRegion="polite">
+      <Text style={styles.toastText}>{text}</Text>
+    </Animated.View>
+  );
+}
+
+// ---------- motion ----------
+/** Springy press feedback: the element shrinks a little under the finger and bounces back. */
+export function usePressScale(to = 0.96) {
+  const scale = useState(() => new Animated.Value(1))[0];
+  const pressIn = useCallback(() => { Animated.spring(scale, { toValue: to, useNativeDriver: true, speed: 40, bounciness: 0 }).start(); }, [scale, to]);
+  const pressOut = useCallback(() => { Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 18, bounciness: 10 }).start(); }, [scale]);
+  return { style: { transform: [{ scale }] }, pressIn, pressOut };
+}
+const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
 // ---------- layout ----------
 export type TabKey = 'discover' | 'likes' | 'chats' | 'me';
 
 // Same rule as the prototype: no tab bar on the first launch, account and onboarding screens.
 const NO_TABS = ['/', '/language', '/signin', '/signup', '/forgot', '/captcha', '/confirmation'];
-const ME_SCREENS = ['/me', '/edit-', '/opening-moves', '/privacy', '/settings', '/support-help', '/notification-settings', '/legal', '/data-export', '/delete-', '/blocked', '/referral', '/share-sheet', '/verification-', '/account-', '/report', '/appeal', '/community-rules'];
+const ME_SCREENS = ['/me', '/guide', '/edit-', '/opening-moves', '/privacy', '/settings', '/support-help', '/notification-settings', '/legal', '/data-export', '/delete-', '/blocked', '/referral', '/share-sheet', '/verification-', '/account-', '/report', '/appeal', '/community-rules'];
 const CHAT_SCREENS = ['/chat', '/icebreakers', '/push-prompt', '/photo-', '/message-', '/archive', '/muted', '/unmatch', '/support-share', '/date-', '/video-call'];
 function tabFor(path: string): TabKey {
   if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'likes';
@@ -69,7 +84,9 @@ export function Screen({ children, scroll = true, tabs, style }: {
     <View style={[styles.main, styles.mainFill, style]}>{children}</View>
   );
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    // With the tab bar, the bar itself pads for the home indicator (TabBar); otherwise the safe area adds it below
+    // the bar too and the tabs float above an empty strip.
+    <SafeAreaView style={styles.safe} edges={showTabs ? ['top'] : ['top', 'bottom']}>
       <TopBar compact={compactBar} />
       {body}
       {showTabs ? <TabBar active={tabs ?? tabFor(path)} /> : null}
@@ -134,27 +151,27 @@ function useIncomingCount() {
   return uid && state.uid === uid ? state.n : 0;
 }
 
+function TabItem({ tab, on, label, badge }: { tab: (typeof TABS)[number]; on: boolean; label: string; badge: number }) {
+  const motion = usePressScale(0.84);
+  return (
+    <Pressable accessibilityRole="tab" accessibilityState={{ selected: on }} onPressIn={motion.pressIn} onPressOut={motion.pressOut}
+      onPress={() => { if (!on) tap(); router.navigate(tab.href as never); }} style={styles.tab}>
+      <Animated.View style={[styles.tabIcon, motion.style]}><UiIcon name={tab.icon} size={22} color={on ? colors.red : colors.tabInactive} /></Animated.View>
+      <Text style={[styles.tabLabel, on && { color: colors.red, fontWeight: '700' }]}>{label}</Text>
+      {badge > 0 ? <View style={styles.tabBadge}><Text style={styles.tabBadgeText}>{badge}</Text></View> : null}
+    </Pressable>
+  );
+}
 export function TabBar({ active }: { active?: string }) {
   const { t } = useLang();
   const incoming = useIncomingCount();
+  const { bottom } = useSafeAreaInsets();
+  // iOS layout: icons and labels in the top ~50 pt, then the home-indicator inset (a little tighter, like the system bar).
   return (
-    <View style={styles.tabs} accessibilityRole="tablist">
-      {TABS.map((tab) => {
-        const on = active === tab.key;
-        return (
-          <Pressable
-            key={tab.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
-            onPress={() => router.navigate(tab.href as never)}
-            style={styles.tab}
-          >
-            <View style={styles.tabIcon}><UiIcon name={tab.icon} size={22} color={on ? colors.red : colors.tabInactive} /></View>
-            <Text style={[styles.tabLabel, on && { color: colors.red, fontWeight: '700' }]}>{t(tab.labelKey)}</Text>
-            {tab.key === 'likes' && incoming > 0 ? <View style={styles.tabBadge}><Text style={styles.tabBadgeText}>{incoming}</Text></View> : null}
-          </Pressable>
-        );
-      })}
+    <View style={[styles.tabs, { paddingBottom: bottom > 0 ? Math.max(bottom - 12, 8) : 8 }]} accessibilityRole="tablist">
+      {TABS.map((tab) => (
+        <TabItem key={tab.key} tab={tab} on={active === tab.key} label={t(tab.labelKey)} badge={tab.key === 'likes' ? incoming : 0} />
+      ))}
     </View>
   );
 }
@@ -195,17 +212,22 @@ export function Btn({ label, onPress, kind = 'primary', disabled, busy, accessib
   }[kind];
   // `busy` disables the button only after a re-render; drop presses while the handler's promise is pending.
   const press = useRef({ busy: false });
+  const motion = usePressScale(0.97);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: !!disabled || !!busy, busy: !!busy }}
-      disabled={disabled || busy}
-      onPress={() => { runGuarded(press.current, onPress); }}
-      style={({ pressed }) => [styles.btn, bg, (disabled || busy) && { opacity: 0.5 }, pressed && { opacity: 0.85 }]}
-    >
-      {busy ? <ActivityIndicator color={fg} /> : <Text style={[styles.btnText, { color: fg }]}>{label}</Text>}
-    </Pressable>
+    <Animated.View style={motion.style}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled: !!disabled || !!busy, busy: !!busy }}
+        disabled={disabled || busy}
+        onPressIn={motion.pressIn}
+        onPressOut={motion.pressOut}
+        onPress={() => { if (kind === 'primary') tap(); runGuarded(press.current, onPress); }}
+        style={({ pressed }) => [styles.btn, bg, (disabled || busy) && { opacity: 0.5 }, pressed && { opacity: 0.9 }]}
+      >
+        {busy ? <ActivityIndicator color={fg} /> : <Text style={[styles.btnText, { color: fg }]}>{label}</Text>}
+      </Pressable>
+    </Animated.View>
   );
 }
 export function LinkBtn({ label, onPress, center, icon }: { label: string; onPress: () => void; center?: boolean; icon?: IconName }) {
@@ -226,7 +248,7 @@ export function Card({ children, tight, style }: { children: React.ReactNode; ti
 export function Line() {
   return <View style={styles.line} />;
 }
-export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'plain' | 'red' | 'green' | 'amber'; icon?: string }) {
+export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'plain' | 'red' | 'green' | 'amber'; icon?: IconName }) {
   const t = {
     plain: { bg: colors.white, border: colors.line, fg: '#625f59' },
     red: { bg: colors.redWash, border: colors.chipBorder, fg: colors.redDark },
@@ -234,8 +256,9 @@ export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'p
     amber: { bg: colors.amberWash, border: '#ecddba', fg: colors.amber },
   }[tone];
   return (
-    <View style={[styles.pill, { backgroundColor: t.bg, borderColor: t.border }]}>
-      <Text style={[styles.pillText, { color: t.fg }]}>{icon ? <Text style={styles.pillIcon}>{icon}  </Text> : null}{label}</Text>
+    <View style={[styles.pill, { backgroundColor: t.bg, borderColor: t.border }, icon && styles.pillWithIcon]}>
+      {icon ? <UiIcon name={icon} size={14} color={t.fg} /> : null}
+      <Text style={[styles.pillText, { color: t.fg }]}>{label}</Text>
     </View>
   );
 }
@@ -309,11 +332,9 @@ export function Loading({ label }: { label?: string }) {
 export function StateBlock({ icon, title, copy, label, onPress, secondary }: {
   icon: string; title: string; copy: string; label?: string; onPress?: () => void; secondary?: React.ReactNode;
 }) {
-  const { t } = useLang();
   return (
     <View style={styles.stateBlock}>
       <Text style={styles.stateIcon}>{icon}</Text>
-      <Eyebrow>{t('common.statusEyebrow')}</Eyebrow>
       <Text style={styles.stateTitle} accessibilityRole="header">{title}</Text>
       <Lede>{copy}</Lede>
       {label && onPress ? <View style={{ alignSelf: 'stretch' }}><Btn label={label} onPress={onPress} /></View> : null}
@@ -379,7 +400,7 @@ export function VerifiedBadge({ size = 18, label }: { size?: number; label?: str
 
 export function Avatar({ uri, size = 49 }: { uri?: string | null; size?: number }) {
   return uri ? (
-    <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} accessibilityIgnoresInvertColors />
+    <Photo source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} accessibilityIgnoresInvertColors />
   ) : (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.blush }} />
   );
@@ -399,9 +420,11 @@ export function ActionSet({ onPass, onComment, onSpark, onProfile, sparkDisabled
   );
 }
 export function ActionBtn({ label, icon, size = 21, onPress }: { label: string; icon: IconName; size?: number; onPress: () => void }) {
+  const motion = usePressScale(0.86);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.action}>
-      <View style={styles.actionRound}><UiIcon name={icon} size={size} color="#46443f" /></View>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPressIn={motion.pressIn} onPressOut={motion.pressOut}
+      onPress={() => { tap(); onPress(); }} style={styles.action}>
+      <Animated.View style={[styles.actionRound, motion.style]}><UiIcon name={icon} size={size} color="#46443f" /></Animated.View>
       <Text style={styles.actionLabel}>{label}</Text>
     </Pressable>
   );
@@ -420,10 +443,16 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
     return () => { if (raf.current) clearInterval(raf.current); };
   }, []);
   const HOLD = 460;
+  const toast = useToast();
+  // Motion: the button swells while held, then a ring bursts out when the spark is sent.
+  const grow = useState(() => new Animated.Value(0))[0];
+  const burst = useState(() => new Animated.Value(0))[0];
   const start = () => {
     if (disabled) return;
     fired.current = false;
     started.current = Date.now();
+    if (!reduceMotion) Animated.timing(grow, { toValue: 1, duration: HOLD, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     raf.current = setInterval(() => {
       const p = Math.min(1, (Date.now() - started.current) / HOLD);
       setProgress(p);
@@ -431,16 +460,30 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
         fired.current = true;
         if (raf.current) clearInterval(raf.current);
         setProgress(0);
+        if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+        if (!reduceMotion) {
+          burst.setValue(0);
+          Animated.timing(burst, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+        }
+        Animated.spring(grow, { toValue: 0, useNativeDriver: true, speed: 14, bounciness: 14 }).start();
         onComplete(() => {});
       }
     }, 16);
   };
   const end = () => {
     if (raf.current) clearInterval(raf.current);
-    if (!fired.current) setProgress(0);
+    if (!fired.current) {
+      // A short tap used to do nothing at all: explain the gesture instead.
+      if (Date.now() - started.current < HOLD * 0.6) toast(t('components.ui.uderzhivaytePokaNeZapolnit'));
+      setProgress(0);
+      Animated.spring(grow, { toValue: 0, useNativeDriver: true, speed: 20, bounciness: 6 }).start();
+    }
   };
   const r = 27;
   const c = 2 * Math.PI * r;
+  const scale = grow.interpolate({ inputRange: [0, 1], outputRange: [1, 1.14] });
+  const burstScale = burst.interpolate({ inputRange: [0, 1], outputRange: [1, 2.2] });
+  const burstOpacity = burst.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] });
   return (
     <Pressable
       accessibilityRole="button"
@@ -448,7 +491,7 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
       accessibilityHint={t('components.ui.uderzhivayteChtobyOtpravit')}
       onPressIn={start}
       onPressOut={end}
-      onPress={() => { /* hold only; tap explains the gesture */ }}
+      onPress={() => { /* hold only; a short tap shows the hint in end() */ }}
       // VoiceOver / Switch Control cannot hold: their double tap performs "activate", which sends the spark.
       accessibilityActions={[{ name: 'activate' }]}
       onAccessibilityAction={(e) => { if (e.nativeEvent.actionName === 'activate' && !disabled) onComplete(() => {}); }}
@@ -456,16 +499,19 @@ export function SparkButton({ onComplete, disabled }: { onComplete: (completed: 
       style={[styles.action, disabled && { opacity: 0.5 }]}
     >
       <View style={styles.sparkRing}>
-        <Svg width={61} height={61} style={StyleSheet.absoluteFill}>
-          <Circle cx={30.5} cy={30.5} r={r} stroke="#f3d7d1" strokeWidth={4} fill="none" />
-          <Circle
-            cx={30.5} cy={30.5} r={r} stroke={colors.red} strokeWidth={4} fill="none"
-            strokeDasharray={`${c * progress} ${c}`} transform="rotate(-90 30.5 30.5)"
-          />
-        </Svg>
-        <View style={styles.sparkInner}><BrandMark color="#fff" size={27} /></View>
+        <Animated.View pointerEvents="none" style={[styles.sparkBurst, { opacity: burstOpacity, transform: [{ scale: burstScale }] }]} />
+        <Animated.View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', transform: [{ scale }] }]}>
+          <Svg width={61} height={61} style={StyleSheet.absoluteFill}>
+            <Circle cx={30.5} cy={30.5} r={r} stroke="#f3d7d1" strokeWidth={4} fill="none" />
+            <Circle
+              cx={30.5} cy={30.5} r={r} stroke={colors.red} strokeWidth={4} fill="none"
+              strokeDasharray={`${c * progress} ${c}`} transform="rotate(-90 30.5 30.5)"
+            />
+          </Svg>
+          <View style={styles.sparkInner}><BrandMark color="#fff" size={27} /></View>
+        </Animated.View>
       </View>
-      <Text style={styles.actionLabel}>{reduceMotion ? t('components.ui.uderzhatIskru') : t('components.ui.uderzhatIskru')}</Text>
+      <Text style={styles.actionLabel}>{t('components.ui.uderzhatIskru')}</Text>
     </Pressable>
   );
 }
@@ -538,7 +584,7 @@ const styles = StyleSheet.create({
   barActions: { flexDirection: 'row', gap: 6 },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   iconBtnText: { fontSize: 11, fontWeight: '800', color: colors.ink },
-  tabs: { height: 76, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingBottom: 10 },
+  tabs: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 4 },
   tab: { width: '24%', height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 },
   tabIcon: { height: 23, alignItems: 'center', justifyContent: 'center' },
   tabBadge: { position: 'absolute', right: 16, top: 6, backgroundColor: colors.red, borderRadius: 8, paddingHorizontal: 4, paddingVertical: 1 },
@@ -557,7 +603,7 @@ const styles = StyleSheet.create({
   line: { height: 1, backgroundColor: colors.line, marginVertical: 14 },
   pill: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6, marginRight: 7, marginBottom: 7 },
   pillText: { fontSize: 11, lineHeight: 14 },
-  pillIcon: { fontSize: 12 },
+  pillWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },
@@ -589,6 +635,7 @@ const styles = StyleSheet.create({
   actionRound: { width: 54, height: 54, borderRadius: 27, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line, shadowColor: '#201E1D', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   actionLabel: { fontSize: 10, color: colors.ink, fontWeight: '700' },
   sparkRing: { width: 61, height: 61, alignItems: 'center', justifyContent: 'center' },
+  sparkBurst: { position: 'absolute', width: 61, height: 61, borderRadius: 31, borderWidth: 3, borderColor: colors.red },
   sparkInner: { width: 47, height: 47, borderRadius: 24, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', shadowColor: colors.red, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
   pillBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 7, marginRight: 7, marginBottom: 7, backgroundColor: colors.white },
   pillBtnOn: { backgroundColor: colors.redWash, borderColor: colors.chipBorder },

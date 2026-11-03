@@ -5,6 +5,8 @@ import { api, type DiscoverCard, type SparkResult } from './api';
 import { AppError, toAppError } from './errors';
 import { useLang } from '@/lib/lang';
 import { useSession } from '@/lib/session';
+import { signedMany } from '@/hooks/useSignedUrl';
+import { prefetchPhotos } from '@/components/Photo';
 
 export type SparkTarget = { kind: 'profile' | 'photo' | 'prompt'; ref: string | null; label: string };
 export type MatchInfo = { match_id: string; partner: { id: string; name: string; age: number; photo?: string | null } };
@@ -22,6 +24,8 @@ type Ctx = {
   error: AppError | null;
   likesUsed: number;
   load: () => Promise<void>;
+  /** Load only when nothing is loaded yet or the list is older than a few minutes (returning to the tab keeps the person on screen). */
+  ensure: () => void;
   pass: () => Promise<void>;
   undoPass: () => Promise<boolean>;
   spark: (card: DiscoverCard, target: SparkTarget, comment: string | null) => Promise<SparkResult | null>;
@@ -117,6 +121,16 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
 
   const current = cards[index] ?? null;
   const remaining = cards.length - index;
+
+  // Photos of the card on screen and the next three are signed in one request and downloaded ahead of time,
+  // so the next profile appears with its photos already on the device.
+  useEffect(() => {
+    const paths = cards.slice(index, index + 4).flatMap((c, n) => c.photos.filter((p) => p.kind !== 'video').slice(0, n === 0 ? 6 : 2).map((p) => p.path));
+    if (!paths.length) return;
+    let alive = true;
+    signedMany(paths).then((urls) => { if (alive) prefetchPhotos(urls); });
+    return () => { alive = false; };
+  }, [cards, index]);
   useEffect(() => {
     if (loaded && !loading && !loadingMore && !exhausted && !moreError && !error && remaining <= REFILL_AT) loadMore();
   }, [loaded, loading, loadingMore, exhausted, moreError, error, remaining, loadMore]);
@@ -124,6 +138,15 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
   // Empty is real only when the server returned nothing; a failed refetch is an error, not "no one left".
   const pending = loading || loadingMore || (!current && !error && !moreError && (!loaded || !exhausted));
   const shownError = error ?? (current ? null : moreError);
+
+  // Coming back to the Discover tab used to reload a fresh random page, so the person on screen "jumped" to someone
+  // else. Keep the current list unless it is empty, failed, or stale.
+  const loadedAt = useRef(0);
+  useEffect(() => { if (loaded && !loading) loadedAt.current = Date.now(); }, [loaded, loading]);
+  const ensure = useCallback(() => {
+    const stale = Date.now() - loadedAt.current > 10 * 60 * 1000;
+    if (!loaded || error || stale || !cardsRef.current.length) load();
+  }, [loaded, error, load]);
 
   const pass = useCallback(async () => {
     const card = cards[index];
@@ -177,7 +200,7 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
   }, [cards]);
 
   return (
-    <C.Provider value={{ cards, index, current, loading, pending, error: shownError, likesUsed, load, pass, undoPass, spark, target, setTarget, lastMatch, setLastMatch, focus }}>
+    <C.Provider value={{ cards, index, current, loading, pending, error: shownError, likesUsed, load, ensure, pass, undoPass, spark, target, setTarget, lastMatch, setLastMatch, focus }}>
       {children}
     </C.Provider>
   );

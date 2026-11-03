@@ -1,0 +1,6 @@
+{
+  "NSPhotoLibraryUsageDescription": "RENVI otevře galerii, abys sám vybral fotky a krátká videa do profilu nebo fotku do chatu. Jiné soubory aplikace nevidí.",
+  "NSCameraUsageDescription": "Kamera slouží k ověření selfie a k videohovoru před schůzkou, pokud s ním souhlasíš. Selfie se nestane součástí profilu.",
+  "NSMicrophoneUsageDescription": "Mikrofon slouží jen k videohovoru před schůzkou, se kterým jsi souhlasil. RENVI hovory nenahrává.",
+  "NSLocationWhenInUseUsageDescription": "Poloha slouží jen k přibližné vzdálenosti. Souřadnice se zaokrouhlují asi na 1 km a nikomu se nezobrazují."
+}

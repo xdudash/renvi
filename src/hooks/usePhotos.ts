@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAsync } from './useAsync';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/lib/api';
+import { signed } from './useSignedUrl';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
 import { logError } from '@/lib/errorLog';
@@ -16,7 +17,7 @@ export function useMyPhotos() {
   const q = useAsync<MyMedia[]>(async () => {
     if (!uid) return [];
     const rows = (await api.myPhotos(uid)) as MyMedia[];
-    return Promise.all(rows.map(async (r) => ({ ...r, url: await api.signedUrl(r.storage_path).catch(() => undefined) })));
+    return Promise.all(rows.map(async (r) => ({ ...r, url: await signed(r.storage_path).catch(() => undefined) })));
   }, [uid]);
   const items = q.data ?? [];
   const load = async () => { q.reload(); };

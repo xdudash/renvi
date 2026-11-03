@@ -3,7 +3,8 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { BrandMark } from '@/components/BrandMark';
 import { colors } from '@/theme/tokens';
 import { SessionProvider, useSession } from '@/lib/session';
 import { ToastProvider } from '@/components/ui';
@@ -17,6 +18,15 @@ import { pushRoute, responseKey } from '@/lib/pushRoute';
 
 const handledPushes = new Set<string>();
 
+// Web (also on phones): a long press on buttons and cards selected their text and opened the copy menu (for example
+// while holding the spark). App-like behaviour: no selection outside fields and chat messages.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const css = document.createElement('style');
+  css.textContent = 'body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}'
+    + 'input,textarea,[data-selectable="true"]{-webkit-user-select:text;user-select:text}';
+  document.head.appendChild(css);
+}
+
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
@@ -24,7 +34,7 @@ if (Platform.OS !== 'web') {
 }
 
 function Shell() {
-  const { configured } = useSession();
+  const { configured, ready } = useSession();
   // Tapping a push opens the right conversation. The listener alone misses the tap that launched a killed app
   // (cold start), so the last response is read once as well; each tap is handled once (module-level set).
   useEffect(() => {
@@ -48,6 +58,9 @@ function Shell() {
     <>
       <Gate />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
+      {/* Until the session and profile are known, cover the screens: otherwise a signed-in user briefly saw the
+          welcome / sign-up screen and was then thrown to another screen ("jumping" on every launch). */}
+      {ready ? null : <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center' }]} accessibilityLabel="RENVI"><BrandMark size={64} /></View>}
     </>
   );
 }

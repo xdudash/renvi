@@ -1,7 +1,9 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Photo } from '@/components/Photo';
 import { Redirect, router } from 'expo-router';
 import { Btn, Eyebrow, Screen } from '@/components/ui';
 import { BrandMark } from '@/components/BrandMark';
+import { FadeIn, PopIn } from '@/components/Motion';
 import { useDiscover } from '@/lib/discover';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { useMyPhotos } from '@/hooks/usePhotos';
@@ -21,12 +23,12 @@ export default function Match() {
       <View style={s.hero}>
         <Eyebrow>{t('screens.match.vyObaSdelaliPervyy')}</Eyebrow>
         <View style={s.faces}>
-          {theirs ? <Image source={{ uri: theirs }} style={s.face} accessibilityLabel={lastMatch.partner.name} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}
-          {items[0]?.url ? <Image source={{ uri: items[0].url }} style={s.face} accessibilityLabel={t('screens.match.vashProfil')} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}
+          <PopIn>{theirs ? <Photo source={{ uri: theirs }} style={s.face} accessibilityLabel={lastMatch.partner.name} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}</PopIn>
+          <PopIn delay={140}>{items[0]?.url ? <Photo source={{ uri: items[0].url }} style={s.face} accessibilityLabel={t('screens.match.vashProfil')} /> : <View style={[s.face, { backgroundColor: colors.blush }]} />}</PopIn>
         </View>
-        <BrandMark size={62} />
-        <Text style={s.title} accessibilityRole="header">{t('screens.match.etoVzaimno')}</Text>
-        <Text style={s.lede}>{t('screens.match.vyINameZainteresovali', { name: lastMatch.partner.name })}</Text>
+        <PopIn delay={320}><BrandMark size={62} /></PopIn>
+        <FadeIn delay={420}><Text style={s.title} accessibilityRole="header">{t('screens.match.etoVzaimno')}</Text></FadeIn>
+        <FadeIn delay={520}><Text style={s.lede}>{t('screens.match.vyINameZainteresovali', { name: lastMatch.partner.name })}</Text></FadeIn>
         <Text style={{ fontSize: 10, letterSpacing: 0.2, color: colors.sub, marginTop: 18, marginBottom: 8 }}>Make it mutual.</Text>
       </View>
       <Btn label={t('screens.match.nachatRazgovor')} onPress={chat} />

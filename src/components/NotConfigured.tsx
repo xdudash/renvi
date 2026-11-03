@@ -1,8 +1,16 @@
 import { Text } from 'react-native';
 import { Card, Screen, StateBlock } from './ui';
 
-// Shown only in a build without Supabase settings (developer misconfiguration), never to end users.
+// A build without Supabase settings. Developers (dev builds) see what to fix; a store build never shows technical
+// names (scripts/check-release.mjs also refuses to release without them).
 export function NotConfigured() {
+  if (!__DEV__) {
+    return (
+      <Screen>
+        <StateBlock icon="⌁" title="RENVI" copy="Сервис временно недоступен. Попробуйте позже. · The service is temporarily unavailable. Please try again later." />
+      </Screen>
+    );
+  }
   return (
     <Screen>
       <StateBlock icon="⌁" title="Сервер не подключён" copy="В этой сборке не заданы EXPO_PUBLIC_SUPABASE_URL и EXPO_PUBLIC_SUPABASE_ANON_KEY." />
