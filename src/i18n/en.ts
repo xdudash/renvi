@@ -509,6 +509,7 @@ export const en: Dictionary = {
   "screens.settings.iosNote": "The app also follows Reduce Motion and text size from your iOS settings.",
   "screens.settings.openIos": "Open iOS notifications",
   "screens.settings.openManually": "Open your phone settings manually",
+  "screens.me.signOutSub": "You can sign back in with your e-mail and password",
   "screens.settings.signOut": "Sign out",
   "screens.signin.enterPassword": "Enter your password",
   "screens.signin.confirmEmail": "Confirm your email using the link in the message.",

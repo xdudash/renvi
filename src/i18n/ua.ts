@@ -509,6 +509,7 @@ export const ua: Dictionary = {
   "screens.settings.iosNote": "Застосунок також враховує Reduce Motion і розмір тексту в налаштуваннях iOS.",
   "screens.settings.openIos": "Відкрити сповіщення iOS",
   "screens.settings.openManually": "Відкрий налаштування телефона вручну",
+  "screens.me.signOutSub": "Увійти знову можна за поштою й паролем",
   "screens.settings.signOut": "Вийти з акаунта",
   "screens.signin.enterPassword": "Введи пароль",
   "screens.signin.confirmEmail": "Підтверди пошту за посиланням із листа.",
