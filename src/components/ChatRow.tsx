@@ -1,4 +1,5 @@
-import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Photo } from './Photo';
 import { router } from 'expo-router';
 import { VerifiedBadge } from './ui';
 import { useAsync } from '@/hooks/useAsync';
@@ -33,7 +34,7 @@ export function ChatRow({ m, sub }: { m: MatchRow; sub?: string }) {
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/chat', params: { match: m.match_id } })}
       style={({ pressed }) => [s.row, pressed && { backgroundColor: '#f3efe9' }]}>
       <View style={[s.ring, unread && s.ringOn]}>
-        {url ? <Image source={{ uri: url }} style={s.avatar} /> : <View style={[s.avatar, { backgroundColor: colors.blush }]} />}
+        {url ? <Photo source={{ uri: url }} style={s.avatar} /> : <View style={[s.avatar, { backgroundColor: colors.blush }]} />}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={s.top}>
@@ -58,7 +59,7 @@ export function NewMatchBubble({ m }: { m: MatchRow }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${m.partner_name}, ${m.partner_age}`} onPress={() => router.push({ pathname: '/chat', params: { match: m.match_id } })} style={s.bubble}>
       <View style={s.bigRing}>
-        {url ? <Image source={{ uri: url }} style={s.bigAvatar} /> : <View style={[s.bigAvatar, { backgroundColor: colors.blush }]} />}
+        {url ? <Photo source={{ uri: url }} style={s.bigAvatar} /> : <View style={[s.bigAvatar, { backgroundColor: colors.blush }]} />}
         {verified ? <View style={s.bigBadge}><VerifiedBadge size={18} /></View> : null}
       </View>
       <Text style={s.bubbleName} numberOfLines={1}>{m.partner_name}</Text>

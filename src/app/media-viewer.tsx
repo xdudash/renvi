@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Photo } from '@/components/Photo';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, Loading, Screen, Tiny, useToast } from '@/components/ui';
 import { useProfileCard } from '@/hooks/useProfileCard';
@@ -31,7 +32,7 @@ export default function MediaViewer() {
         {cur?.kind === 'video' && url ? (
           <Clip url={url} muted={muted} />
         ) : url ? (
-          <Image source={{ uri: url }} style={s.photo} resizeMode="cover" accessibilityLabel={t('screens.mediaViewer.mediaVIzN', { i: i + 1, n })} />
+          <Photo source={{ uri: url }} style={s.photo} accessibilityLabel={t('screens.mediaViewer.mediaVIzN', { i: i + 1, n })} />
         ) : <View style={s.photo} />}
         <View style={s.top}>
           <View style={s.pill}><Text style={{ fontSize: 10 }}>{t('screens.mediaViewer.vIzN', { i: i + 1, n })}</Text></View>

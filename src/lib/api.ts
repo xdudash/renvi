@@ -108,6 +108,9 @@ export type MatchContext = {
 
 export type SparkResult = { status: 'sent' } | { status: 'match'; match_id: string };
 
+/** Lifetime of a signed media URL (seconds). */
+export const SIGNED_URL_SECONDS = 24 * 3600;
+
 export const api = {
   discover: (limit = 20) => rpc<DiscoverCard[]>('discover', { p_limit: limit }),
   likesToday: () => rpc<number>('likes_today'),
@@ -212,9 +215,19 @@ export const api = {
     if (error) throw toAppError(error);
     return path;
   },
+  // Signed for a day: the same URL is reused (memory + device storage, hooks/useSignedUrl), so the image cache hits.
   signedUrl: async (path: string): Promise<string> => {
-    const { data, error } = await supabase.storage.from('profile-media').createSignedUrl(path, 3600);
+    const { data, error } = await supabase.storage.from('profile-media').createSignedUrl(path, SIGNED_URL_SECONDS);
     if (error) throw toAppError(error);
     return data.signedUrl;
+  },
+  /** One request for many files (feed prefetch). Files that fail are left out. */
+  signedUrls: async (paths: string[]): Promise<Record<string, string>> => {
+    if (!paths.length) return {};
+    const { data, error } = await supabase.storage.from('profile-media').createSignedUrls(paths, SIGNED_URL_SECONDS);
+    if (error) throw toAppError(error);
+    const out: Record<string, string> = {};
+    for (const r of data ?? []) if (r.path && r.signedUrl && !r.error) out[r.path] = r.signedUrl;
+    return out;
   },
 };

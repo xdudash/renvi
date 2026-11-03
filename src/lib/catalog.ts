@@ -85,7 +85,7 @@ export const CITIES: Record<string, [string, string][]> = {
 export const COUNTRY_NAME: Record<string, string> = { SK: 'Slovensko', CZ: 'Česko' };
 
 export const DATE_PLACES = [
-  { key: 'eurovea', name: 'Eurovea', sub: 'Набережная · Ружинов', subKey: 'catalog.place.eurovea.sub', icon: '☕', label: 'Eurovea · набережная', labelKey: 'catalog.place.eurovea.label' },
+  { key: 'eurovea', name: 'Eurovea', sub: 'Набережная · Ружинов', subKey: 'catalog.place.eurovea.sub', icon: '◎', label: 'Eurovea · набережная', labelKey: 'catalog.place.eurovea.label' },
   { key: 'oldtown', name: 'Hlavné námestie', sub: 'Старый город', subKey: 'catalog.place.oldtown.sub', icon: '◉', label: 'Hlavné námestie · Старый город', labelKey: 'catalog.place.oldtown.label' },
   { key: 'castle', name: 'Bratislavský hrad', sub: 'Старый город · прогулка', subKey: 'catalog.place.castle.sub', icon: '⌂', label: 'Bratislavský hrad', labelKey: 'catalog.place.castle.label' },
   { key: 'sad', name: 'Sad Janka Kráľa', sub: 'Петржалка · парк', subKey: 'catalog.place.sad.sub', icon: '⌘', label: 'Sad Janka Kráľa', labelKey: 'catalog.place.sad.label' },

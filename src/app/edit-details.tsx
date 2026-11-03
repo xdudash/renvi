@@ -6,6 +6,8 @@ import { useDraft } from '@/hooks/useDraft';
 import { useSession } from '@/lib/session';
 import { api } from '@/lib/api';
 import { useLang } from '@/lib/lang';
+import { UiIcon, type IconName } from '@/components/UiIcon';
+import { colors } from '@/theme/tokens';
 import { DETAIL_ICON, DETAIL_OPTIONS, DETAIL_ORDER, LANGUAGES, MAX_LANGUAGES, detailTitle, detailValue, languageLabel, type DetailKey } from '@/lib/details';
 
 // Подробнее обо мне: optional details shown on the card (height, languages, kids, habits, education, pets, zodiac).
@@ -40,16 +42,16 @@ export default function EditDetails() {
     <Screen tabs="me">
       <BackLink onPress={() => router.navigate('/edit-profile')} />
       <Title kicker={t('details.editKicker')} heading={t('details.editHeading')} sub={t('details.editSub')} />
-      <Eyebrow>{DETAIL_ICON.height_cm} {detailTitle(t, 'height_cm')}</Eyebrow>
+      <IconEyebrow icon={DETAIL_ICON.height_cm} label={detailTitle(t, 'height_cm')} />
       <Field value={height} onChangeText={(v) => setHeight(v.replace(/\D/g, '').slice(0, 3))} keyboardType="number-pad" placeholder="175" accessibilityLabel={t('details.heightA11y')} />
       <Tiny>{t('details.heightHint')}</Tiny>
-      <Eyebrow style={{ marginTop: 16 }}>{DETAIL_ICON.languages} {detailTitle(t, 'languages')}</Eyebrow>
+      <IconEyebrow top={16} icon={DETAIL_ICON.languages} label={detailTitle(t, 'languages')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
         {LANGUAGES.map((c) => <Pill key={c} label={languageLabel(t, c)} active={langs.includes(c)} onPress={() => toggleLang(c)} />)}
       </View>
       {DETAIL_ORDER.map((k) => (
         <View key={k} style={{ marginTop: 12 }}>
-          <Eyebrow>{DETAIL_ICON[k]} {detailTitle(t, k)}</Eyebrow>
+          <IconEyebrow icon={DETAIL_ICON[k]} label={detailTitle(t, k)} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
             {DETAIL_OPTIONS[k].map((v) => (
               <Pill key={v} label={detailValue(t, k, v)} active={vals[k] === v} onPress={() => setVals({ ...vals, [k]: vals[k] === v ? null : v })} />
@@ -60,5 +62,14 @@ export default function EditDetails() {
       <View style={{ height: 12 }} />
       <Btn label={t('details.save')} busy={busy} onPress={save} />
     </Screen>
+  );
+}
+
+function IconEyebrow({ icon, label, top = 0 }: { icon: IconName; label: string; top?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: top }}>
+      <UiIcon name={icon} size={15} color={colors.red} />
+      <Eyebrow>{label}</Eyebrow>
+    </View>
   );
 }

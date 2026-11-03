@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Photo } from './Photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Chip, Sheet, Choice, PromptCard, VerifiedBadge, useToast } from './ui';
 import { UiIcon } from './UiIcon';
 import { colors } from '@/theme/tokens';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
+import { useGridTile } from '@/hooks/useGridTile';
 import { intentChip, interestLabel } from '@/lib/catalog';
 import { detailChips, detailTitle, type DetailKey } from '@/lib/details';
 import { api, type DiscoverCard, type PhotoRow, type ProfileDetails } from '@/lib/api';
@@ -17,9 +19,13 @@ type HeroPhoto = Pick<PhotoRow, 'path'> & { kind?: string };
  * Large photo card. With `photos` the user taps the right / left half to go through them (segment bars on top);
  * with `name` the name, age, verified badge and `sub` line sit on a dark gradient over the photo.
  */
-export function ProfileHero({ path, photos, count, at = 0, verified, label, overlay, name, age, sub, height = 470 }: {
+export function ProfileHero({ path, photos, count, at = 0, verified, label, overlay, name, age, sub, height = 470, fill, onOpen, openLabel }: {
   path?: string | null; photos?: HeroPhoto[]; count: number; at?: number; verified?: boolean; label: string; overlay?: string;
   name?: string; age?: number | null; sub?: string; height?: number;
+  /** Take all remaining height (Discover: the card fills the screen between the header and the buttons). */
+  fill?: boolean;
+  /** Tap on the name area opens the full profile. */
+  onOpen?: () => void; openLabel?: string;
 }) {
   const { t } = useLang();
   const list = photos?.length ? photos : path ? [{ path }] : [];
@@ -29,8 +35,8 @@ export function ProfileHero({ path, photos, count, at = 0, verified, label, over
   const url = useSignedUrl(list[cur]?.path ?? null);
   const go = (d: number) => setI((v) => Math.max(0, Math.min(list.length - 1, v + d)));
   return (
-    <View style={[s.hero, { height }]}>
-      {url ? <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={label} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: '#e7e1da' }]} accessibilityLabel={label} />}
+    <View style={[s.hero, fill ? { flex: 1, marginBottom: 8 } : { height }]}>
+      {url ? <Photo source={{ uri: url }} style={StyleSheet.absoluteFill} accessibilityLabel={label} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: '#e7e1da' }]} accessibilityLabel={label} />}
       {list.length > 1 ? (
         <View style={StyleSheet.absoluteFill}>
           <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -46,13 +52,14 @@ export function ProfileHero({ path, photos, count, at = 0, verified, label, over
       ) : null}
       {overlay ? <View style={s.count} pointerEvents="none"><Text style={s.countText}>{overlay}</Text></View> : null}
       {name ? (
-        <LinearGradient pointerEvents="none" colors={['rgba(20,16,14,0)', 'rgba(20,16,14,0.55)', 'rgba(20,16,14,0.82)']} style={s.shade}>
-          <View style={s.nameRow}>
+        <LinearGradient pointerEvents={onOpen ? 'box-none' : 'none'} colors={['rgba(20,16,14,0)', 'rgba(20,16,14,0.55)', 'rgba(20,16,14,0.82)']} style={s.shade}>
+          {onOpen ? <Pressable style={StyleSheet.absoluteFill} accessibilityRole="button" accessibilityLabel={openLabel ?? name} onPress={onOpen} /> : null}
+          <View style={s.nameRow} pointerEvents="none">
             <Text style={s.name} numberOfLines={1}>{name}{age ? `, ${age}` : ''}</Text>
             {verified ? <VerifiedBadge size={24} label={t('card.verified')} /> : null}
           </View>
           {sub ? (
-            <View style={s.subRow}>
+            <View style={s.subRow} pointerEvents="none">
               <UiIcon name="pin" size={14} color="#fff" />
               <Text style={s.sub} numberOfLines={1}>{sub}</Text>
             </View>
@@ -64,23 +71,34 @@ export function ProfileHero({ path, photos, count, at = 0, verified, label, over
 }
 
 /** Chips under the photo (goal, photo check, details, interests) and the "···" actions. The name is on the photo. */
-export function ProfileMeta({ card, showInterests = true }: {
+export function ProfileMeta({ card, showInterests = true, compact, extra }: {
   card: Pick<DiscoverCard, 'profile_id' | 'display_name' | 'age' | 'city' | 'distance' | 'verified' | 'intent' | 'interests'> & { details?: ProfileDetails };
   showInterests?: boolean;
+  /** One scrollable line of chips (Discover), so the card always fits the screen. */
+  compact?: boolean;
+  extra?: React.ReactNode;
 }) {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const toast = useToast();
-  const chips = detailChips(t, card.details).slice(0, 4);
+  const chips = detailChips(t, card.details).slice(0, compact ? 3 : 4);
+  const list = (
+    <>
+      <Chip label={intentChip(card.intent, t)} tone="red" />
+      {card.verified ? <Chip label={t('components.Profile.fotoProvereno')} tone="green" icon="check" /> : null}
+      {extra}
+      {chips.map((c) => <Chip key={c.key} icon={c.icon} label={c.label} />)}
+      {showInterests ? card.interests.slice(0, 3).map((x) => <Chip key={x} label={interestLabel(t, x)} />) : null}
+    </>
+  );
   return (
     <View>
-      <View style={s.metaRow}>
-        <View style={[s.wrap, { flex: 1 }]}>
-          <Chip label={intentChip(card.intent, t)} tone="red" />
-          {card.verified ? <Chip label={t('components.Profile.fotoProvereno')} tone="green" /> : null}
-          {chips.map((c) => <Chip key={c.key} icon={c.icon} label={c.label} />)}
-          {showInterests ? card.interests.slice(0, 3).map((x) => <Chip key={x} label={interestLabel(t, x)} />) : null}
-        </View>
+      <View style={[s.metaRow, compact && { alignItems: 'center' }]}>
+        {compact ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ alignItems: 'center', paddingTop: 7 }}>{list}</ScrollView>
+        ) : (
+          <View style={[s.wrap, { flex: 1 }]}>{list}</View>
+        )}
         <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.deystviyaSProfilem')} onPress={() => setOpen(true)} style={s.more}><Text style={{ fontSize: 16, color: colors.ink }}>···</Text></Pressable>
       </View>
       <Sheet visible={open} onClose={() => setOpen(false)}>
@@ -103,9 +121,9 @@ export function DetailsGrid({ details }: { details?: ProfileDetails }) {
       <Text style={s.section}>{t('details.section')}</Text>
       <View style={s.grid}>
         {chips.map((c) => (
-          <View key={c.key} style={s.tile}>
-            <Text style={s.tileIcon}>{c.icon}</Text>
-            <View style={{ flex: 1 }}>
+          <View key={c.key} style={[s.tile, c.key === 'languages' && s.tileWide]}>
+            <View style={s.tileIcon}><UiIcon name={c.icon} size={18} color={colors.red} /></View>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={s.tileTitle}>{detailTitle(t, c.key as DetailKey | 'height_cm' | 'languages')}</Text>
               <Text style={s.tileValue}>{c.label}</Text>
             </View>
@@ -121,17 +139,18 @@ export function InlinePhoto({ path, onPress, label }: { path: string; onPress: (
   const url = useSignedUrl(path);
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={s.inline}>
-      {url ? <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
+      {url ? <Photo source={{ uri: url }} style={StyleSheet.absoluteFill} /> : null}
     </Pressable>
   );
 }
 
 export function MediaThumb({ path, onPress, video }: { path: string; onPress: () => void; video?: boolean }) {
   const { t } = useLang();
+  const size = useGridTile(3, 7, 0.78);
   const url = useSignedUrl(path);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.fotoProfilya')} onPress={onPress} style={s.thumb}>
-      {url ? <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
+    <Pressable accessibilityRole="button" accessibilityLabel={t('components.Profile.fotoProfilya')} onPress={onPress} style={[s.thumb, size]}>
+      {url ? <Photo source={{ uri: url }} style={StyleSheet.absoluteFill} /> : null}
       {video ? <View style={s.thumbPill}><Text style={{ fontSize: 10 }}>{t('components.Profile.video')}</Text></View> : null}
     </Pressable>
   );
@@ -157,12 +176,14 @@ const s = StyleSheet.create({
   sheetH: { fontSize: 25, fontWeight: '800', letterSpacing: -1, color: colors.ink, marginBottom: 8 },
   section: { fontSize: 24, fontWeight: '800', letterSpacing: -1, color: colors.ink, marginTop: 20, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { width: '48.6%', flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 11 },
-  tileIcon: { fontSize: 20 },
+  tile: { flexGrow: 1, flexBasis: '45%', minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 11 },
+  // Languages can be a long list: full width so it wraps as words, never one letter per line.
+  tileWide: { width: '100%' },
+  tileIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.redWash, alignItems: 'center', justifyContent: 'center' },
   tileTitle: { fontSize: 10, color: colors.sub, fontWeight: '600' },
   tileValue: { fontSize: 13, color: colors.ink, fontWeight: '700', marginTop: 2 },
   inline: { width: '100%', height: 400, borderRadius: 24, overflow: 'hidden', backgroundColor: '#e7e1da', marginVertical: 10 },
-  thumb: { width: '31.6%', aspectRatio: 0.78, borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
+  thumb: { borderRadius: 13, overflow: 'hidden', backgroundColor: '#eee' },
   thumbPill: { position: 'absolute', left: 5, bottom: 5, backgroundColor: colors.white, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 4 },
 });
 

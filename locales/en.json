@@ -1,0 +1,6 @@
+{
+  "NSPhotoLibraryUsageDescription": "RENVI opens your library so you can pick photos and short videos for your profile or a photo for a chat. The app sees no other files.",
+  "NSCameraUsageDescription": "The camera is used for the selfie check and for a video call before a date, only if you agree to it. The selfie never becomes part of your profile.",
+  "NSMicrophoneUsageDescription": "The microphone is used only for a video call before a date that you agreed to. RENVI does not record calls.",
+  "NSLocationWhenInUseUsageDescription": "Your location is used only to show an approximate distance. Coordinates are rounded to about 1 km and never shown to anyone."
+}

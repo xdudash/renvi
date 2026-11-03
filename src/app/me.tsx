@@ -11,6 +11,7 @@ import { completeness } from '@/lib/completeness';
 import { filledCount } from '@/lib/details';
 import { colors } from '@/theme/tokens';
 import { Row } from '@/components/Row';
+import { UiIcon } from '@/components/UiIcon';
 import type { TranslationKey } from '@/i18n';
 import { useLang } from '@/lib/lang';
 
@@ -64,6 +65,16 @@ export default function Me() {
           <LinkBtn label={t('details.profileNudgeCta')} onPress={() => router.push('/edit-details')} />
         </Card>
       )}
+      {profile?.gender === 'man' ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/guide')} style={guideCard}>
+          <View style={guideIcon}><UiIcon name="book" size={22} color="#fff" /></View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ fontWeight: '800', fontSize: 14, color: colors.ink }}>{t('guide.cardTitle')}</Text>
+            <Text style={{ fontSize: 11, color: colors.sub, marginTop: 3, lineHeight: 15 }}>{t('guide.cardSub')}</Text>
+          </View>
+          <Text style={{ fontSize: 20, color: colors.redDark }}>›</Text>
+        </Pressable>
+      ) : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/likes')} style={tile}>
           <Text style={eyebrow}>{t('screens.me.newSparks')}</Text><Text style={metric}>{incoming.data?.count ?? 0}</Text><Text style={tiny}>{t('screens.me.view')}</Text>
@@ -83,3 +94,5 @@ const tile = { flex: 1, borderWidth: 1, borderColor: colors.line, backgroundColo
 const eyebrow = { fontSize: 9, fontWeight: '800', letterSpacing: 1.2, color: colors.eyebrow } as const;
 const metric = { fontSize: 31, fontWeight: '800', letterSpacing: -1.5, color: colors.ink, marginVertical: 4 } as const;
 const tiny = { fontSize: 10, color: colors.muted } as const;
+const guideCard = { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.chipBorder, backgroundColor: colors.redWash, borderRadius: 18, padding: 14, marginBottom: 10 } as const;
+const guideIcon = { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' } as const;
