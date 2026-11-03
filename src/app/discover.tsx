@@ -82,7 +82,10 @@ export default function Discover() {
         </SwipeCard>
         {/* Outside the swipe area: the chip line scrolls sideways itself. */}
         <ProfileMeta compact card={card}
-          extra={common.length ? <Chip tone="green" icon="heart" label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /> : null} />
+          extra={<>
+            {card.seen ? <Chip tone="amber" label={t('screens.discover.seenBefore')} /> : null}
+            {common.length ? <Chip tone="green" icon="heart" label={t('screens.discover.obscheeV', { common: common.map((x) => interestLabel(t, x)).join(', ').toLowerCase() })} /> : null}
+          </>} />
         <ActionSet onPass={() => { void doPass(false); }} onComment={onComment} onSpark={() => { void doSpark(false); }} onProfile={() => openProfile(card)} />
       </>
     );

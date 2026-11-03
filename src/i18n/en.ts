@@ -1381,4 +1381,5 @@ export const en: Dictionary = {
   "guide.cta": "Apply it to my profile",
   "guide.cardTitle": "Guide: date with confidence",
   "guide.cardSub": "Profile, first message, what to talk about and how to ask for a date",
+  "screens.discover.seenBefore": "Seen before",
 };

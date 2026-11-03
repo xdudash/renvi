@@ -1381,4 +1381,5 @@ export const cs: Dictionary = {
   "guide.cta": "Použít na můj profil",
   "guide.cardTitle": "Průvodce: seznamuj se sebevědomě",
   "guide.cardSub": "Profil, první zpráva, o čem mluvit a jak pozvat na schůzku",
+  "screens.discover.seenBefore": "Už jsi viděl",
 };
