@@ -28,6 +28,8 @@ export type DiscoverCard = {
   music_title: string | null;
   prompts: PromptRow[];
   photos: PhotoRow[];
+  /** Passed before and shown again (migration 0033 recycles passes); undefined on an older database. */
+  seen?: boolean;
   /** "Подробнее обо мне" (migration 0031): only the filled-in values; undefined on an older database. */
   details?: ProfileDetails;
 };

@@ -1381,4 +1381,5 @@ export const ua: Dictionary = {
   "guide.cta": "Застосувати до своєї анкети",
   "guide.cardTitle": "Гайд: знайомся впевнено",
   "guide.cardSub": "Анкета, перше повідомлення, про що говорити і як запросити на зустріч",
+  "screens.discover.seenBefore": "Ви вже бачили",
 };

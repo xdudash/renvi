@@ -561,4 +561,5 @@ export const ruB = {
   'guide.cta': "Применить к своей анкете",
   'guide.cardTitle': "Гайд: знакомься уверенно",
   'guide.cardSub': "Анкета, первое сообщение, о чём говорить и как пригласить на встречу",
+  'screens.discover.seenBefore': "Вы уже видели",
 } as const;
