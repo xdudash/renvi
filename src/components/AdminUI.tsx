@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { router, usePathname } from 'expo-router';
@@ -10,13 +10,22 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { localeOf } from '@/i18n/current';
 import type { TranslationKey } from '@/i18n';
 
-// Web admin shell: sidebar on desktop widths, horizontal tabs on a phone.
-const NAV: [string, TranslationKey][] = [
-  ['/admin', 'adm.nav.dashboard'], ['/admin/reports', 'adm.nav.reports'], ['/admin/appeals', 'adm.nav.appeals'],
-  ['/admin/verification', 'adm.nav.verification'], ['/admin/users', 'adm.nav.users'], ['/admin/config', 'adm.nav.config'],
-  ['/admin/referrals', 'adm.nav.referrals'], ['/admin/audit', 'adm.nav.audit'], ['/admin/admins', 'adm.nav.admins'],
-  ['/admin/errors', 'adm.nav.errors'], ['/admin/analytics', 'analytics.title'], ['/admin/demo', 'adm.nav.demo'],
+// Web admin shell: a sidebar on desktop widths, a compact menu on a phone. One list drives both.
+type NavItem = [href: string, label: TranslationKey];
+const NAV_GROUPS: { title: TranslationKey; items: NavItem[] }[] = [
+  {
+    title: 'adm.navGroup.moderation',
+    items: [['/admin', 'adm.nav.dashboard'], ['/admin/reports', 'adm.nav.reports'], ['/admin/appeals', 'adm.nav.appeals'],
+      ['/admin/verification', 'adm.nav.verification'], ['/admin/users', 'adm.nav.users']],
+  },
+  { title: 'adm.navGroup.insight', items: [['/admin/analytics', 'adm.nav.analytics']] },
+  {
+    title: 'adm.navGroup.system',
+    items: [['/admin/config', 'adm.nav.config'], ['/admin/audit', 'adm.nav.audit'], ['/admin/errors', 'adm.nav.errors'],
+      ['/admin/admins', 'adm.nav.admins'], ['/admin/demo', 'adm.nav.demo']],
+  },
 ];
+const NAV: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export const STATUS_TONE = { active: 'green', suspended: 'amber', banned: 'red' } as const;
 export const STATUS_LABEL: Record<'active' | 'suspended' | 'banned', TranslationKey> = { active: 'adm.status.active', suspended: 'adm.status.suspended', banned: 'adm.status.banned' };
@@ -28,6 +37,7 @@ export const REASON_LABEL: Record<string, TranslationKey> = {
 export const OUTCOME_LABEL: Record<string, TranslationKey> = {
   dismissed: 'adm.outcome.dismissed', actioned: 'adm.outcome.actioned', warning: 'adm.outcome.warning', suspension: 'adm.outcome.suspension', ban: 'adm.outcome.ban',
 };
+export const APPEAL_LABEL: Record<string, TranslationKey> = { open: 'adm.appealStatus.open', accepted: 'adm.appealStatus.accepted', rejected: 'adm.appealStatus.rejected' };
 
 export const useWide = () => useWindowDimensions().width >= 960;
 
@@ -39,6 +49,7 @@ export function AdminPage({ title, sub, right, children }: { title: string; sub?
   const { t } = useLang();
   const path = usePathname();
   const wide = useWide();
+  const [menu, setMenu] = useState(false);
   const header = (
     <View style={[s.pageHead, wide && { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }]}>
       <View style={{ flexShrink: 1 }}>
@@ -51,18 +62,23 @@ export function AdminPage({ title, sub, right, children }: { title: string; sub?
   if (wide) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper, flexDirection: 'row' }}>
-        <View style={s.side}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 }}><BrandMark size={24} /><Text style={s.word}>renvi · admin</Text></View>
-          {NAV.map(([href, label]) => {
-            const on = isActive(path, href);
-            return (
-              <Pressable key={href} accessibilityRole="link" accessibilityState={{ selected: on }} onPress={() => router.replace(href as never)} style={[s.sideItem, on && s.sideItemOn]}>
-                <Text style={[s.sideText, on && { color: colors.paper }]}>{t(label)}</Text>
-              </Pressable>
-            );
-          })}
-          <Pressable onPress={() => router.replace('/')} style={{ marginTop: 18 }}><Text style={s.link}>{t('adm.nav.toApp')}</Text></Pressable>
-        </View>
+        <ScrollView style={s.side} contentContainerStyle={{ paddingHorizontal: 14, paddingVertical: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}><BrandMark size={24} /><Text style={s.word}>renvi · admin</Text></View>
+          {NAV_GROUPS.map((g) => (
+            <View key={g.title} style={{ marginBottom: 10 }}>
+              <Text style={s.navGroup}>{t(g.title)}</Text>
+              {g.items.map(([href, label]) => {
+                const on = isActive(path, href);
+                return (
+                  <Pressable key={href} accessibilityRole="link" accessibilityState={{ selected: on }} onPress={() => router.replace(href as never)} style={[s.sideItem, on && s.sideItemOn]}>
+                    <Text style={[s.sideText, on && { color: colors.paper }]}>{t(label)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+          <Pressable accessibilityRole="link" onPress={() => router.replace('/')} style={{ marginTop: 8, minHeight: 36, justifyContent: 'center' }}><Text style={s.link}>{t('adm.nav.toApp')}</Text></Pressable>
+        </ScrollView>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={[s.body, { paddingHorizontal: 32 }]}>
           <View style={{ width: '100%', maxWidth: 1400, alignSelf: 'center' }}>
             {header}
@@ -72,24 +88,36 @@ export function AdminPage({ title, sub, right, children }: { title: string; sub?
       </SafeAreaView>
     );
   }
+  const current = NAV.find(([href]) => isActive(path, href));
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={s.bar}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><BrandMark size={24} /><Text style={s.word}>renvi · admin</Text></View>
-        <Pressable onPress={() => router.replace('/')}><Text style={s.link}>{t('adm.nav.toApp')}</Text></Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}><BrandMark size={24} /><Text style={s.word}>admin</Text></View>
+        <Pressable accessibilityRole="button" accessibilityLabel={`${t('adm.nav.menu')}: ${current ? t(current[1]) : ''}`} accessibilityState={{ expanded: menu }}
+          onPress={() => setMenu(!menu)} style={s.menuBtn}>
+          <Text style={s.menuText} numberOfLines={1}>{current ? t(current[1]) : t('adm.nav.menu')}</Text>
+          <Text style={s.menuText}>{menu ? '▴' : '▾'}</Text>
+        </Pressable>
       </View>
-      <View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.nav}>
-          {NAV.map(([href, label]) => {
-            const on = isActive(path, href);
-            return (
-              <Pressable key={href} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => router.replace(href as never)} style={[s.tab, on && s.tabOn]}>
-                <Text style={[s.tabText, on && { color: colors.paper }]}>{t(label)}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      {menu ? (
+        <View style={s.menu}>
+          {NAV_GROUPS.map((g) => (
+            <View key={g.title} style={{ marginBottom: 6 }}>
+              <Text style={s.navGroup}>{t(g.title)}</Text>
+              {g.items.map(([href, label]) => {
+                const on = isActive(path, href);
+                return (
+                  <Pressable key={href} accessibilityRole="link" accessibilityState={{ selected: on }}
+                    onPress={() => { setMenu(false); router.replace(href as never); }} style={[s.menuItem, on && s.sideItemOn]}>
+                    <Text style={[s.sideText, on && { color: colors.paper }]}>{t(label)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+          <Pressable accessibilityRole="link" onPress={() => router.replace('/')} style={s.menuItem}><Text style={s.link}>{t('adm.nav.toApp')}</Text></Pressable>
+        </View>
+      ) : null}
       <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" automaticallyAdjustKeyboardInsets>
         {header}
         {children}
@@ -98,23 +126,45 @@ export function AdminPage({ title, sub, right, children }: { title: string; sub?
   );
 }
 
-// Table: horizontal scroll on narrow screens; optional fixed column widths and an empty-state line.
+// Table. Desktop: a horizontally scrollable grid with column widths. Phone: three columns or fewer stay a grid that
+// fills the screen; wider tables become cards (first cell is the title, the rest are "label: value" lines, a column
+// with an empty heading is the action row), so nothing is clipped and nothing needs sideways scrolling.
 export function Tbl({ head, rows, widths, empty }: { head: string[]; rows: React.ReactNode[][]; widths?: number[]; empty?: string }) {
   const { t } = useLang();
-  const w = (j: number) => ({ width: widths?.[j] ?? 160 });
-  return (
-    <ScrollView horizontal>
-      <View>
-        <View style={[s.tr, { borderTopWidth: 0 }]}>{head.map((h, j) => <Text key={`${h}-${j}`} style={[s.td, s.th, w(j)]}>{h}</Text>)}</View>
-        {rows.length === 0 ? <Text style={[s.cell, { paddingVertical: 14, color: colors.sub }]}>{empty ?? t('adm.common.empty')}</Text> : null}
+  const wide = useWide();
+  const emptyText = empty ?? t('adm.common.empty');
+  const cellNode = (c: React.ReactNode) => (typeof c === 'string' || typeof c === 'number' ? <Text style={s.cell} selectable>{c}</Text> : c);
+  if (!wide && head.length > 3) {
+    return (
+      <View style={{ gap: 10 }}>
+        {rows.length === 0 ? <Text style={[s.cell, { paddingVertical: 14, color: colors.sub }]}>{emptyText}</Text> : null}
         {rows.map((r, i) => (
-          <View key={i} style={s.tr}>
-            {r.map((c, j) => <View key={j} style={[s.td, w(j)]}>{typeof c === 'string' || typeof c === 'number' ? <Text style={s.cell} selectable>{c}</Text> : c}</View>)}
+          <View key={i} style={s.rowCard}>
+            <View style={{ marginBottom: 4 }}>{typeof r[0] === 'string' || typeof r[0] === 'number' ? <Text style={s.rowCardTitle} selectable>{r[0]}</Text> : r[0]}</View>
+            {r.slice(1).map((c, j) => {
+              const label = head[j + 1];
+              return label ? (
+                <View key={j} style={s.kv}><Text style={s.kvK}>{label}</Text><View style={{ flex: 1, minWidth: 0 }}>{cellNode(c)}</View></View>
+              ) : <View key={j} style={{ paddingTop: 6 }}>{cellNode(c)}</View>;
+            })}
           </View>
         ))}
       </View>
-    </ScrollView>
+    );
+  }
+  const col = (j: number) => (wide ? { width: widths?.[j] ?? 160 } : { flex: 1, minWidth: 0 });
+  const grid = (
+    <View style={wide ? undefined : { alignSelf: 'stretch' }}>
+      <View style={[s.tr, { borderTopWidth: 0 }]}>{head.map((h, j) => <Text key={`${h}-${j}`} style={[s.td, s.th, col(j)]}>{h}</Text>)}</View>
+      {rows.length === 0 ? <Text style={[s.cell, { paddingVertical: 14, color: colors.sub }]}>{emptyText}</Text> : null}
+      {rows.map((r, i) => (
+        <View key={i} style={s.tr}>
+          {r.map((c, j) => <View key={j} style={[s.td, col(j)]}>{cellNode(c)}</View>)}
+        </View>
+      ))}
+    </View>
   );
+  return wide ? <ScrollView horizontal>{grid}</ScrollView> : grid;
 }
 
 type Tone = 'ink' | 'red' | 'green' | 'ghost' | 'amber';
@@ -131,6 +181,18 @@ export function Acts({ children }: { children: React.ReactNode }) {
   return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{children}</View>;
 }
 
+// Ignores a second press while an async action is still running (double click, Enter held down).
+export function useLock() {
+  const [busy, setBusy] = useState(false);
+  const ref = useRef(false);
+  const run = useCallback(async (fn: () => Promise<void>) => {
+    if (ref.current) return;
+    ref.current = true; setBusy(true);
+    try { await fn(); } finally { ref.current = false; setBusy(false); }
+  }, []);
+  return [busy, run] as const;
+}
+
 export function Badge({ label, tone = 'plain' }: { label: string; tone?: 'plain' | 'red' | 'green' | 'amber' | 'ink' }) {
   const map = {
     plain: [colors.surfaceMuted, colors.ink], red: [colors.redWash, colors.redDark], green: [colors.greenWash, colors.green],
@@ -140,11 +202,22 @@ export function Badge({ label, tone = 'plain' }: { label: string; tone?: 'plain'
   return <View style={[s.badge, { backgroundColor: bg }]}><Text style={[s.badgeText, { color: fg }]}>{label}</Text></View>;
 }
 
+// A number with a caption; a link when it has an `href`. Red when something is waiting for a moderator.
+export function Stat({ value, label, href, alert }: { value: number | string; label: string; href?: string; alert?: boolean }) {
+  return (
+    <Pressable accessibilityRole={href ? 'link' : undefined} disabled={!href} onPress={href ? () => router.push(href as never) : undefined}
+      style={{ minWidth: 140, flexGrow: 1, flexBasis: 140, borderTopWidth: 2, borderTopColor: alert ? colors.red : colors.ink, paddingVertical: 10, minHeight: 44 }}>
+      <Text style={{ fontSize: 34, fontWeight: '900', letterSpacing: -1.5, color: alert ? colors.red : colors.ink }}>{value}</Text>
+      <Text style={{ fontSize: 12, color: href ? colors.ink : colors.sub }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function Section({ title, right, children, style }: { title: string; right?: React.ReactNode; children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[s.section, style]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
-        <Text style={s.sectionTitle}>{title}</Text>
+        <Text style={s.sectionTitle} accessibilityRole="header">{title}</Text>
         {right}
       </View>
       {children}
@@ -169,6 +242,14 @@ export function Columns({ children, min = 360 }: { children: React.ReactNode; mi
   </View>;
 }
 
+export function Chip({ label, on, onPress, role = 'button' }: { label: string; on: boolean; onPress: () => void; role?: 'button' | 'checkbox' }) {
+  return (
+    <Pressable accessibilityRole={role} accessibilityState={role === 'checkbox' ? { checked: on } : { selected: on }} onPress={onPress} style={[s.chip, on && s.chipOn]}>
+      <Text style={[s.chipText, on && { color: colors.paper }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function FilterGroup<K extends string>({ label, options, value, onChange }: {
   label: string; options: { key: K | null; label: string }[]; value: K | null; onChange: (k: K | null) => void;
 }) {
@@ -176,14 +257,7 @@ export function FilterGroup<K extends string>({ label, options, value, onChange 
     <View style={{ marginBottom: 8 }}>
       <Text style={s.filterLabel}>{label}</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        {options.map((o) => {
-          const on = o.key === value;
-          return (
-            <Pressable key={o.key ?? '__all'} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onChange(o.key)} style={[s.chip, on && s.chipOn]}>
-              <Text style={[s.chipText, on && { color: colors.paper }]}>{o.label}</Text>
-            </Pressable>
-          );
-        })}
+        {options.map((o) => <Chip key={o.key ?? '__all'} label={o.label} on={o.key === value} onPress={() => onChange(o.key)} />)}
       </View>
     </View>
   );
@@ -246,6 +320,13 @@ export const fmtDate = (iso?: string | null) => {
   if (d.getFullYear() > 9000) return '∞';
   return d.toLocaleString(localeOf(), { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
+// 3725 -> "1 ч 02 мин", 125 -> "2 мин 05 с", 40 -> "40 с".
+export const fmtDuration = (seconds: number | null | undefined) => {
+  const n = Math.round(Number(seconds) || 0);
+  if (n >= 3600) return `${Math.floor(n / 3600)} ч ${String(Math.floor((n % 3600) / 60)).padStart(2, '0')} мин`;
+  if (n >= 60) return `${Math.floor(n / 60)} мин ${String(n % 60).padStart(2, '0')} с`;
+  return `${n} с`;
+};
 export const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 // ---------- Confirmation dialog with a reason (and optional number of days) ----------
@@ -254,7 +335,7 @@ export type DialogSpec = {
   body?: string;
   confirmLabel: string;
   tone?: 'ink' | 'red' | 'green';
-  reason?: 'required' | 'optional' | 'none';
+  reason?: 'required' | 'optional';
   reasonLabel?: string;
   days?: number;               // shows a "days" input with this default
   extra?: { label: string; value: boolean };  // optional checkbox (e.g. "also remove the message")
@@ -277,19 +358,22 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
   const [extra, setExtra] = useState(spec.extra?.value ?? false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const locked = useRef(false);
   const need = spec.reason ?? 'required';
   const submit = async () => {
+    if (locked.current) return;
     if (need === 'required' && reason.trim().length < 3) { setError(t('adm.dialog.reasonRequired')); return; }
     const n = Number(days);
     if (spec.days !== undefined && (!Number.isInteger(n) || n < 1 || n > 365)) { setError(t('adm.dialog.daysInvalid')); return; }
-    setBusy(true); setError(null);
+    locked.current = true; setBusy(true); setError(null);
     try {
       await spec.onConfirm({ reason: reason.trim(), days: n, extra });
       onClose();
       spec.onDone?.();
     } catch (e) {
       setError(t('adm.common.error', { message: errText(e) }));
-    } finally { setBusy(false); }
+      locked.current = false; setBusy(false);
+    }
   };
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
@@ -302,27 +386,21 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
             <View style={{ marginBottom: 10 }}>
               <Text style={s.filterLabel}>{t('adm.dialog.days')}</Text>
               <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                {[1, 3, 7, 14, 30].map((d) => (
-                  <Pressable key={d} onPress={() => setDays(String(d))} style={[s.chip, days === String(d) && s.chipOn]}>
-                    <Text style={[s.chipText, days === String(d) && { color: colors.paper }]}>{d}</Text>
-                  </Pressable>
-                ))}
+                {[1, 3, 7, 14, 30].map((d) => <Chip key={d} label={String(d)} on={days === String(d)} onPress={() => setDays(String(d))} />)}
                 <TextInput value={days} onChangeText={(v) => setDays(v.replace(/[^0-9]/g, ''))} keyboardType="number-pad" style={[s.search, { width: 80, marginBottom: 0 }]} accessibilityLabel={t('adm.dialog.days')} />
               </View>
             </View>
           ) : null}
-          {need !== 'none' ? (
-            <View>
-              <Text style={s.filterLabel}>{spec.reasonLabel ?? (need === 'required' ? t('adm.dialog.reason') : t('adm.dialog.reasonOptional'))}</Text>
-              {spec.presets?.length ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
-                  {spec.presets.map((p) => <Pressable key={p} onPress={() => setReason(p)} style={s.chip}><Text style={s.chipText}>{p}</Text></Pressable>)}
-                </View>
-              ) : null}
-              <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} style={[s.search, { minHeight: 80, textAlignVertical: 'top' }]}
-                accessibilityLabel={spec.reasonLabel ?? t('adm.dialog.reason')} />
-            </View>
-          ) : null}
+          <View>
+            <Text style={s.filterLabel}>{spec.reasonLabel ?? (need === 'required' ? t('adm.dialog.reason') : t('adm.dialog.reasonOptional'))}</Text>
+            {spec.presets?.length ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                {spec.presets.map((p) => <Chip key={p} label={p} on={false} onPress={() => setReason(p)} />)}
+              </View>
+            ) : null}
+            <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} style={[s.search, { minHeight: 80, textAlignVertical: 'top' }]}
+              accessibilityLabel={spec.reasonLabel ?? (need === 'required' ? t('adm.dialog.reason') : t('adm.dialog.reasonOptional'))} />
+          </View>
           {spec.extra ? (
             <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: extra }} onPress={() => setExtra(!extra)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, marginBottom: 10 }}>
               <View style={[s.box, extra && { backgroundColor: colors.ink }]}>{extra ? <Text style={{ color: colors.paper, fontSize: 11 }}>✓</Text> : null}</View>
@@ -342,14 +420,15 @@ function ActionDialog({ spec, onClose }: { spec: DialogSpec; onClose: () => void
 }
 
 const s = StyleSheet.create({
-  bar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
+  bar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
   word: { fontSize: 20, fontWeight: '900', letterSpacing: -1, color: colors.ink },
   link: { fontSize: 12, fontWeight: '700', color: colors.redDark },
-  nav: { paddingHorizontal: 12, paddingVertical: 10, gap: 6 },
-  tab: { minHeight: 44, justifyContent: 'center', borderWidth: 1, borderColor: colors.ink, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
-  tabOn: { backgroundColor: colors.ink },
-  tabText: { fontSize: 11, fontWeight: '700', color: colors.ink },
-  side: { width: 220, borderRightWidth: 1, borderRightColor: colors.line, paddingHorizontal: 14, paddingVertical: 20 },
+  menuBtn: { minHeight: 44, flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: colors.ink, borderRadius: 22, paddingHorizontal: 14 },
+  menuText: { fontSize: 13, fontWeight: '700', color: colors.ink, flexShrink: 1 },
+  menu: { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line, backgroundColor: colors.white },
+  menuItem: { minHeight: 44, justifyContent: 'center', borderRadius: 10, paddingHorizontal: 12 },
+  navGroup: { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow, marginTop: 6, marginBottom: 4, paddingHorizontal: 12 },
+  side: { width: 220, flexGrow: 0, borderRightWidth: 1, borderRightColor: colors.line },
   sideItem: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 2 },
   sideItemOn: { backgroundColor: colors.ink },
   sideText: { fontSize: 13, fontWeight: '700', color: colors.ink },
@@ -361,6 +440,8 @@ const s = StyleSheet.create({
   td: { paddingVertical: 10, paddingRight: 12 },
   th: { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow },
   cell: { fontSize: 12, color: colors.ink },
+  rowCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 12 },
+  rowCardTitle: { fontSize: 14, fontWeight: '800', color: colors.ink },
   act: { minHeight: 44, minWidth: 44, justifyContent: 'center', maxWidth: '100%', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6, alignSelf: 'flex-start' },
   actText: { textAlign: 'center', flexShrink: 1, color: '#fff', fontSize: 11, fontWeight: '700' },
   badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
@@ -371,7 +452,7 @@ const s = StyleSheet.create({
   kvK: { width: '42%', maxWidth: 150, flexShrink: 1, fontSize: 12, color: colors.sub },
   kvV: { flex: 1, minWidth: 0, fontSize: 12, color: colors.ink },
   filterLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow, marginBottom: 5 },
-  chip: { minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: colors.white },
+  chip: { minHeight: 44, justifyContent: 'center', maxWidth: '100%', borderWidth: 1, borderColor: colors.line, borderRadius: 22, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.white },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontSize: 12, color: colors.ink, fontWeight: '600' },
   search: { borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 14, color: colors.ink, backgroundColor: colors.white, marginBottom: 10 },
