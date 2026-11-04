@@ -17,6 +17,10 @@ verify_jwt = false
 [functions.demo-access]
 verify_jwt = true
 
+# RENVI Playbook purchase check (caller only; asks RevenueCat with REVENUECAT_SECRET_KEY).
+[functions.playbook-sync]
+verify_jwt = true
+
 # Local development/test Auth. Hosted Supabase Auth/SMTP must also be configured in its Dashboard.
 [auth]
 site_url = "http://127.0.0.1:8081"

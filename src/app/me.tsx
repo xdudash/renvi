@@ -14,6 +14,8 @@ import { Row } from '@/components/Row';
 import { UiIcon } from '@/components/UiIcon';
 import type { TranslationKey } from '@/i18n';
 import { useLang } from '@/lib/lang';
+import { LESSON_COUNT, nextLesson, usePlaybook } from '@/lib/playbook';
+import { playbookContent } from '@/playbook';
 
 const ROWS = [
   ['screens.me.rowLang', 'screens.me.rowLangSub', '/settings'],
@@ -65,16 +67,7 @@ export default function Me() {
           <LinkBtn label={t('details.profileNudgeCta')} onPress={() => router.push('/edit-details')} />
         </Card>
       )}
-      {profile?.gender === 'man' ? (
-        <Pressable accessibilityRole="button" onPress={() => router.push('/guide')} style={guideCard}>
-          <View style={guideIcon}><UiIcon name="book" size={22} color="#fff" /></View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontWeight: '800', fontSize: 14, color: colors.ink }}>{t('guide.cardTitle')}</Text>
-            <Text style={{ fontSize: 11, color: colors.sub, marginTop: 3, lineHeight: 15 }}>{t('guide.cardSub')}</Text>
-          </View>
-          <Text style={{ fontSize: 20, color: colors.redDark }}>›</Text>
-        </Pressable>
-      ) : null}
+      {profile?.gender === 'man' ? <PlaybookCard /> : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/likes')} style={tile}>
           <Text style={eyebrow}>{t('screens.me.newSparks')}</Text><Text style={metric}>{incoming.data?.count ?? 0}</Text><Text style={tiny}>{t('screens.me.view')}</Text>
@@ -94,5 +87,30 @@ const tile = { flex: 1, borderWidth: 1, borderColor: colors.line, backgroundColo
 const eyebrow = { fontSize: 9, fontWeight: '800', letterSpacing: 1.2, color: colors.eyebrow } as const;
 const metric = { fontSize: 31, fontWeight: '800', letterSpacing: -1.5, color: colors.ink, marginVertical: 4 } as const;
 const tiny = { fontSize: 10, color: colors.muted } as const;
-const guideCard = { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.chipBorder, backgroundColor: colors.redWash, borderRadius: 18, padding: 14, marginBottom: 10 } as const;
-const guideIcon = { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' } as const;
+const pbCard = { backgroundColor: colors.ink, borderRadius: 20, padding: 16, gap: 12, marginBottom: 10 } as const;
+const pbIcon = { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' } as const;
+const pbTrack = { height: 6, borderRadius: 3, backgroundColor: '#3A3633', overflow: 'hidden' } as const;
+
+// Entry to the RENVI Playbook (men's course): progress and the next lesson.
+function PlaybookCard() {
+  const { t, lang } = useLang();
+  const { session } = useSession();
+  const pb = usePlaybook(session?.user.id);
+  const next = nextLesson(pb);
+  const titles = playbookContent(lang).titles;
+  const pct = Math.round((pb.done.length / LESSON_COUNT) * 100);
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={t('playbook.cardTitle')} onPress={() => router.push('/playbook')} style={pbCard}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={pbIcon}><UiIcon name="book" size={21} color="#fff" /></View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontWeight: '800', fontSize: 16, color: '#fff' }}>{t('playbook.cardTitle')}</Text>
+          <Text style={{ fontSize: 12, color: '#CFC9C1', marginTop: 2 }}>{t('playbook.cardSub')}</Text>
+        </View>
+        <Text style={{ fontSize: 22, color: '#fff' }}>›</Text>
+      </View>
+      <View style={pbTrack}><View style={{ width: `${pct}%`, height: 6, borderRadius: 3, backgroundColor: colors.red }} /></View>
+      <Text style={{ fontSize: 12.5, color: '#F3B7AE' }}>{next ? t('playbook.cardNext', { title: titles[next] }) : t('playbook.cardDone')}</Text>
+    </Pressable>
+  );
+}
