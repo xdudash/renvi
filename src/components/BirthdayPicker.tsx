@@ -24,7 +24,7 @@ export function BirthdayPicker({value,onChange,disabled=false}:{value:string;onC
       <View style={{flex:1,backgroundColor:'rgba(0,0,0,0.35)',justifyContent:'flex-end'}}>
         <View accessibilityViewIsModal style={{backgroundColor:'#FDFCF9',borderTopLeftRadius:24,borderTopRightRadius:24,padding:20,paddingBottom:36,maxHeight:'75%'}}>
           <Text accessibilityRole="header" style={{fontSize:20,marginBottom:10}}>{part?t(`identity.${part}`):''}</Text>
-          <ScrollView>{values.map(v=><Pressable key={v} accessibilityRole="button" accessibilityState={{selected:part!==null && ({day,month,year}[part])===v}} onPress={()=>select(v)} style={{minHeight:48,justifyContent:'center',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#ece5df'}}><Text style={{fontSize:18}}>{v}</Text></Pressable>)}</ScrollView>
+          <ScrollView style={{flexGrow:0,flexShrink:1}} contentContainerStyle={{paddingBottom:8}}>{values.map(v=><Pressable key={v} accessibilityRole="button" accessibilityState={{selected:part!==null && ({day,month,year}[part])===v}} onPress={()=>select(v)} style={{minHeight:48,justifyContent:'center',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#ece5df'}}><Text style={{fontSize:18}}>{v}</Text></Pressable>)}</ScrollView>
           <Pressable accessibilityRole="button" onPress={()=>setPart(null)} style={{minHeight:48,alignItems:'center',justifyContent:'center',marginTop:8}}><Text>{t('identity.close')}</Text></Pressable>
         </View>
       </View>

@@ -20,12 +20,4 @@ export const ruIdentity = {
   'identity.requestNew': 'Запросить новое письмо',
   'identity.email': 'Электронная почта',
   'identity.confirmRequired': 'Подтвердите почту по ссылке из письма. После подтверждения вы сможете продолжить.',
-  'identity.adminHeading': 'Исправление даты рождения и гендера',
-  'identity.adminReason': 'Причина исправления (обязательно)',
-  'identity.adminBirthday': 'Дата рождения (ГГГГ-ММ-ДД)',
-  'identity.adminGender': 'Гендер',
-  'identity.adminSave': 'Сохранить исправление',
-  'identity.adminSaved': 'Исправление сохранено и записано в журнал.',
-  'identity.adminInvalid': 'Проверьте дату, гендер и причину (не менее 3 символов).',
-  'identity.adminFailed': 'Не удалось сохранить исправление.',
 } as const;
