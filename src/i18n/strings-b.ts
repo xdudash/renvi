@@ -259,7 +259,7 @@ export const ruB = {
   'screens.inviteInviteCode.ssylkaPersonalnayaBezopasn': 'Ссылка персональная · безопасная',
   'screens.inviteInviteCode.uMenyaUzheEst': 'У меня уже есть аккаунт',
   'screens.legal.dokumenty': 'ДОКУМЕНТЫ',
-  'screens.legal.dokumentyDolzhnyBytProvere': 'Документы открываются в браузере. Вопросы по ним можно задать через «Поддержку».',
+  'screens.legal.dokumentyDolzhnyBytProvere': 'Вопросы по документам можно задать через «Поддержку».',
   'screens.legal.kakIspolzuyutsyaDannye': 'Как используются данные',
   'screens.legal.neUdalosOtkrytDokument': 'Не удалось открыть документ',
   'screens.legal.politikaPrivatnosti': 'Политика приватности',
