@@ -120,12 +120,13 @@ await step('warn a user: sanction + audit row, user sees the warning', async () 
 
 await step('ban then unban a user: profile state, sanctions and audit rows', async () => {
   await go(ap, '/admin/user/' + banee.uid);
-  await ap.getByText('Заблокировать', { exact: true }).first().click();
+  const seen = async (what) => `${what}: ap=${ap.url()} text=${(await ap.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 400)}`;
+  await ap.getByText('Заблокировать', { exact: true }).first().click({ timeout: 8000 }).catch(async () => { throw new Error(await seen('ban button')); });
   await confirm(ap, 'Заблокировать', 'aui: мошенничество подтверждено');
   eq(sql(`select suspended_until from public.profiles where id = '${banee.uid}'`), 'infinity', 'suspended_until after ban');
   eq(auditCount('user.ban', banee.uid), 1, 'audit rows for ban');
   await go(ap, '/admin/user/' + banee.uid);
-  await ap.getByText('Разблокировать', { exact: true }).first().click();
+  await ap.getByText('Разблокировать', { exact: true }).first().click({ timeout: 8000 }).catch(async () => { throw new Error(await seen('unban button')); });
   await confirm(ap, 'Разблокировать', 'aui: ошибка модератора');
   eq(sql(`select suspended_until is null from public.profiles where id = '${banee.uid}'`), 't', 'suspended_until after unban');
   eq(sql(`select count(*) from public.account_sanctions where user_id = '${banee.uid}' and kind = 'ban' and lifted_at is null`), 0, 'active bans');
