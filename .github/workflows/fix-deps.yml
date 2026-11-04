@@ -1,0 +1,31 @@
+name: Fix deps (one-off)
+
+# One-off: installs the Expo-compatible version of expo-splash-screen (required by app.config.js since 171c7a8) and
+# commits package.json / package-lock.json back to this branch. Runs only on pushes to the deps-fix branch.
+on:
+  push:
+    branches: [deps-fix]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx expo install expo-splash-screen
+      - name: Expo compatibility report
+        run: npx expo install --check || true
+      - name: Commit lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git diff --cached --quiet && echo "nothing to commit" && exit 0
+          git commit -m "Add expo-splash-screen (version resolved by expo install)"
+          git push
