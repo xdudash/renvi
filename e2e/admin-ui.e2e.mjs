@@ -128,7 +128,7 @@ await step('ban then unban a user: profile state, sanctions and audit rows', asy
   eq(auditCount('user.ban', banee.uid), 1, 'audit rows for ban');
   await go(ap, '/admin/user/' + banee.uid);
   await ap.getByText('Разблокировать', { exact: true }).first().click({ timeout: 8000 }).catch(async () => { throw new Error(await seen('unban button')); });
-  await confirm(ap, 'Разблокировать', 'aui: ошибка модератора');
+  await confirm(ap, 'Снять', 'aui: ошибка модератора');
   eq(sql(`select suspended_until is null from public.profiles where id = '${banee.uid}'`), 't', 'suspended_until after unban');
   eq(sql(`select count(*) from public.account_sanctions where user_id = '${banee.uid}' and kind = 'ban' and lifted_at is null`), 0, 'active bans');
   eq(auditCount('user.lift', banee.uid) >= 1, true, 'audit row for unban');
