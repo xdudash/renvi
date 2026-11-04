@@ -229,6 +229,14 @@
       "sk": "./locales/sk.json",
       "cs": "./locales/cs.json",
       "uk": "./locales/uk.json"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/db6a2f51-ff51-43ca-9ae9-e4de7b981bd7"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "db6a2f51-ff51-43ca-9ae9-e4de7b981bd7"
+      }
     }
   }
 }
