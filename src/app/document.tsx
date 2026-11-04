@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { BackLink, Screen, Title } from '@/components/ui';
+import { OperatorInfo } from '@/components/OperatorInfo';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
 import type { TranslationKey } from '@/i18n';
@@ -25,6 +26,7 @@ export default function DocumentScreen() {
           <Text style={{ fontSize: 13, lineHeight: 20, color: colors.sub }}>{t(`doc.${key}.b${i + 1}` as TranslationKey)}</Text>
         </View>
       ))}
+      <OperatorInfo />
     </Screen>
   );
 }
