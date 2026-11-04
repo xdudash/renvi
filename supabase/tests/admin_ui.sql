@@ -1,4 +1,4 @@
--- Server side of the admin review (migration 0034) and the guarantees the admin screens rely on:
+-- Server side of the admin review (migration 0035) and the guarantees the admin screens rely on:
 -- discover_recycle is validated, only a confirmed account can be made admin, the default report queue ("open")
 -- keeps a taken report in front of the moderator, a warning is visible to the warned user and restricts nothing,
 -- unbanning works, the app error log is readable by admins only, every audit-log filter group has rows.
