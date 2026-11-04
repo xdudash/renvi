@@ -36,7 +36,7 @@ async function confirm(p, label, reason) {
 const auditCount = (action, target) => Number(sql(`select count(*) from public.admin_actions where action like '${action}' and target_user = '${target}'`));
 
 // ---- fixtures ----
-const photo = [ASSETS + 'profile-1.jpg'];
+const photo = [ASSETS + 'profile-1.jpg', ASSETS + 'profile-2.jpg'];
 const person = (email, name, extra = {}) => makeProfile({
   email, password: 'renvi-test-1', photos: photo, prompts: [['Моё идеальное первое свидание —', 'кофе и прогулка']],
   patch: { display_name: name, birthdate: '1997-04-12', gender: 'man', seeking: 'women', intent: 'serious', country: 'SK', city: 'Bratislava', ...extra },
