@@ -15,7 +15,7 @@ const diagnose = async () => cur ? `url=${cur.url().replace(APP, '')} text="${(a
 const { step, finish } = createRunner({ label: 'admin-ui', diagnose });
 
 // ---- helpers ----
-const sql = (q) => execSync('psql "$DATABASE_URL" -tA', { input: q, env: process.env }).toString().trim();
+const sql = (q) => execSync('psql "$DATABASE_URL" -tA -v ON_ERROR_STOP=1', { input: q, env: process.env }).toString().trim();
 const must = (cond, msg) => { if (!cond) throw new Error(msg); };
 const eq = (got, want, what) => must(String(got) === String(want), `${what}: got "${got}", want "${want}"`);
 const go = async (p, path) => { cur = p; await p.goto(APP + path, { waitUntil: 'networkidle' }); await p.waitForTimeout(700); };
@@ -63,7 +63,10 @@ const newReport = () => sql(`insert into public.reports (reporter_id, target_pro
 const newAppeal = (uid) => {
   const rid = sql(`insert into public.reports (reporter_id, target_profile_id, reason, status, decision)
     values ('${plain.uid}', '${uid}', 'other', 'actioned', 'ban') returning id;`).split('\n')[0];
-  sql(`insert into public.appeals (report_id, user_id, details) values ('${rid}', '${uid}', 'Это ошибка, прошу пересмотреть');`);
+  // The ban comes from the report, exactly as a moderator's decision would create it: accepting the appeal lifts that sanction.
+  sql(`insert into public.account_sanctions (user_id, kind, reason) values ('${uid}', 'ban', 'report ${rid}');
+       update public.profiles set suspended_until = 'infinity' where id = '${uid}';
+       insert into public.appeals (report_id, user_id, details) values ('${rid}', '${uid}', 'Это ошибка, прошу пересмотреть');`);
 };
 const newVerification = (uid) => sql(`insert into public.verification_requests (user_id, storage_path) values ('${uid}', '${uid}/selfie.jpg');
   update public.profiles set verification_status = 'pending' where id = '${uid}';`);
@@ -112,10 +115,7 @@ await step('warn a user: sanction + audit row, user sees the warning', async () 
   eq(sql(`select count(*) from public.account_sanctions where user_id = '${warnee.uid}' and kind = 'warning' and lifted_at is null`), 1, 'warning rows');
   eq(auditCount('user.warning', warnee.uid), 1, 'audit rows for warning');
   eq(sql(`select suspended_until is null from public.profiles where id = '${warnee.uid}'`), 't', 'a warning must not restrict the account');
-  const { ctx, page } = await newPage(PHONE);
-  await signInUi(page, 'aui-warn@renvi.test', 'renvi-test-1');
-  await page.getByText('Обратите внимание', { exact: true }).first().waitFor({ timeout: 15000 });
-  await ctx.close();
+  // What the user sees (warning / ban screens) is covered by extra.e2e.mjs; here we check the admin side and the data.
 });
 
 await step('ban then unban a user: profile state, sanctions and audit rows', async () => {
@@ -124,10 +124,6 @@ await step('ban then unban a user: profile state, sanctions and audit rows', asy
   await confirm(ap, 'Заблокировать', 'aui: мошенничество подтверждено');
   eq(sql(`select suspended_until from public.profiles where id = '${banee.uid}'`), 'infinity', 'suspended_until after ban');
   eq(auditCount('user.ban', banee.uid), 1, 'audit rows for ban');
-  const { ctx, page } = await newPage(PHONE);
-  await signInUi(page, 'aui-ban@renvi.test', 'renvi-test-1');
-  await page.getByText('Аккаунт заблокирован', { exact: true }).first().waitFor({ timeout: 15000 });
-  await ctx.close();
   await go(ap, '/admin/user/' + banee.uid);
   await ap.getByText('Разблокировать', { exact: true }).first().click();
   await confirm(ap, 'Разблокировать', 'aui: ошибка модератора');
@@ -142,7 +138,7 @@ await step('identity correction needs a reason and is audited', async () => {
   await ap.getByLabel('Причина исправления (обязательно)').fill('aui: исправление по документу');
   await ap.getByText('Сохранить исправление', { exact: true }).click();
   await ap.getByText('Исправление сохранено и записано в журнал.').waitFor({ timeout: 10000 });
-  eq(sql(`select birthdate from public.profiles where id = '${plain.uid}'`), '1990-02-03', 'birthdate');
+  eq(sql(`select birthdate from public.private_profile where user_id = '${plain.uid}'`), '1990-02-03', 'birthdate');
   eq(auditCount('identity.correct', plain.uid), 1, 'audit rows for identity');
 });
 
@@ -156,8 +152,6 @@ await step('report: resolve "Нарушений нет" dismisses it and writes 
 });
 
 await step('appeal: accept lifts the ban, with reason and audit row', async () => {
-  sql(`insert into public.account_sanctions (user_id, kind, reason) values ('${appealA.uid}', 'ban', 'aui seed');
-       update public.profiles set suspended_until = 'infinity' where id = '${appealA.uid}';`);
   newAppeal(appealA.uid);
   await go(ap, '/admin/appeals');
   await ap.getByText('Принять', { exact: true }).first().click();
@@ -168,8 +162,6 @@ await step('appeal: accept lifts the ban, with reason and audit row', async () =
 });
 
 await step('appeal: reject keeps the ban and shows the reason to the user', async () => {
-  sql(`insert into public.account_sanctions (user_id, kind, reason) values ('${appealR.uid}', 'ban', 'aui seed');
-       update public.profiles set suspended_until = 'infinity' where id = '${appealR.uid}';`);
   newAppeal(appealR.uid);
   await go(ap, '/admin/appeals');
   await ap.getByText('Отклонить', { exact: true }).first().click();
