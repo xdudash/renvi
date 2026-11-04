@@ -8,3 +8,6 @@ export function nextOnboardingRoute(profile: Record<string, any> | null): string
   return `/${ONBOARDING[step]}`;
 }
 export const stepIndex = (r: OnbRoute) => ONBOARDING.indexOf(r);
+
+/** Set by "save draft and leave": the welcome screen then stays on screen instead of forwarding to the draft. */
+export const welcomeHold = { on: false };

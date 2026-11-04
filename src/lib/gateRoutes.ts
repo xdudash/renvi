@@ -30,3 +30,16 @@ export function gateTarget(path: string, signedIn: boolean, profile: P, loadErro
   if (!profile?.onboarding_done && !isPublic && !ONBOARDING_OK(path)) return nextOnboardingRoute(profile);
   return null;
 }
+
+/**
+ * Where the welcome screen ("/") sends a signed-in user, or null to stay. Finished profile -> Discover; unfinished
+ * profile -> its saved onboarding step, so a navigation that lands on "/" mid-profile (stack reset, deep link) never
+ * leaves the person on the sign-up screen. `hold` = the person chose "save draft and leave". Sanctioned accounts are
+ * handled by gateTarget, never here.
+ */
+export function welcomeTarget(signedIn: boolean, profile: P, loadError = false, emailConfirmed = true, hold = false, now: Date = new Date()): string | null {
+  if (!signedIn || isBanned(profile) || isSuspended(profile, now)) return null;
+  if (profile?.onboarding_done) return '/discover';
+  if (hold || loadError || !emailConfirmed) return null;
+  return nextOnboardingRoute(profile);
+}
