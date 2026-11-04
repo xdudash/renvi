@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Eyebrow, useToast } from './ui';
 import { colors } from '@/theme/tokens';
 import { api } from '@/lib/api';
-import { ONBOARDING, type OnbRoute } from '@/lib/onboarding';
+import { ONBOARDING, welcomeHold, type OnbRoute } from '@/lib/onboarding';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 
@@ -53,6 +53,7 @@ export function useStepSave(route: OnbRoute) {
   };
   const saveDraftAndExit = async (patch: Record<string, unknown>) => {
     try { await api.saveOnboarding({ ...patch, onboarding_step: idx }); toast(t('components.Onboarding.chernovikAnketySohranen')); } catch { toast(t('components.Onboarding.neUdalosSohranitChernovik')); }
+    welcomeHold.on = true;
     router.replace('/');
   };
   return { save, busy, saveDraftAndExit };

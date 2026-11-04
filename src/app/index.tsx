@@ -6,7 +6,8 @@ import { Btn, LinkBtn, Screen, Tiny } from '@/components/ui';
 import { colors } from '@/theme/tokens';
 import { useSession } from '@/lib/session';
 import { LANGUAGE_NAMES, useLang } from '@/lib/lang';
-import { nextOnboardingRoute } from '@/lib/onboarding';
+import { nextOnboardingRoute, welcomeHold } from '@/lib/onboarding';
+import { welcomeTarget } from '@/lib/gateRoutes';
 
 // 01 · Обложка (welcome)
 export default function Welcome() {
@@ -15,12 +16,14 @@ export default function Welcome() {
 
   useEffect(() => {
     if (!ready || !session) return;
-    if (profile?.onboarding_done) router.replace('/discover');
-    // A new account has no profile row until the first onboarding step. Once the e-mail is confirmed (sign-in or the
-    // link from the letter) it goes straight to that step, as signup did before confirmation was required. Without
-    // this the welcome screen showed only "sign up / sign in" and signing in returned here in a loop.
-    else if (!profile && !loadError && session.user.email_confirmed_at) router.replace(nextOnboardingRoute(null) as never);
+    // Finished profile -> Discover. Unfinished (or a brand-new confirmed account) -> its onboarding step: "/" is never
+    // a dead end in the middle of the profile. Only "save draft and leave" keeps the welcome screen (welcomeHold).
+    const to = welcomeTarget(true, profile, loadError, !!session.user.email_confirmed_at, welcomeHold.on);
+    if (to) router.replace(to as never);
   }, [ready, session, profile, loadError]);
+
+  // A different person signing in later must not inherit the previous "save draft and leave".
+  useEffect(() => { if (ready && !session) welcomeHold.on = false; }, [ready, session]);
 
   // Web: when Auth falls back to the Site URL (redirect not allow-listed) the confirmation tokens land on the home
   // page. Hand them to the callback screen instead of silently dropping them.
@@ -38,7 +41,7 @@ export default function Welcome() {
 
   return (
     <Screen>
-      {draft ? <Btn kind="secondary" label={t('screens.index.prodolzhitAnketu')} onPress={() => router.push(draft as never)} /> : null}
+      {draft ? <Btn kind="secondary" label={t('screens.index.prodolzhitAnketu')} onPress={() => { welcomeHold.on = false; router.push(draft as never); }} /> : null}
       <View style={s.brandRow}>
         <BrandMark size={55} />
         <Text style={s.wordmark}>renvi</Text>

@@ -6,7 +6,7 @@ const load = (p) => import(new URL(`../src/lib/${p}.ts`, import.meta.url).href);
 const { parseRecoveryUrl, planRecovery } = await load('recovery');
 const { createOutbox, withLock, reconcile, outboxKey } = await load('outbox');
 const { mergeSnapshot } = await load('snapshot');
-const { gateTarget, RESTRICTED_OK } = await load('gateRoutes');
+const { gateTarget, welcomeTarget, RESTRICTED_OK } = await load('gateRoutes');
 
 let n = 0;
 const ok = (name, fn) => Promise.resolve(fn()).then(() => { n++; }, (e) => { console.error(`FAIL ${name}`); throw e; });
@@ -20,6 +20,16 @@ await ok('recovery implicit fragment', () => assert.deepEqual(
 await ok('recovery expired link', () => assert.equal(planRecovery('https://x.app/reset-password#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired').kind, 'invalid'));
 await ok('recovery wrong type ignored', () => assert.equal(planRecovery('x://r#access_token=a&refresh_token=b&type=signup').kind, 'none'));
 await ok('recovery empty', () => { assert.equal(planRecovery(null).kind, 'none'); assert.deepEqual(parseRecoveryUrl(''), {}); });
+
+// Welcome screen never strands a signed-in person mid-profile.
+await ok('welcome: not signed in stays', () => assert.equal(welcomeTarget(false, null), null));
+await ok('welcome: finished profile -> discover', () => assert.equal(welcomeTarget(true, { onboarding_done: true }), '/discover'));
+await ok('welcome: unfinished profile -> saved step', () => assert.equal(welcomeTarget(true, { onboarding_done: false, onboarding_step: 3 }), '/ob-intent'));
+await ok('welcome: new confirmed account -> step 1', () => assert.equal(welcomeTarget(true, null), '/ob-age'));
+await ok('welcome: unconfirmed account stays', () => assert.equal(welcomeTarget(true, null, false, false), null));
+await ok('welcome: load error stays', () => assert.equal(welcomeTarget(true, null, true), null));
+await ok('welcome: save-draft-and-leave stays', () => assert.equal(welcomeTarget(true, { onboarding_step: 2 }, false, true, true), null));
+await ok('welcome: banned left to the gate', () => assert.equal(welcomeTarget(true, { onboarding_step: 2, suspended_until: 'infinity' }), null));
 
 // C2: banned / suspended users keep data-rights screens
 const banned = { onboarding_done: true, suspended_until: 'infinity' };
