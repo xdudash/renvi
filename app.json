@@ -223,11 +223,6 @@
       "typedRoutes": true
     },
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F7F5F2"
-    },
     "locales": {
       "ru": "./locales/ru.json",
       "en": "./locales/en.json",
