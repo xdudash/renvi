@@ -119,8 +119,9 @@ await step('warn a user: sanction + audit row, user sees the warning', async () 
 });
 
 await step('ban then unban a user: profile state, sanctions and audit rows', async () => {
+  const navs = []; const onNav = (f) => { if (f === ap.mainFrame()) navs.push(f.url().replace(APP, '')); }; ap.on('framenavigated', onNav);
   await go(ap, '/admin/user/' + banee.uid);
-  const seen = async (what) => `${what}: ap=${ap.url()} text=${(await ap.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 400)}`;
+  const seen = async (what) => `${what}: ap=${ap.url()} navs=${navs.join(' > ')} uid=${banee.uid} text=${(await ap.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 400)}`;
   await ap.getByText('Заблокировать', { exact: true }).first().click({ timeout: 8000 }).catch(async () => { throw new Error(await seen('ban button')); });
   await confirm(ap, 'Заблокировать', 'aui: мошенничество подтверждено');
   eq(sql(`select suspended_until from public.profiles where id = '${banee.uid}'`), 'infinity', 'suspended_until after ban');
