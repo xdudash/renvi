@@ -3,14 +3,14 @@ import { nextOnboardingRoute } from './onboarding.ts';
 
 type P = Record<string, any> | null;
 
-export const PUBLIC = ['/', '/language', '/signin', '/signup', '/forgot', '/reset-password', '/auth-callback', '/confirmation', '/captcha', '/invite-not-found', '/legal', '/community-rules', '/support-help', '/not-found', '/safety'];
+export const PUBLIC = ['/', '/language', '/signin', '/signup', '/forgot', '/reset-password', '/auth-callback', '/confirmation', '/captcha', '/invite-not-found', '/legal', '/document', '/community-rules', '/support-help', '/not-found', '/safety'];
 // Account controls stay reachable with an unfinished profile (deletion and data export must always be available).
-export const ACCOUNT_OK = ['/profile', '/media-viewer', '/settings', '/delete-account', '/delete-confirm', '/data-export', '/privacy-data', '/legal', '/support-help', '/community-rules', '/safety', '/language'];
+export const ACCOUNT_OK = ['/profile', '/media-viewer', '/settings', '/delete-account', '/delete-confirm', '/data-export', '/privacy-data', '/legal', '/document', '/support-help', '/community-rules', '/safety', '/language'];
 export const ONBOARDING_OK = (p: string) => p.startsWith('/admin') || p.startsWith('/ob-') || p.startsWith('/verification-') || ACCOUNT_OK.includes(p);
 // Banned / suspended users: sanction screens, appeal and support, and the data-rights screens (export, privacy, account
 // deletion) which must never be blocked.
 export const RESTRICTED_OK = [
-  '/appeal', '/support-help', '/support-share', '/data-export', '/report-status', '/legal', '/community-rules',
+  '/appeal', '/support-help', '/support-share', '/data-export', '/report-status', '/legal', '/document', '/community-rules',
   '/account-suspended', '/account-banned', '/account-warning', '/settings',
   '/privacy-data', '/delete-account', '/delete-confirm', '/reset-password',
 ];
