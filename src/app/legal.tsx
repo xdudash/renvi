@@ -4,6 +4,7 @@ import { BackLink, Card, Screen, Tiny, Title, useToast } from '@/components/ui';
 import { Row } from '@/components/Row';
 import { useAsync } from '@/hooks/useAsync';
 import { api } from '@/lib/api';
+import { OperatorInfo } from '@/components/OperatorInfo';
 import { useLang } from '@/lib/lang';
 import type { TranslationKey } from '@/i18n';
 
@@ -31,6 +32,7 @@ export default function Legal() {
       <BackLink />
       <Title kicker={t('screens.legal.dokumenty')} heading={t('screens.legal.pravilaIProzrachnost')} sub={t('screens.legal.prosmotriteAktualnyeDokume')} />
       <Card tight>{DOCS.map(([k, a, b]) => <Row key={k} label={t(a)} sub={t(b)} right={data?.[k] ? '↗' : '›'} onPress={() => open(k)} />)}</Card>
+      <OperatorInfo />
       <Tiny>{t('screens.legal.dokumentyDolzhnyBytProvere')}</Tiny>
     </Screen>
   );
