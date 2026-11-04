@@ -1,9 +1,9 @@
-// Product polish (Nov 2026): grid sizing, drawn detail icons, the men's guide, new strings, App Store permission texts.
+// Product polish (Nov 2026): grid sizing, drawn detail icons, new strings, App Store permission texts.
+// (The free men's guide of that release was replaced by the RENVI Playbook: scripts/tests/playbook.test.mjs.)
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { gridTileSize, SCREEN_GUTTER } from '../../src/lib/grid.ts';
-import { guideChapters } from '../../src/i18n/guide.ts';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
@@ -42,26 +42,8 @@ test('animated values are created once, not read from a ref during render', () =
   }
 });
 
-test('the guide has the same six chapters with four tips in every language, without mixed alphabets', () => {
-  const ru = guideChapters('RU');
-  assert.equal(ru.length, 6);
-  for (const lang of ['RU', 'EN', 'SK', 'CS', 'UA']) {
-    const g = guideChapters(lang);
-    assert.equal(g.length, ru.length, lang);
-    for (const c of g) {
-      assert.ok(c.title.trim() && c.lead.trim(), lang);
-      assert.equal(c.tips.length, 4, `${lang}: ${c.title}`);
-      const text = [c.title, c.lead, ...c.tips].join(' ');
-      if (lang === 'EN' || lang === 'SK' || lang === 'CS') assert.doesNotMatch(text, /[А-Яа-яЁёІіЇїЄє]/, `${lang}: Cyrillic letter in "${c.title}"`);
-      else assert.doesNotMatch(text.replace(/RENVI|Татры|[A-Z]{2,}/g, ''), /[а-яіїє][a-z]|[a-z][а-яіїє]/i, `${lang}: Latin letter inside a word in "${c.title}"`);
-    }
-  }
-  assert.equal(guideChapters('XX').length, ru.length, 'unknown language falls back to Russian');
-});
-
 test('new strings exist in every language', async () => {
-  const keys = ['guide.kicker', 'guide.heading', 'guide.sub', 'guide.progress', 'guide.markRead', 'guide.readAgain', 'guide.cta', 'guide.cardTitle', 'guide.cardSub',
-    'screens.discover.stampPass', 'screens.discover.stampSpark', 'screens.discover.openProfile',
+  const keys = ['screens.discover.stampPass', 'screens.discover.stampSpark', 'screens.discover.openProfile',
     'screens.obVerify.skip', 'screens.obReview.skippedTitle', 'screens.obReview.skippedSub'];
   for (const l of ['ru', 'en', 'sk', 'cs', 'ua']) {
     const d = await load(l);
