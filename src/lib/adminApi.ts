@@ -71,6 +71,8 @@ export type UserDetail = {
 };
 
 export type ReportState = 'new' | 'review' | 'resolved';
+// 'open' = new + in review (the default queue: a report you just took stays in front of you).
+export type ReportFilter = ReportState | 'open';
 export type ReportRow = {
   id: string; reason: string; details: string | null; status: 'open' | 'actioned' | 'dismissed'; state: ReportState;
   decision: string | null; created_at: string; decided_at: string | null; resolution_note: string | null;
@@ -102,6 +104,8 @@ export type AuditRow = {
   reason: string | null; details: Record<string, unknown>;
 };
 export type AdminRow = { user_id: string; email: string; name: string | null; created_at: string; added_by_email: string | null; is_me: boolean };
+export type ErrorEvent = { id: string; area: string; message: string; created_at: string; user_id: string | null };
+export type DemoAccount = { id: string; email: string; display_name: string | null };
 
 export const adminApi = {
   dashboard: () => call<Dashboard>('admin_dashboard'),
@@ -118,8 +122,11 @@ export const adminApi = {
   verify: (user: string, decision: 'approved' | 'rejected' | 'revoked', reason?: string) =>
     call<void>('admin_verification_decide', { p_user: user, p_decision: decision, p_reason: reason ?? null }),
   removePhoto: (photo: string, reason: string) => call<void>('admin_remove_photo', { p_photo: photo, p_reason: reason }),
+  // Birthday and gender are locked for the user; the server needs both values and a reason, and logs the change.
+  correctIdentity: (user: string, birthdate: string, gender: string, reason: string) =>
+    call<void>('admin_correct_identity', { p_user: user, p_birthdate: birthdate, p_gender: gender, p_reason: reason }),
 
-  reports: (f: { state: ReportState | null; reason?: string | null; country?: string | null; assigned?: 'me' | 'none' | null; target?: string | null; limit: number; offset: number }) =>
+  reports: (f: { state: ReportFilter | null; reason?: string | null; country?: string | null; assigned?: 'me' | 'none' | null; target?: string | null; limit: number; offset: number }) =>
     call<Page<ReportRow>>('admin_report_queue', {
       p_state: f.state, p_reason: f.reason ?? null, p_country: f.country ?? null, p_assigned: f.assigned ?? null,
       p_target: f.target ?? null, p_limit: f.limit, p_offset: f.offset,
@@ -150,6 +157,15 @@ export const adminApi = {
 
   audit: (f: { action?: string | null; admin?: string | null; target?: string | null; limit: number; offset: number }) =>
     call<Page<AuditRow>>('admin_audit_log', { p_action: f.action ?? null, p_admin: f.admin ?? null, p_target: f.target ?? null, p_limit: f.limit, p_offset: f.offset }),
+
+  // Client errors reported by the app (read-only; admins are allowed to read the table by RLS).
+  errors: async (limit: number, offset: number): Promise<Page<ErrorEvent>> => {
+    const { data, error, count } = await supabase.from('error_events').select('id, area, message, created_at, user_id', { count: 'exact' })
+      .order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+    if (error) throw new AdminError(error.message, error.code);
+    return { rows: (data ?? []) as ErrorEvent[], total: count ?? (data?.length ?? 0) };
+  },
+  demoAccounts: () => call<DemoAccount[]>('admin_demo_accounts').then((rows) => rows ?? []),
 
   admins: () => call<AdminRow[]>('admin_list_admins'),
   addAdmin: (email: string, reason: string) => call<string>('admin_add_admin', { p_email: email, p_reason: reason }),

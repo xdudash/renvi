@@ -21,14 +21,23 @@ export default function AdminUsers() {
   const [status, setStatus] = useState<AccountStatus | null>(null);
   const [verif, setVerif] = useState<Verification | null>(null);
   const [demo, setDemo] = useState<Demo | null>(params.demo === '1' ? 'demo' : null);
+  const [demoParam, setDemoParam] = useState(params.demo);
   const [sort, setSort] = useState<Sort | null>('new');
   const [offset, setOffset] = useState(0);
   // Debounced search; any filter change goes back to page 1.
   useEffect(() => { const h = setTimeout(() => { setQ(input.trim()); setOffset(0); }, 350); return () => clearTimeout(h); }, [input]);
   const filter = <T,>(set: (v: T) => void) => (v: T) => { set(v); setOffset(0); };
+  // The dashboard link "show demo profiles" can arrive while this screen is already mounted.
+  // Adjusting state during render (not in an effect) avoids a cascading render.
+  if (params.demo !== demoParam) {
+    setDemoParam(params.demo);
+    if (params.demo === '1') { setDemo('demo'); setOffset(0); }
+  }
 
+  // Country chips follow the launch countries from the settings (plus the chosen one, if it was dropped from them).
   const cfg = useAsync(() => adminApi.config(), []);
-  const countries = Array.from(new Set(['SK', 'CZ', ...(((cfg.data?.launch_countries as string[] | undefined) ?? []))]));
+  const launch = cfg.data?.launch_countries;
+  const countries = Array.from(new Set([...(Array.isArray(launch) ? (launch as string[]) : []), ...(country ? [country] : [])]));
   const { data, error, loading, reload } = useAsync(() => adminApi.users({
     query: q || null, country, status, verification: verif, demo: demo === null ? null : demo === 'demo', sort: sort ?? 'new', limit: LIMIT, offset,
   }), [q, country, status, verif, demo, sort, offset]);
@@ -54,14 +63,14 @@ export default function AdminUsers() {
       {data ? (
         <View style={{ opacity: loading ? 0.5 : 1 }}>
           <Pager total={data.total} offset={offset} limit={LIMIT} onChange={setOffset} />
-          <Tbl widths={[230, 110, 110, 110, 90, 130, 120, 90]}
+          <Tbl widths={[250, 130, 120, 120, 100, 130, 120]}
             head={[t('adm.users.colUser'), t('adm.users.colCountry'), t('adm.users.colStatus'), t('adm.users.colVerif'),
-              t('adm.users.colReports'), t('adm.users.colActive'), t('adm.users.colCreated'), '']}
+              t('adm.users.colReports'), t('adm.users.colActive'), t('adm.users.colCreated')]}
             rows={data.rows.map((u) => [
               <Pressable key="u" accessibilityRole="link" onPress={() => open(u)}>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: colors.ink }}>{u.display_name ?? '—'}{u.age ? `, ${u.age}` : ''}</Text>
                 <Text style={{ fontSize: 11, color: colors.sub }} selectable>{u.email}</Text>
-                <View style={{ flexDirection: 'row', gap: 4, marginTop: 3 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
                   {u.is_demo ? <Badge label={t('adm.users.demo')} tone="red" /> : null}
                   {u.is_admin ? <Badge label={t('adm.users.admin')} tone="ink" /> : null}
                   {!u.onboarding_done ? <Badge label={t('adm.users.draft')} /> : null}
@@ -73,7 +82,6 @@ export default function AdminUsers() {
               <Text key="r" style={{ fontSize: 12, color: u.reports_open > 0 ? colors.red : colors.ink, fontWeight: u.reports_open > 0 ? '800' : '400' }}>{`${u.reports_open} / ${u.reports_total}`}</Text>,
               fmtDate(u.last_active),
               fmtDate(u.created_at),
-              <Act key="o" label={t('adm.users.open')} onPress={() => open(u)} />,
             ])} />
           <Pager total={data.total} offset={offset} limit={LIMIT} onChange={setOffset} />
         </View>

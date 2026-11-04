@@ -13,12 +13,14 @@ export default function AdminAdmins() {
   const { t } = useLang();
   const toast = useToast();
   const [email, setEmail] = useState('');
+  const [bad, setBad] = useState(false);
   const [dialog, openDialog] = useActionDialog();
   const { data, error, loading, reload } = useAsync(() => adminApi.admins(), []);
   const only = (data?.length ?? 0) <= 1;
 
   const add = () => {
-    if (!isEmail(email)) { toast(t('adm.cfg.badEmail')); return; }
+    if (!isEmail(email)) { setBad(true); return; }
+    setBad(false);
     openDialog({
       title: t('adm.admins.addTitle', { email: email.trim() }), body: t('adm.admins.addBody'), confirmLabel: t('adm.admins.add'), tone: 'red',
       onConfirm: ({ reason }) => adminApi.addAdmin(email.trim(), reason),
@@ -39,16 +41,17 @@ export default function AdminAdmins() {
       <Section title={t('adm.admins.addSection')}>
         <Text style={{ fontSize: 12, color: colors.sub, marginBottom: 8 }}>{t('adm.admins.addHint')}</Text>
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextInput value={email} onChangeText={setEmail} placeholder="name@example.com" autoCapitalize="none" autoCorrect={false} keyboardType="email-address"
-            accessibilityLabel={t('adm.admins.email')}
+          <TextInput value={email} onChangeText={(v) => { setEmail(v); setBad(false); }} placeholder="name@example.com" autoCapitalize="none" autoCorrect={false} keyboardType="email-address"
+            accessibilityLabel={t('adm.admins.email')} onSubmitEditing={add}
             style={{ flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 14, backgroundColor: colors.white, color: colors.ink }} />
           <Act label={t('adm.admins.add')} onPress={add} disabled={!email.trim()} />
         </View>
+        {bad ? <Text accessibilityRole="alert" style={{ color: colors.redDark, fontSize: 12, marginTop: 6 }}>{t('adm.cfg.badEmail')}</Text> : null}
       </Section>
       {loading && !data ? <Busy /> : null}
       {data ? (
         <Section title={t('adm.admins.list', { n: data.length })}>
-          <Tbl widths={[240, 150, 140, 200, 160]} head={[t('adm.admins.email'), t('adm.admins.name'), t('adm.admins.since'), t('adm.admins.addedBy'), '']}
+          <Tbl widths={[260, 150, 140, 220, 160]} head={[t('adm.admins.email'), t('adm.admins.name'), t('adm.admins.since'), t('adm.admins.addedBy'), '']}
             rows={data.map((a) => [
               <View key="e" style={{ gap: 3 }}><Text style={{ fontSize: 12, color: colors.ink }} selectable>{a.email}</Text>{a.is_me ? <Badge label={t('adm.admins.you')} tone="ink" /> : null}</View>,
               a.name ?? '—', fmtDate(a.created_at), a.added_by_email ?? t('adm.admins.bySql'),

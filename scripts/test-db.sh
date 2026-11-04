@@ -24,6 +24,7 @@ run_sql supabase/tests/video_calls.sql "video-call"
 run_sql supabase/tests/voice.sql "voice-message"
 run_sql supabase/tests/audit_server.sql "audit server-rules"
 run_sql supabase/tests/admin.sql "admin-panel"
+run_sql supabase/tests/admin_ui.sql "admin-ui (review fixes)"
 run_sql supabase/tests/extensions.sql "extension-portability"
 run_sql supabase/tests/integration.sql "cross-feature"
 

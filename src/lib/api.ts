@@ -208,7 +208,6 @@ export const api = {
     if (error) throw toAppError(error);
     return (data as DateRow) ?? null;
   },
-  stats: () => rpc<Record<string, number>>('admin_stats', { p_country: null }),
   uploadPhoto: async (ownerId: string, uri: string, mime: string, folder: 'profile' | 'verify' | 'chat' = 'profile'): Promise<string> => {
     const ext = mime.startsWith('video') ? 'mp4' : 'jpg';
     const path = `${ownerId}/${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;

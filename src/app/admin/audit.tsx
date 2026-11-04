@@ -6,9 +6,14 @@ import { useAsync } from '@/hooks/useAsync';
 import { adminApi } from '@/lib/adminApi';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import type { TranslationKey } from '@/i18n';
 
 const LIMIT = 50;
-const GROUPS = ['user.', 'report.', 'appeal.', 'verification.', 'config.', 'admin.', 'photo.', 'referral.'] as const;
+// Action prefixes as written by the admin RPCs (user.warning, report.resolve, config.set, identity.correct, demo.password_reset, ...).
+const GROUPS: [string, TranslationKey][] = [
+  ['user.', 'adm.audit.gUser'], ['report.', 'adm.audit.gReport'], ['appeal.', 'adm.audit.gAppeal'], ['verification.', 'adm.audit.gVerification'],
+  ['photo.', 'adm.audit.gPhoto'], ['identity.', 'adm.audit.gIdentity'], ['config.', 'adm.audit.gConfig'], ['admin.', 'adm.audit.gAdmin'], ['demo.', 'adm.audit.gDemo'],
+];
 
 // Who did what and when. Rows are written only by the admin RPCs (admin_actions is read-only for clients).
 export default function AdminAudit() {
@@ -21,7 +26,7 @@ export default function AdminAudit() {
   return (
     <AdminPage title={t('adm.audit.title')} sub={t('adm.audit.sub')} right={<Act label={t('adm.common.refresh')} tone="ghost" onPress={reload} />}>
       <FilterGroup<string> label={t('adm.audit.fAction')} value={action} onChange={(v) => { setAction(v); setOffset(0); }}
-        options={[{ key: null, label: t('adm.common.all') }, ...GROUPS.map((g) => ({ key: g, label: g.replace('.', '') }))]} />
+        options={[{ key: null, label: t('adm.common.all') }, ...GROUPS.map(([key, label]) => ({ key, label: t(label) }))]} />
       {target ? (
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 8 }}>
           <Badge label={t('adm.reports.onlyUser', { id: target.slice(0, 8) })} tone="ink" />
@@ -33,14 +38,14 @@ export default function AdminAudit() {
       {data ? (
         <View style={{ opacity: loading ? 0.5 : 1 }}>
           <Pager total={data.total} offset={offset} limit={LIMIT} onChange={setOffset} />
-          <Tbl widths={[130, 170, 150, 190, 240, 280]}
+          <Tbl widths={[130, 190, 150, 200, 240, 300]}
             head={[t('adm.audit.when'), t('adm.audit.admin'), t('adm.audit.action'), t('adm.audit.target'), t('adm.audit.reason'), t('adm.audit.details')]}
             rows={data.rows.map((a) => [
               fmtDate(a.created_at),
               a.admin_email ?? '—',
               <Text key="a" style={{ fontSize: 12, fontWeight: '700', color: colors.ink }}>{a.action}</Text>,
               a.target_user ? (
-                <Pressable key="t" onPress={() => router.push({ pathname: '/admin/user/[id]', params: { id: a.target_user as string } } as never)}>
+                <Pressable key="t" accessibilityRole="link" onPress={() => router.push({ pathname: '/admin/user/[id]', params: { id: a.target_user as string } } as never)}>
                   <Text style={{ fontSize: 12, color: colors.redDark }}>{a.target_name ?? a.target_email ?? a.target_user.slice(0, 8)}</Text>
                   {a.target_email ? <Text style={{ fontSize: 10, color: colors.sub }}>{a.target_email}</Text> : null}
                 </Pressable>

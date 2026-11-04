@@ -4,20 +4,15 @@ import * as Crypto from 'expo-crypto';
 import * as Clipboard from 'expo-clipboard';
 import { Act, AdminPage, Busy, ErrorNote, Section } from '@/components/AdminUI';
 import { useAsync } from '@/hooks/useAsync';
-import { AdminError } from '@/lib/adminApi';
+import { adminApi, type DemoAccount } from '@/lib/adminApi';
 import { useLang } from '@/lib/lang';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme/tokens';
 
-type Account = { id: string; email: string; display_name: string | null };
+type Account = DemoAccount;
 const text = { color: colors.ink, fontSize: 14 } as const;
 const hint = { color: colors.sub, fontSize: 12 } as const;
 
-async function loadAccounts(): Promise<Account[]> {
-  const { data, error } = await supabase.rpc('admin_demo_accounts');
-  if (error) throw new AdminError(error.message, error.code);
-  return data ?? [];
-}
 function AccountAccess({ account }: { account: Account }) {
   const { t } = useLang();
   const [custom, setCustom] = useState('');
@@ -76,12 +71,12 @@ function AccountAccess({ account }: { account: Account }) {
 }
 export default function AdminDemoAccess() {
   const { t } = useLang();
-  const accounts = useAsync(loadAccounts, []);
+  const accounts = useAsync(() => adminApi.demoAccounts(), []);
   return (
-    <AdminPage title={t('adm.demo.title')} sub={t('adm.demo.sub')} right={<Act label={t('adm.common.refresh')} onPress={accounts.reload} />}>
+    <AdminPage title={t('adm.demo.title')} sub={t('adm.demo.sub')} right={<Act label={t('adm.common.refresh')} tone="ghost" onPress={accounts.reload} />}>
       <Text style={[hint, { marginBottom: 16 }]}>{t('adm.demo.note')}</Text>
       {accounts.error ? <ErrorNote message={t('adm.demo.failed')} onRetry={accounts.reload} /> : null}
-      {accounts.loading ? <Busy /> : null}
+      {accounts.loading && !accounts.data ? <Busy /> : null}
       {accounts.data?.length === 0 ? <Text style={text}>{t('adm.demo.empty')}</Text> : null}
       {accounts.data?.map((account) => <AccountAccess key={account.id} account={account} />)}
     </AdminPage>

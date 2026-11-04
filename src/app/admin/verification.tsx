@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { AdminPage, AdminPhoto, Act, Acts, Badge, Busy, ErrorNote, FilterGroup, Pager, errText, fmtDate, useActionDialog, useWide } from '@/components/AdminUI';
+import { AdminPage, AdminPhoto, Act, Acts, Badge, Busy, ErrorNote, FilterGroup, Pager, VERIF_LABEL, errText, fmtDate, useActionDialog, useWide } from '@/components/AdminUI';
 import { useToast } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { adminApi, type VerificationRow } from '@/lib/adminApi';
@@ -54,7 +54,7 @@ export default function AdminVerification() {
                   <Text style={{ fontSize: 15, fontWeight: '800', color: colors.redDark }}>{v.name ?? '—'}{v.age ? `, ${v.age}` : ''}</Text>
                 </Pressable>
                 <Text style={muted}>{v.country ?? ''}{v.city ? ` · ${v.city}` : ''} · {fmtDate(v.created_at)}</Text>
-                <Badge label={v.status} tone={v.status === 'approved' ? 'green' : v.status === 'rejected' ? 'red' : 'amber'} />
+                <Badge label={t(VERIF_LABEL[v.status])} tone={v.status === 'approved' ? 'green' : v.status === 'rejected' ? 'red' : 'amber'} />
                 {v.previous_requests > 0 ? <Badge label={t('adm.verify.previous', { n: v.previous_requests })} /> : null}
               </View>
               <ScrollView horizontal>

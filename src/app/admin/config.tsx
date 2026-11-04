@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { AdminPage, Act, Badge, Busy, Columns, ErrorNote, KV, Section, errText, fmtDate } from '@/components/AdminUI';
+import { AdminPage, Act, Badge, Busy, Chip, Columns, ErrorNote, KV, Section, errText, fmtDate, useLock } from '@/components/AdminUI';
 import { useToast } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { adminApi, isEmail, isHttpsUrl } from '@/lib/adminApi';
@@ -12,7 +12,6 @@ import type { TranslationKey } from '@/i18n';
 type Json = unknown;
 type Obj = Record<string, Json>;
 const asObj = (v: Json): Obj => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : {});
-const KNOWN = ['daily_spark_limit', 'legal_urls', 'support_email', 'banned_words', 'referral', 'rate_limits', 'digest', 'demo_bots', 'launch_countries', 'countries', 'languages'];
 const LEGAL: [string, TranslationKey][] = [
   ['privacy', 'adm.cfg.legalPrivacy'], ['terms', 'adm.cfg.legalTerms'], ['community', 'adm.cfg.legalCommunity'],
   ['moderation', 'adm.cfg.legalModeration'],
@@ -32,15 +31,17 @@ function Num({ value, onChange, label, width = 90 }: { value: string; onChange: 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <Pressable accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel={label} onPress={() => onChange(!on)}
-      style={{ width: 42, height: 24, borderRadius: 12, backgroundColor: on ? colors.green : colors.line, padding: 3, alignItems: on ? 'flex-end' : 'flex-start' }}>
-      <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: colors.white }} />
+      style={{ minHeight: 44, minWidth: 54, justifyContent: 'center' }}>
+      <View style={{ width: 42, height: 24, borderRadius: 12, backgroundColor: on ? colors.green : colors.line, padding: 3, alignItems: on ? 'flex-end' : 'flex-start' }}>
+        <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: colors.white }} />
+      </View>
     </Pressable>
   );
 }
 function Row({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, borderTopWidth: 1, borderTopColor: colors.line, flexWrap: 'wrap' }}>
-      <View style={{ width: 200 }}><Text style={{ fontSize: 13, color: colors.ink }}>{label}</Text>{hint ? <Text style={muted}>{hint}</Text> : null}</View>
+      <View style={{ width: 200, maxWidth: '100%' }}><Text style={{ fontSize: 13, color: colors.ink }}>{label}</Text>{hint ? <Text style={muted}>{hint}</Text> : null}</View>
       <View style={{ flex: 1, minWidth: 160 }}>{children}</View>
     </View>
   );
@@ -53,17 +54,17 @@ function Editor({ title, k, note, validate, build, children, onSaved }: {
 }) {
   const { t } = useLang();
   const toast = useToast();
-  const [busy, setBusy] = useState(false);
+  const [busy, run] = useLock();
   const [err, setErr] = useState<string | null>(null);
-  const save = async () => {
+  const save = () => run(async () => {
     const v = validate();
     if (v) { setErr(v); return; }
-    setBusy(true); setErr(null);
+    setErr(null);
     try {
       for (const [key, value] of Object.entries(build())) await adminApi.setConfig(key, value);
       toast(t('adm.common.saved')); onSaved();
-    } catch (e) { setErr(t('adm.common.error', { message: errText(e) })); } finally { setBusy(false); }
-  };
+    } catch (e) { setErr(t('adm.common.error', { message: errText(e) })); }
+  });
   return (
     <Section title={title} right={<Text style={muted}>{Array.isArray(k) ? k.join(' + ') : k}</Text>}>
       {note ? <Text style={[muted, { marginBottom: 8 }]}>{note}</Text> : null}
@@ -183,11 +184,7 @@ function DigestEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
       <Row label={t('adm.cfg.digestEnabled')}><Toggle on={enabled} onChange={setEnabled} label={t('adm.cfg.digestEnabled')} /></Row>
       <Row label={t('adm.cfg.digestDay')}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-          {WEEKDAYS.map((w, i) => (
-            <Pressable key={w} onPress={() => setWeekday(i)} style={{ borderWidth: 1, borderColor: weekday === i ? colors.ink : colors.line, backgroundColor: weekday === i ? colors.ink : colors.white, borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4 }}>
-              <Text style={{ fontSize: 12, color: weekday === i ? colors.paper : colors.ink }}>{t(w)}</Text>
-            </Pressable>
-          ))}
+          {WEEKDAYS.map((w, i) => <Chip key={w} label={t(w)} on={weekday === i} onPress={() => setWeekday(i)} />)}
         </View>
       </Row>
       <Row label={t('adm.cfg.digestHour')} hint="UTC 0–23"><Num value={hour} onChange={setHour} label={t('adm.cfg.digestHour')} /></Row>
@@ -205,29 +202,9 @@ function CountriesEditor({ cfg, onSaved }: { cfg: Obj; onSaved: () => void }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
         {all.map((c) => {
           const on = sel.includes(c);
-          return (
-            <Pressable key={c} accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={() => setSel(on ? sel.filter((x) => x !== c) : [...sel, c])}
-              style={{ borderWidth: 1, borderColor: on ? colors.ink : colors.line, backgroundColor: on ? colors.ink : colors.white, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 }}>
-              <Text style={{ fontSize: 12, color: on ? colors.paper : colors.ink, fontWeight: '700' }}>{c}</Text>
-            </Pressable>
-          );
+          return <Chip key={c} role="checkbox" label={c} on={on} onPress={() => setSel(on ? sel.filter((x) => x !== c) : [...sel, c])} />;
         })}
       </View>
-    </Editor>
-  );
-}
-
-// Keys added later by other features (e.g. video / voice): JSON editor, same JSON type enforced by the server.
-function JsonEditor({ k, value, onSaved }: { k: string; value: Json; onSaved: () => void }) {
-  const { t } = useLang();
-  const [text, setText] = useState(JSON.stringify(value, null, 2));
-  let parsed: Json = undefined;
-  let parseErr: string | null = null;
-  try { parsed = JSON.parse(text); } catch { parseErr = t('adm.cfg.badJson'); }
-  return (
-    <Editor title={k} k={k} note={t('adm.cfg.otherNote')} onSaved={onSaved} validate={() => parseErr} build={() => ({ [k]: parsed })}>
-      <TextInput value={text} onChangeText={setText} multiline autoCapitalize="none" autoCorrect={false} accessibilityLabel={k}
-        style={[input, { minHeight: 110, fontFamily: 'Courier', fontSize: 12, textAlignVertical: 'top' }, parseErr ? { borderColor: colors.red } : null]} />
     </Editor>
   );
 }
@@ -245,7 +222,6 @@ export default function AdminConfig() {
     { key: 'report', label: t('adm.cfg.rlReport'), min: 1, max: 100000 }, { key: 'submit_appeal', label: t('adm.cfg.rlAppeal'), min: 1, max: 100000 },
   ];
   const rateKeys = Object.keys(asObj(c?.rate_limits));
-  const others = c ? Object.keys(c).filter((k) => !KNOWN.includes(k)).sort() : [];
   return (
     <AdminPage title={t('adm.cfg.title')} sub={t('adm.cfg.sub')}>
       {cfg.error ? <ErrorNote message={errText(cfg.error)} onRetry={cfg.reload} /> : null}
@@ -259,14 +235,15 @@ export default function AdminConfig() {
               <WordsEditor cfg={c} onSaved={saved} />
             </View>
             <View>
+              <NumbersEditor cfg={c} k="discover_recycle" title={t('adm.cfg.recycleTitle')} note={t('adm.cfg.recycleNote')} onSaved={saved} fields={[
+                { key: 'cooldown_hours', label: t('adm.cfg.recycleCooldown'), min: 0, max: 8760 },
+                { key: 'fallback_minutes', label: t('adm.cfg.recycleFallback'), min: 0, max: 10080 },
+                { key: 'max_passes', label: t('adm.cfg.recycleMax'), min: 1, max: 100 }]} />
               <NumbersEditor cfg={c} k="referral" title={t('adm.cfg.referralTitle')} note={t('adm.cfg.referralNote')} onSaved={saved} fields={[
                 { key: 'goal', label: t('adm.cfg.refGoal'), min: 1, max: 1000 }]} />
               <NumbersEditor cfg={c} k="rate_limits" title={t('adm.cfg.rateTitle')} note={t('adm.cfg.rateNote')} onSaved={saved} extraKeys
                 fields={[...rateFields, ...rateKeys.filter((k) => !rateFields.some((f) => f.key === k)).map((k) => ({ key: k, label: RATE_LABEL[k] ? t(RATE_LABEL[k]) : k, min: 1, max: 100000 }))]} />
               <DigestEditor cfg={c} onSaved={saved} />
-              <NumbersEditor cfg={c} k="demo_bots" title={t('adm.cfg.demoTitle')} note={t('adm.cfg.demoNote')} onSaved={saved} fields={[
-                { key: 'match_every', label: t('adm.cfg.demoEvery'), min: 1, max: 100 }, { key: 'welcome_sparks', label: t('adm.cfg.demoWelcome'), min: 0, max: 20 }]} />
-              {others.map((k) => <JsonEditor key={k} k={k} value={c[k]} onSaved={saved} />)}
             </View>
           </Columns>
           <Section title={t('adm.cfg.history')}>
