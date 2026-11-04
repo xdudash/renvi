@@ -48,7 +48,7 @@ try {
           await page.waitForTimeout(500);
           at = new URL(page.url()).pathname;
           audit = await page.evaluate(auditLayout);
-          if (!await page.locator('#root').innerText()) throw new Error('App root is blank');
+          await page.waitForFunction(() => Boolean(document.querySelector('#root')?.innerText?.trim()), null, { timeout: 5000 });
           await page.screenshot({ path: `${output}/${device}/${name}.png` });
           if (fixtures) await checkMobileInteraction(page, name, `${output}/${device}`);
         } catch (error) { navigationError = error.message.slice(0, 160); }
