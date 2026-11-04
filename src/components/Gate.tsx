@@ -26,11 +26,11 @@ export function Gate() {
     if (to) router.replace(to as never);
   }, [ready, configured, session, profile, loadError, path]);
 
-  // A new warning from moderation is shown once.
+  // A new warning from moderation is shown once. Filter by user: moderators can read every sanction and must not be shown other people's warnings.
   useEffect(() => {
     if (!session || warned.current === session.user.id) return;
     warned.current = session.user.id;
-    supabase.from('account_sanctions').select('id, kind').eq('kind', 'warning').order('created_at', { ascending: false }).limit(1)
+    supabase.from('account_sanctions').select('id, kind').eq('user_id', session.user.id).eq('kind', 'warning').order('created_at', { ascending: false }).limit(1)
       .then(async ({ data }) => {
         const w = data?.[0];
         if (!w) return;

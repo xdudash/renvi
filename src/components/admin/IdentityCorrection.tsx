@@ -1,35 +1,57 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
-import { Btn, Card, Choice, Field, Tiny } from '@/components/ui';
+import { Text, TextInput, View } from 'react-native';
+import { Act, Chip, Section, errText, useLock } from '@/components/AdminUI';
+import { adminApi } from '@/lib/adminApi';
 import { GENDERS } from '@/lib/catalog';
-import { birthdateFromParts, ageOnDate } from '@/lib/identity';
-import { supabase } from '@/lib/supabase';
+import { ageOnDate } from '@/lib/identity';
+import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
-export default function IdentityCorrection({userId,onSaved}:{userId:string;onSaved?:()=>void|Promise<void>}) {
-  const {t}=useLang();
-  const [birthdate,setBirthdate]=useState('');
-  const [gender,setGender]=useState('');
-  const [reason,setReason]=useState('');
-  const [busy,setBusy]=useState(false);
-  const [message,setMessage]=useState('');
-  const save=async()=>{
-    const [y,m,d]=birthdate.split('-');const age=ageOnDate(birthdate);
-    if(birthdateFromParts(d??'',m??'',y??'')!==birthdate || age===null || age<18 || age>120 || !GENDERS.some(g=>g.key===gender) || reason.trim().length<3){setMessage(t('identity.adminInvalid'));return;}
-    setBusy(true);setMessage('');
+const label = { fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', color: colors.eyebrow, marginTop: 10, marginBottom: 5 } as const;
+const input = { borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 14, color: colors.ink, backgroundColor: colors.white } as const;
+
+// Date of birth and gender are locked for the user; only an admin can correct them, with a reason that goes to the audit log.
+// The server needs both values, so the current gender is pre-selected and only the date has to be typed.
+export default function IdentityCorrection({ userId, gender: current, age, onSaved }: {
+  userId: string; gender: string | null; age: number | null; onSaved?: () => void | Promise<void>;
+}) {
+  const { t } = useLang();
+  const [birthdate, setBirthdate] = useState('');
+  const [gender, setGender] = useState(current ?? '');
+  const [reason, setReason] = useState('');
+  const [busy, run] = useLock();
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const save = () => run(async () => {
+    const years = ageOnDate(birthdate);
+    if (years === null || years < 18 || years > 120 || !GENDERS.some((g) => g.key === gender) || reason.trim().length < 3) {
+      setMessage({ ok: false, text: t('adm.identity.invalid') });
+      return;
+    }
+    setMessage(null);
     try {
-      const {error}=await supabase.rpc('admin_correct_identity',{p_user:userId,p_birthdate:birthdate,p_gender:gender,p_reason:reason.trim()});
-      if(error) throw error;
-      setMessage(t('identity.adminSaved'));setReason('');await onSaved?.();
-    }catch {setMessage(t('identity.adminFailed'));}finally{setBusy(false);}
-  };
-  return <Card>
-    <Text style={{fontSize:16,fontWeight:'600'}}>{t('identity.adminHeading')}</Text>
-    <Field label={t('identity.adminBirthday')} value={birthdate} onChangeText={setBirthdate} placeholder="1998-08-12" autoCapitalize="none" maxLength={10}/>
-    <Tiny>{t('identity.adminGender')}</Tiny>
-    {GENDERS.map(g=><Choice key={g.key} selected={gender===g.key} onPress={()=>setGender(g.key)}><Text>{t(g.labelKey)}</Text></Choice>)}
-    <Field label={t('identity.adminReason')} value={reason} onChangeText={setReason} multiline maxLength={1000}/>
-    {message?<Text accessibilityRole="alert">{message}</Text>:null}
-    <Btn label={t('identity.adminSave')} onPress={save} busy={busy}/>
-  </Card>;
+      await adminApi.correctIdentity(userId, birthdate, gender, reason.trim());
+      setMessage({ ok: true, text: t('adm.identity.saved') });
+      setBirthdate(''); setReason('');
+      await onSaved?.();
+    } catch (e) {
+      setMessage({ ok: false, text: t('adm.common.error', { message: errText(e) }) });
+    }
+  });
+  return (
+    <Section title={t('adm.identity.title')}>
+      <Text style={{ fontSize: 12, color: colors.sub }}>{t('adm.identity.note', { age: age ?? '—' })}</Text>
+      <Text style={label}>{t('adm.identity.birthday')}</Text>
+      <TextInput value={birthdate} onChangeText={setBirthdate} placeholder="1998-08-12" autoCapitalize="none" autoCorrect={false} maxLength={10}
+        accessibilityLabel={t('adm.identity.birthday')} style={input} />
+      <Text style={label}>{t('adm.identity.gender')}</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+        {GENDERS.map((g) => <Chip key={g.key} label={g.label} on={gender === g.key} onPress={() => setGender(g.key)} />)}
+      </View>
+      <Text style={label}>{t('adm.identity.reason')}</Text>
+      <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} accessibilityLabel={t('adm.identity.reason')}
+        style={[input, { minHeight: 70, textAlignVertical: 'top' }]} />
+      {message ? <Text accessibilityRole="alert" style={{ marginTop: 8, fontSize: 12, fontWeight: '600', color: message.ok ? colors.green : colors.redDark }}>{message.text}</Text> : null}
+      <View style={{ marginTop: 10 }}><Act label={busy ? t('adm.dialog.working') : t('adm.identity.save')} onPress={save} disabled={busy} /></View>
+    </Section>
+  );
 }

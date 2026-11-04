@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { AdminError } from './adminApi';
 export type TimelineEvent={event:string;screen:string|null;active_seconds:number;created_at:string};
 export type UserAnalytics={excluded?:boolean;consented?:boolean;sessions?:number;active_seconds?:number;timeline:TimelineEvent[]};
 export type Retention={d:number;eligible:number;returned:number;week?:string};
@@ -10,6 +11,6 @@ export type AnalyticsReport={
  screens:{screen:string;views:number;active_seconds:number}[];hourly:{hour:number;events:number;active_seconds:number}[];weekdays:{weekday:number;events:number;active_seconds:number}[];actions:{event:string;events:number}[];retention:Retention[];cohorts:Retention[];
 };
 async function call<T>(name:string,args?:Record<string,unknown>):Promise<T>{
- const {data,error}=await supabase.rpc(name,args);if(error)throw error;return data as T;
+ const {data,error}=await supabase.rpc(name,args);if(error)throw new AdminError(error.message,error.code);return data as T;
 }
 export const analyticsApi={report:(days=30)=>call<AnalyticsReport>('admin_analytics',{p_days:days}),user:(userId:string)=>call<UserAnalytics>('admin_user_analytics',{p_user:userId})};

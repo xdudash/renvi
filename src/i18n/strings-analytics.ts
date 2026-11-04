@@ -1,6 +1,5 @@
 // Russian source; other languages use the standard Russian fallback.
 export const ruAnalytics = {
- 'analytics.title':'Статистика',
  'analytics.note':'Активность измеряется только после добровольного согласия. Демо-аккаунты исключены. События хранятся до 180 дней. DAU / WAU / MAU — скользящие 24 часа / 7 / 30 дней; онлайн — сигнал за последние 90 секунд. Каждое возвращение из фона начинает новую сессию.',
  'analytics.population':'Всего и новые — все реальные аккаунты (включая незавершённые анкеты). Демография — текущие анкеты. Активность, источники и удержание — только измеряемая аудитория; это не оценка всех пользователей.',
  'analytics.period':'Период: {days} дней',
@@ -11,8 +10,8 @@ export const ruAnalytics = {
  'analytics.acquisition':'Источники (первый доступный UTM после согласия)', 'analytics.source':'Источник','analytics.medium':'Канал','analytics.campaign':'Кампания','analytics.referral':'Реферальный код',
  'analytics.funnel':'Последовательная воронка измеряемых событий',
  'analytics.funnelNote':'Первый анонимный визит и регистрация не измеряются: согласие доступно после входа. Последующие этапы считаются строго по порядку после первой измеренной сессии в выбранном периоде. События до согласия не восстанавливаются.',
- 'analytics.stage':'Этап','analytics.firstVisit':'Первый визит','analytics.signup':'Регистрация','analytics.measuredSession':'Измеренная сессия','analytics.onboard':'Анкета опубликована','analytics.like':'Лайк отправлен','analytics.match':'Мэтч создан','analytics.date':'Приглашение на свидание',
- 'analytics.unavailable':'Не измеряется','analytics.screens':'Экраны','analytics.screen':'Экран','analytics.views':'Просмотры','analytics.actions':'Действия','analytics.event':'Событие','analytics.count':'Количество',
+ 'analytics.stage':'Этап','analytics.measuredSession':'Измеренная сессия','analytics.onboard':'Анкета опубликована','analytics.like':'Лайк отправлен','analytics.match':'Мэтч создан','analytics.date':'Приглашение на свидание',
+ 'analytics.screens':'Экраны','analytics.screen':'Экран','analytics.views':'Просмотры','analytics.actions':'Действия','analytics.event':'Событие','analytics.count':'Количество',
  'analytics.retention':'Удержание по UTC-дням','analytics.retentionNote':'Когорта начинается с первой сессии в доступном окне 180 дней. Учитываются только созревшие когорты. Возврат — измеренный просмотр экрана или сигнал активной сессии ровно на D1 / D7 / D30; это не удержание от регистрации.',
  'analytics.hourly':'Активность по часам UTC', 'analytics.weekdays':'Активность по дням недели UTC', 'analytics.hour':'Час UTC', 'analytics.weekday':'День недели (0 = вс)',
  'analytics.day':'День','analytics.eligible':'Созрели','analytics.returned':'Вернулись','analytics.rate':'Доля','analytics.cohorts':'Недельные когорты','analytics.week':'Неделя',

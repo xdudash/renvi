@@ -3,11 +3,11 @@ import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   AdminPage, AdminPhoto, Act, Acts, Badge, Busy, ErrorNote, FilterGroup, OUTCOME_LABEL, Pager, REASON_LABEL, STATUS_LABEL, STATUS_TONE,
-  errText, fmtDate, useActionDialog, useWide,
+  errText, fmtDate, useActionDialog, useLock, useWide,
 } from '@/components/AdminUI';
 import { useToast } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
-import { adminApi, type ReportOutcome, type ReportRow, type ReportState } from '@/lib/adminApi';
+import { adminApi, type ReportFilter, type ReportOutcome, type ReportRow } from '@/lib/adminApi';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 
@@ -23,12 +23,13 @@ export default function AdminReports() {
   const wide = useWide();
   const params = useLocalSearchParams<{ target?: string }>();
   const [target, setTarget] = useState<string | null>(params.target ?? null);
-  const [state, setState] = useState<ReportState | null>(params.target ? null : 'new');
+  const [state, setState] = useState<ReportFilter | null>(params.target ? null : 'open');
   const [reason, setReason] = useState<string | null>(null);
   const [assigned, setAssigned] = useState<Assigned | null>(null);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
   const [dialog, openDialog] = useActionDialog();
+  const [working, lock] = useLock();
   const { data, error, loading, reload } = useAsync(
     () => adminApi.reports({ state, reason, assigned, target, limit: LIMIT, offset }),
     [state, reason, assigned, target, offset],
@@ -37,10 +38,10 @@ export default function AdminReports() {
   const filter = <T,>(set: (v: T) => void) => (v: T) => { set(v); setOffset(0); setSelected([]); };
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
-  const assign = async (r: ReportRow, on: boolean) => {
+  const assign = (r: ReportRow, on: boolean) => lock(async () => {
     try { await adminApi.assignReport(r.id, on); toast(on ? t('adm.reports.taken') : t('adm.reports.released')); refresh(); }
     catch (e) { toast(t('adm.common.error', { message: errText(e) })); }
-  };
+  });
   const resolve = (r: ReportRow, outcome: ReportOutcome) => {
     const label = t(OUTCOME_LABEL[outcome]);
     openDialog({
@@ -56,11 +57,11 @@ export default function AdminReports() {
       onDone: () => { toast(t('adm.reports.resolved')); refresh(); },
     });
   };
-  const bulkAssign = async () => {
+  const bulkAssign = () => lock(async () => {
     let failed = 0;
     for (const id of selected) { try { await adminApi.assignReport(id, true); } catch { failed++; } }
     toast(failed ? t('adm.reports.bulkPartial', { failed }) : t('adm.reports.taken')); refresh();
-  };
+  });
   const bulkDismiss = () => openDialog({
     title: t('adm.reports.bulkDismissTitle', { n: selected.length }), body: t('adm.reports.resolveDismissBody'),
     confirmLabel: t(OUTCOME_LABEL.dismissed), tone: 'green', reasonLabel: t('adm.reports.noteLabel'),
@@ -78,8 +79,8 @@ export default function AdminReports() {
     <AdminPage title={t('adm.reports.title')} sub={t('adm.reports.sub')} right={<Act label={t('adm.common.refresh')} tone="ghost" onPress={refresh} />}>
       {dialog}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 22 }}>
-        <FilterGroup<ReportState> label={t('adm.reports.fState')} value={state} onChange={filter(setState)} options={[
-          { key: 'new', label: t('adm.reports.stateNew') }, { key: 'review', label: t('adm.reports.stateReview') },
+        <FilterGroup<ReportFilter> label={t('adm.reports.fState')} value={state} onChange={filter(setState)} options={[
+          { key: 'open', label: t('adm.reports.fOpen') }, { key: 'new', label: t('adm.reports.stateNew') }, { key: 'review', label: t('adm.reports.stateReview') },
           { key: 'resolved', label: t('adm.reports.stateResolved') }, { key: null, label: t('adm.common.all') }]} />
         <FilterGroup<Assigned> label={t('adm.reports.fAssigned')} value={assigned} onChange={filter(setAssigned)} options={[
           { key: null, label: t('adm.common.all') }, { key: 'me', label: t('adm.reports.mine') }, { key: 'none', label: t('adm.reports.unassigned') }]} />
@@ -101,7 +102,7 @@ export default function AdminReports() {
             {openable.length > 0 ? <Act label={selected.length === openable.length ? t('adm.reports.selectNone') : t('adm.reports.selectAll')} tone="ghost"
               onPress={() => setSelected(selected.length === openable.length ? [] : openable.map((r) => r.id))} /> : null}
             {selected.length > 0 ? <>
-              <Act label={t('adm.reports.bulkTake', { n: selected.length })} onPress={bulkAssign} />
+              <Act label={t('adm.reports.bulkTake', { n: selected.length })} onPress={bulkAssign} disabled={working} />
               <Act label={t('adm.reports.bulkDismiss', { n: selected.length })} tone="green" onPress={bulkDismiss} />
             </> : null}
           </View>
@@ -109,7 +110,7 @@ export default function AdminReports() {
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {data.rows.map((r) => (
               <ReportCard key={r.id} r={r} wide={wide} selected={selected.includes(r.id)} onToggle={() => toggle(r.id)}
-                onAssign={(on) => assign(r, on)} onResolve={(o) => resolve(r, o)} />
+                busy={working} onAssign={(on) => assign(r, on)} onResolve={(o) => resolve(r, o)} />
             ))}
           </View>
           <Pager total={data.total} offset={offset} limit={LIMIT} onChange={(o) => { setOffset(o); setSelected([]); }} />
@@ -119,8 +120,8 @@ export default function AdminReports() {
   );
 }
 
-function ReportCard({ r, wide, selected, onToggle, onAssign, onResolve }: {
-  r: ReportRow; wide: boolean; selected: boolean; onToggle: () => void; onAssign: (on: boolean) => void; onResolve: (o: ReportOutcome) => void;
+function ReportCard({ r, wide, selected, busy, onToggle, onAssign, onResolve }: {
+  r: ReportRow; wide: boolean; selected: boolean; busy: boolean; onToggle: () => void; onAssign: (on: boolean) => void; onResolve: (o: ReportOutcome) => void;
 }) {
   const { t } = useLang();
   const stateTone = r.state === 'new' ? 'red' : r.state === 'review' ? 'amber' : 'green';
@@ -130,9 +131,11 @@ function ReportCard({ r, wide, selected, onToggle, onAssign, onResolve }: {
     <View style={{ width: wide ? '49%' : '100%', backgroundColor: colors.white, borderWidth: 1, borderColor: selected ? colors.ink : colors.line, borderRadius: 14, padding: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
         {r.status === 'open' ? (
-          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={onToggle}
-            style={{ width: 18, height: 18, borderWidth: 1, borderColor: colors.ink, borderRadius: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? colors.ink : 'transparent' }}>
-            {selected ? <Text style={{ color: colors.paper, fontSize: 11 }}>✓</Text> : null}
+          <Pressable accessibilityRole="checkbox" accessibilityLabel={t('adm.reports.select', { id: r.id.slice(0, 8) })} accessibilityState={{ checked: selected }} onPress={onToggle}
+            style={{ width: 44, height: 44, marginLeft: -10, marginTop: -10, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 18, height: 18, borderWidth: 1, borderColor: colors.ink, borderRadius: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? colors.ink : 'transparent' }}>
+              {selected ? <Text style={{ color: colors.paper, fontSize: 11 }}>✓</Text> : null}
+            </View>
           </Pressable>
         ) : null}
         <Badge label={stateLabel} tone={stateTone} />
@@ -171,7 +174,7 @@ function ReportCard({ r, wide, selected, onToggle, onAssign, onResolve }: {
       {r.status === 'open' ? (
         <View style={{ marginTop: 10, gap: 6 }}>
           <Acts>
-            {r.state === 'new' ? <Act label={t('adm.reports.take')} tone="ghost" onPress={() => onAssign(true)} /> : <Act label={t('adm.reports.release')} tone="ghost" onPress={() => onAssign(false)} />}
+            {r.state === 'new' ? <Act label={t('adm.reports.take')} tone="ghost" disabled={busy} onPress={() => onAssign(true)} /> : <Act label={t('adm.reports.release')} tone="ghost" disabled={busy} onPress={() => onAssign(false)} />}
             <Act label={t(OUTCOME_LABEL.dismissed)} tone="green" onPress={() => onResolve('dismissed')} />
             <Act label={t(OUTCOME_LABEL.actioned)} onPress={() => onResolve('actioned')} />
             {r.target_profile_id ? <>

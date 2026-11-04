@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  AdminPage, AdminPhoto, Act, Acts, Badge, Busy, Columns, ErrorNote, KV, OUTCOME_LABEL, REASON_LABEL, STATUS_LABEL, STATUS_TONE,
+  APPEAL_LABEL, AdminPage, AdminPhoto, Act, Acts, Badge, Busy, Columns, ErrorNote, KV, OUTCOME_LABEL, REASON_LABEL, STATUS_LABEL, STATUS_TONE,
   Section, VERIF_LABEL, errText, fmtDate, useActionDialog,
 } from '@/components/AdminUI';
 import { useToast } from '@/components/ui';
@@ -62,8 +62,6 @@ export default function AdminUserDetail() {
       <Act label={t('adm.user.back')} tone="ghost" onPress={() => (router.canGoBack() ? router.back() : router.replace('/admin/users' as never))} />
       <Act label={t('adm.common.refresh')} tone="ghost" onPress={reload} />
     </>}>
-      <AdminUserAnalytics userId={String(id)} />
-      <IdentityCorrection userId={String(id)} onSaved={reload} />
       {dialog}
       {error ? <ErrorNote message={errText(error)} onRetry={reload} /> : null}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
@@ -81,8 +79,8 @@ export default function AdminUserDetail() {
           <Act label={t('adm.user.warn')} onPress={warn} />
           <Act label={t('adm.user.suspend')} tone="amber" onPress={suspend} disabled={u.is_admin} />
           <Act label={t('adm.user.ban')} tone="red" onPress={ban} disabled={u.is_admin || u.status === 'banned'} />
-          {u.status !== 'active' ? <Act label={t('adm.user.liftAll')} tone="green" onPress={liftAll} /> : null}
-          {p.verification_status !== 'approved' ? <Act label={t('adm.verify.approve')} tone="green" onPress={approve} /> : null}
+          {u.status !== 'active' ? <Act label={u.status === 'banned' ? t('adm.user.unban') : t('adm.user.unsuspend')} tone="green" onPress={liftAll} /> : null}
+          {p.verification_status === 'pending' || p.verification_status === 'rejected' ? <Act label={t('adm.verify.approve')} tone="green" onPress={approve} /> : null}
           {p.verification_status === 'pending' ? <Act label={t('adm.verify.reject')} tone="red" onPress={reject} /> : null}
           {p.verification_status === 'approved' ? <Act label={t('adm.user.revoke')} tone="ghost" onPress={revoke} /> : null}
         </Acts>
@@ -107,7 +105,7 @@ export default function AdminUserDetail() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {u.photos.map((ph) => (
                 <View key={ph.id} style={{ gap: 4 }}>
-                  <AdminPhoto path={ph.kind === 'photo' ? ph.storage_path : null} label={`#${ph.position + 1}${ph.verified ? ' ✓' : ''}${ph.kind === 'video' ? ' · video' : ''}`} />
+                  <AdminPhoto path={ph.kind === 'photo' ? ph.storage_path : null} label={`#${ph.position + 1}${ph.verified ? ' ✓' : ''}${ph.kind === 'video' ? ` · ${t('adm.user.video')}` : ''}`} />
                   <Act label={t('adm.user.removePhoto')} tone="ghost" onPress={() => removePhoto(ph.id)} />
                 </View>
               ))}
@@ -124,13 +122,15 @@ export default function AdminUserDetail() {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {u.verification_requests.map((v) => (
                   <View key={v.id} style={{ width: 120 }}>
-                    <AdminPhoto path={v.storage_path} label={`${v.status} · ${fmtDate(v.created_at)}`} />
+                    <AdminPhoto path={v.storage_path} label={`${VERIF_LABEL[v.status as keyof typeof VERIF_LABEL] ? t(VERIF_LABEL[v.status as keyof typeof VERIF_LABEL]) : v.status} · ${fmtDate(v.created_at)}`} />
                     {v.decision_reason ? <Text style={muted}>{v.decision_reason}</Text> : null}
                   </View>
                 ))}
               </View>
             )}
           </Section>
+          <IdentityCorrection userId={p.id} gender={p.gender} age={p.age} onSaved={reload} />
+          <AdminUserAnalytics userId={p.id} />
         </View>
         <View>
           <Section title={t('adm.user.activity')}>
@@ -168,7 +168,7 @@ export default function AdminUserDetail() {
           <Section title={t('adm.user.reportsBy', { n: u.reports_by.length })}>
             {u.reports_by.length === 0 ? <Text style={muted}>{t('adm.common.empty')}</Text> : u.reports_by.map((r) => (
               <Line key={r.id}>
-                <Text style={small}>{REASON_LABEL[r.reason] ? t(REASON_LABEL[r.reason]) : r.reason} · {r.status} · {fmtDate(r.created_at)}</Text>
+                <Text style={small}>{REASON_LABEL[r.reason] ? t(REASON_LABEL[r.reason]) : r.reason} · {r.status === 'open' ? t('adm.reports.stateOpen') : t(OUTCOME_LABEL[r.decision ?? r.status] ?? 'adm.outcome.dismissed')} · {fmtDate(r.created_at)}</Text>
                 {r.target_profile_id ? <Pressable onPress={() => router.push({ pathname: '/admin/user/[id]', params: { id: r.target_profile_id as string } } as never)}><Text style={[muted, { color: colors.redDark }]}>{t('adm.reports.against', { name: r.target_name ?? '—' })}</Text></Pressable> : null}
               </Line>
             ))}
@@ -176,7 +176,7 @@ export default function AdminUserDetail() {
           <Section title={t('adm.user.appeals', { n: u.appeals.length })}>
             {u.appeals.length === 0 ? <Text style={muted}>{t('adm.common.empty')}</Text> : u.appeals.map((a) => (
               <Line key={a.id}>
-                <Text style={small}>{a.status} · {fmtDate(a.created_at)}</Text>
+                <Text style={small}>{APPEAL_LABEL[a.status] ? t(APPEAL_LABEL[a.status]) : a.status} · {fmtDate(a.created_at)}</Text>
                 <Text style={muted} selectable>{a.details}</Text>
                 {a.decision_reason ? <Text style={muted}>{t('adm.appeals.decision')}: {a.decision_reason}</Text> : null}
               </Line>
