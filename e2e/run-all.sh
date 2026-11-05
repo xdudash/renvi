@@ -15,7 +15,7 @@ node seed.mjs
 
 trap - ERR
 failed_scripts=()
-for script in signup auth main extra invite admin-ui; do
+for script in signup auth main extra invite admin-ui first-screens; do
   if ! node "$script.e2e.mjs"; then
     failed_scripts+=("$script.e2e.mjs")
   fi

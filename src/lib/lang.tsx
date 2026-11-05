@@ -9,7 +9,6 @@ import { parseLang } from './langCode';
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   SK: 'Slovenčina', CS: 'Čeština', EN: 'English', RU: 'Русский', UA: 'Українська',
 };
-export const LANGUAGE_FLAGS: Record<Lang, string> = { SK: '🇸🇰', CS: '🇨🇿', EN: '🇪🇺', RU: '🇪🇺', UA: '🇺🇦' };
 
 const KEY = 'renvi.lang';
 type LangCtx = {

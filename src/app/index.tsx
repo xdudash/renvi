@@ -1,13 +1,23 @@
 import { useEffect } from 'react';
-import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BrandMark } from '@/components/BrandMark';
+import { Mosaic, type TileSpec } from '@/components/Mosaic';
 import { Btn, LinkBtn, Screen, Tiny } from '@/components/ui';
 import { colors } from '@/theme/tokens';
 import { useSession } from '@/lib/session';
 import { LANGUAGE_NAMES, useLang } from '@/lib/lang';
 import { nextOnboardingRoute, welcomeHold } from '@/lib/onboarding';
 import { welcomeTarget } from '@/lib/gateRoutes';
+
+// Tiles of the cover (prototype "RENVI для всех"): bg / text colours are taken from the mockup.
+const TILE_STYLE = [
+  { bg: '#F3E1DE', fg: '#9A2B26', icon: 'gift' as const },
+  { bg: '#201E1D', fg: '#FFFFFF', icon: 'brand' as const },
+  { bg: '#D4E4DA', fg: '#22603C', icon: 'ball' as const },
+  { bg: '#F3ECDD', fg: '#7A5A12', icon: 'couple' as const },
+  { bg: '#DCE3EE', fg: '#2F4A7A', icon: 'people' as const, wide: true },
+];
 
 // 01 · Обложка (welcome)
 export default function Welcome() {
@@ -35,6 +45,11 @@ export default function Welcome() {
     }
   }, []);
 
+  const tiles: TileSpec[] = TILE_STYLE.map((st, i) => ({
+    key: `t${i + 1}`, ...st,
+    title: t(`screens.index.tile${i + 1}Title` as TranslationKey), sub: t(`screens.index.tile${i + 1}Sub` as TranslationKey),
+  }));
+
   const draft = session && profile && !profile.onboarding_done ? nextOnboardingRoute(profile) : null;
   // Signed in with a finished profile: the redirect above is on its way, do not flash the sign-up screen.
   if (ready && session && profile?.onboarding_done) return <Screen><View /></Screen>;
@@ -48,15 +63,12 @@ export default function Welcome() {
       </View>
       <Text style={s.heading} accessibilityRole="header">{t('screens.index.pustBudetVzaimno')}</Text>
       <Text style={s.lede}>{t('screens.index.nachniteSTogoChto')}</Text>
-      <Image
-        resizeMode="cover"
-        source={require('@/assets/images/welcome-hero.png')}
-        style={s.hero}
-        accessibilityLabel={t('screens.index.vymyshlennayaVzroslayaPara')}
-      />
+      <Mosaic tiles={tiles} />
       <Text style={s.signoff}>{t('screens.index.makeItMutualZnakomstva')}</Text>
-      <Btn label={t('screens.index.nachatZnakomstvo')} onPress={() => router.push('/signup')} />
-      <Btn kind="secondary" label={t('screens.index.uMenyaUzheEst')} onPress={() => router.push('/signin')} />
+      <View style={s.btns}>
+        <Btn label={t('screens.index.nachatZnakomstvo')} onPress={() => router.push('/signup')} />
+        <Btn kind="secondary" label={t('screens.index.uMenyaUzheEst')} onPress={() => router.push('/signin')} />
+      </View>
       <LinkBtn center label={t('screens.index.vIzmenitYazyk', { language: LANGUAGE_NAMES[lang] })} onPress={() => router.push('/language')} />
       <Tiny center>{t('screens.index.sozdavayaAkkauntVyOtdelno')}</Tiny>
     </Screen>
@@ -66,8 +78,8 @@ export default function Welcome() {
 const s = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12, marginBottom: 19 },
   wordmark: { fontSize: 53, fontWeight: '900', letterSpacing: -4, color: colors.ink },
-  heading: { fontSize: 43, fontWeight: '900', lineHeight: 41, letterSpacing: -2.8, maxWidth: 330, color: colors.ink },
+  heading: { fontSize: 44, fontWeight: '900', lineHeight: 42, letterSpacing: -2.86, maxWidth: 330, color: colors.ink },
   lede: { fontSize: 13, lineHeight: 20, color: colors.sub, marginTop: 10, marginBottom: 10 },
-  hero: { width: '100%', height: 205, borderRadius: 17, marginVertical: 17 },
+  btns: { marginVertical: 1 },
   signoff: { fontSize: 10, letterSpacing: 0.7, color: colors.sub, textAlign: 'center', marginVertical: 12 },
 });
