@@ -9,6 +9,7 @@ import { useSession } from '@/lib/session';
 import { LANGUAGE_NAMES, useLang } from '@/lib/lang';
 import { nextOnboardingRoute, welcomeHold } from '@/lib/onboarding';
 import { welcomeTarget } from '@/lib/gateRoutes';
+import type { TranslationKey } from '@/i18n';
 
 // Tiles of the cover (prototype "RENVI для всех"): bg / text colours are taken from the mockup.
 const TILE_STYLE = [

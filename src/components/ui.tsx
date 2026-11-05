@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 11, lineHeight: 14 },
   pillWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
-  tagText: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.19 },
+  tagText: { fontSize: 9.5, lineHeight: 13, fontWeight: '800', letterSpacing: 0.19 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },

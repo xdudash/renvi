@@ -22,7 +22,7 @@ export function Mosaic({ tiles }: { tiles: TileSpec[] }) {
 const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16, marginBottom: 4 },
   tile: { borderRadius: 20, padding: 13, gap: 3, justifyContent: 'flex-end' },
-  half: { width: '48.9%', flexGrow: 1, minHeight: 92 },
+  half: { flexBasis: 150, flexGrow: 1, minHeight: 92 },
   wide: { width: '100%', minHeight: 70 },
   icon: { flexGrow: 1, alignItems: 'flex-start' },
   title: { fontSize: 13, fontWeight: '700', letterSpacing: -0.13 },
