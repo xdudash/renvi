@@ -75,7 +75,7 @@ await step('language: copy, five rows with code tags, RU selected', async () => 
     must(row.h >= 47.5, `${n} row height ${row.h}`); near(row.rad, 13, `${n} row radius`, 0.5);
     const selected = n === 'Русский';
     must(row.bg === (selected ? RED_WASH : PAPER_WHITE), `${n} row colour ${row.bg}`);
-    const code = await page.getByText(['SK', 'CS', 'EN', 'RU', 'UA'][i], { exact: true }).evaluate((el) => { const t = el.parentElement, r = t.getBoundingClientRect(); return { w: r.width, h: r.height, fs: parseFloat(getComputedStyle(el).fontSize), bg: getComputedStyle(t).backgroundColor }; });
+    const code = await page.getByText(['SK', 'CS', 'EN', 'RU', 'UA'][i], { exact: true }).last().evaluate((el) => { const t = el.parentElement, r = t.getBoundingClientRect(); return { w: r.width, h: r.height, fs: parseFloat(getComputedStyle(el).fontSize), bg: getComputedStyle(t).backgroundColor }; });
     near(code.w, 30, 'code tag width', 1); near(code.h, 19, 'code tag height', 1.5); near(code.fs, 9.5, 'code tag font', 0.5);
     must(code.bg === 'rgb(239, 234, 227)', `code tag colour ${code.bg}`);
   }
