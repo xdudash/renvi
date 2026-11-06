@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ActionSet, Between, Chip, Eyebrow, LinkBtn, Screen, Tiny, useToast } from '@/components/ui';
+import { ActionSet, Between, Chip, Eyebrow, LinkBtn, Screen, Tiny, useIncomingCount, useToast } from '@/components/ui';
 import { ProfileHero, ProfileMeta } from '@/components/Profile';
 import { SwipeCard, type SwipeCardHandle } from '@/components/SwipeCard';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
@@ -26,6 +26,7 @@ export default function Discover() {
   const { profile } = useSession();
   const limit = useSparkLimit();
   const swipe = useRef<SwipeCardHandle>(null);
+  const incoming = useIncomingCount();
   const { modes, reload: reloadModes } = useModes();
   useReloadOnFocus(reloadModes);
   useEffect(() => { d.ensure(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -109,6 +110,7 @@ export default function Discover() {
               <Text style={st.undoText}>↶</Text>
             </Pressable>
           ) : null}
+          <LinkBtn label={incoming > 0 ? t('modes.incomingN', { n: incoming }) : t('modes.incoming')} icon="spark" onPress={() => router.push('/likes')} />
           <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />
         </View>
       </Between>

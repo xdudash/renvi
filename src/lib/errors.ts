@@ -5,13 +5,22 @@ export type AppErrorKind = 'offline' | 'limit' | 'rate_limited' | 'blocked' | 'n
 
 export class AppError extends Error {
   kind: AppErrorKind;
-  constructor(kind: AppErrorKind, message: string) {
+  /** SQLSTATE of the database error (e.g. P0008 plan limit), so screens can show a specific message. */
+  code?: string;
+  constructor(kind: AppErrorKind, message: string, code?: string) {
     super(message);
     this.kind = kind;
+    this.code = code;
   }
 }
 
 export function toAppError(e: unknown): AppError {
+  const out = classify(e);
+  out.code = (e as { code?: string } | null)?.code;
+  return out;
+}
+
+function classify(e: unknown): AppError {
   const err = e as { message?: string; code?: string; status?: number } | null;
   const msg = err?.message ?? '';
   if (!navigator?.onLine && typeof navigator !== 'undefined' && navigator.onLine === false) {

@@ -19,7 +19,7 @@ export default function Match() {
   if (!lastMatch) return <Redirect href="/chats" />;
   const chat = () => router.replace({ pathname: '/chat', params: { match: lastMatch.match_id } });
   return (
-    <Screen tabs="likes">
+    <Screen tabs="discover">
       <View style={s.hero}>
         <Eyebrow>{t('screens.match.vyObaSdelaliPervyy')}</Eyebrow>
         <View style={s.faces}>
