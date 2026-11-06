@@ -77,6 +77,19 @@ export type MatchRow = {
   /** Partner cover photo path and verification (migration 0030); undefined on an older database. */
   partner_photo?: string | null;
   partner_verified?: boolean;
+  /** dating | company | couples (migration 0042); undefined on an older database. */
+  kind?: 'dating' | 'company' | 'couples';
+};
+
+export type PlanChatRow = {
+  plan_id: string;
+  title: string;
+  category: string;
+  starts_at: string;
+  going: number;
+  last_body: string | null;
+  last_name: string | null;
+  last_at: string;
 };
 
 export type MessageRow = {
@@ -196,6 +209,7 @@ export const api = {
     rpc<SparkResult>('send_spark', { p_to: to, p_kind: kind, p_ref: ref, p_comment: comment }),
   incoming: () => rpc<{ count: number; items: IncomingSpark[] }>('incoming_sparks'),
   matches: () => rpc<MatchRow[]>('list_matches'),
+  planChats: () => rpc<PlanChatRow[]>('plan_chats'),
   messages: (matchId: string, before?: string | null) =>
     rpc<MessageRow[]>('list_messages', { p_match: matchId, p_before: before ?? null, p_limit: 50 }),
   sendMessage: (matchId: string, clientId: string, body: string | null, photoPath: string | null) =>
