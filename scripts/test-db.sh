@@ -38,6 +38,9 @@ run_sql supabase/tests/bugfixes.sql "bug hunt 2026-10-29"
 run_sql supabase/tests/profile_details.sql "profile details"
 run_sql supabase/tests/detail_filters.sql "detail filters + analytics retention"
 run_sql supabase/tests/recycle_passes.sql "passed profiles come back"
+run_sql supabase/tests/modes_pairs.sql "modes, status and couples"
+run_sql supabase/tests/plans.sql "plans"
+run_sql supabase/tests/company_couples.sql "company and couples"
 run_sql supabase/tests/playbook.sql "playbook (men's course)"
 
 # Edge Function unit tests (pure TypeScript, no network).

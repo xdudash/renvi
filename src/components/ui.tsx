@@ -58,14 +58,16 @@ export function usePressScale(to = 0.96) {
 const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
 // ---------- layout ----------
-export type TabKey = 'discover' | 'likes' | 'chats' | 'me';
+export type TabKey = 'feed' | 'discover' | 'likes' | 'chats' | 'me';
 
 // Same rule as the prototype: no tab bar on the first launch, account and onboarding screens.
 const NO_TABS = ['/', '/language', '/signin', '/signup', '/forgot', '/captcha', '/confirmation'];
 const ME_SCREENS = ['/me', '/playbook', '/edit-', '/opening-moves', '/privacy', '/settings', '/support-help', '/notification-settings', '/legal', '/data-export', '/delete-', '/blocked', '/referral', '/share-sheet', '/verification-', '/account-', '/report', '/appeal', '/community-rules'];
 const CHAT_SCREENS = ['/chat', '/icebreakers', '/push-prompt', '/photo-', '/message-', '/archive', '/muted', '/unmatch', '/support-share', '/date-', '/video-call'];
+const FEED_SCREENS = ['/feed', '/plan', '/my-plans'];
 function tabFor(path: string): TabKey {
-  if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'likes';
+  if (FEED_SCREENS.some((p) => path === p || path.startsWith(p + '-'))) return 'feed';
+  if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'discover';
   if (CHAT_SCREENS.some((p) => path.startsWith(p))) return 'chats';
   if (ME_SCREENS.some((p) => path.startsWith(p))) return 'me';
   return 'discover';
@@ -129,9 +131,9 @@ export function IconButton({ label, onPress, text }: { label: string; onPress: (
   );
 }
 
-const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' | 'chats' | 'me'; icon: IconName }[] = [
+const TABS: { href: string; labelKey: TranslationKey; key: TabKey; icon: IconName }[] = [
+  { href: '/feed', labelKey: 'tabs.feed', key: 'feed', icon: 'date' },
   { href: '/discover', labelKey: 'tabs.discover', key: 'discover', icon: 'discover' },
-  { href: '/likes', labelKey: 'tabs.likes', key: 'likes', icon: 'spark' },
   { href: '/chats', labelKey: 'tabs.chats', key: 'chats', icon: 'chat' },
   { href: '/me', labelKey: 'tabs.me', key: 'me', icon: 'profile' },
 ];
@@ -139,7 +141,7 @@ const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' 
 // Number of new incoming sparks for the tab badge (visible on every plan; the list itself is plan-gated).
 // Every Screen renders its own TabBar: one shared, briefly cached request instead of one per screen mount.
 const incomingBadge = createCachedLoader(() => api.incoming().then((r) => r.count), 30_000);
-function useIncomingCount() {
+export function useIncomingCount() {
   const { session } = useSession();
   const uid = session?.user.id ?? null;
   const [state, setState] = useState<{ uid: string | null; n: number }>({ uid: null, n: 0 });
@@ -170,7 +172,7 @@ export function TabBar({ active }: { active?: string }) {
   return (
     <View style={[styles.tabs, { paddingBottom: bottom > 0 ? Math.max(bottom - 12, 8) : 8 }]} accessibilityRole="tablist">
       {TABS.map((tab) => (
-        <TabItem key={tab.key} tab={tab} on={active === tab.key} label={t(tab.labelKey)} badge={tab.key === 'likes' ? incoming : 0} />
+        <TabItem key={tab.key} tab={tab} on={active === tab.key} label={t(tab.labelKey)} badge={tab.key === 'discover' ? incoming : 0} />
       ))}
     </View>
   );

@@ -14,7 +14,7 @@ export default function ObIntent() {
   const { save, busy } = useStepSave('ob-intent');
   return (
     <Screen>
-      <OnbHeader step={3} kicker={t('screens.obIntent.vashNastroy')} heading={t('screens.obIntent.chegoVySeychasIschete')} sub={t('screens.obIntent.mozhnoVybratToChto')} />
+      <OnbHeader step={5} kicker={t('screens.obIntent.vashNastroy')} heading={t('screens.obIntent.chegoVySeychasIschete')} sub={t('screens.obIntent.mozhnoVybratToChto')} />
       {INTENTS.map((i) => (
         <Choice key={i.key} selected={v === i.key} onPress={() => setV(i.key)}>
           <View style={{ flex: 1 }}>

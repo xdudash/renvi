@@ -113,7 +113,59 @@ export type SparkResult = { status: 'sent' } | { status: 'match'; match_id: stri
 /** Lifetime of a signed media URL (seconds). */
 export const SIGNED_URL_SECONDS = 24 * 3600;
 
+export type RelStatus = 'single' | 'relationship' | 'married' | 'couple';
+export type Goal = 'company' | 'dating' | 'couple' | 'look';
+export type Audience = 'all' | 'women' | 'men';
+export type Modes = {
+  status: RelStatus; goals: Goal[]; dating: boolean; company: boolean; audience: Audience; paused: boolean;
+  dating_open: boolean; dating_open_at: string | null; status_changed_at: string | null; company_look: string[];
+};
+export type CompanyCard = {
+  id: string; name: string; age: number | null; status: RelStatus; city: string | null; about: string | null; look: string[];
+  photo: string | null; common: number; plans: number; said_hello: boolean;
+};
+export type CouplePerson = { id: string; name: string; age: number | null; photo: string | null };
+export type CoupleCard = { couple_id: string; people: [CouplePerson, CouplePerson]; city: string | null; about: string | null; tags: string[]; said_hello: boolean };
+export type HelloResult = { connected: boolean; match_id?: string };
+export type CoupleInfo = {
+  couple_id: string; status: 'pending' | 'active'; code: string | null; expires_at: string;
+  partner: { id: string; name: string; age: number | null } | null;
+} | null;
+
 export const api = {
+  plansFeed: (category: string | null) => rpc<import('@/lib/plans').Plan[]>('plans_feed', { p_category: category }),
+  planDetail: (id: string) => rpc<import('@/lib/plans').Plan>('plan_detail', { p_plan: id }),
+  planCreate: (d: import('@/lib/plans').PlanDraft) => rpc<import('@/lib/plans').Plan>('plan_create', { p_data: d }),
+  planSetAuto: (id: string, auto: boolean) => rpc<void>('plan_set_auto', { p_plan: id, p_auto: auto }),
+  planCancel: (id: string) => rpc<void>('plan_cancel', { p_plan: id }),
+  planRequest: (id: string, message: string | null) => rpc<{ status: 'pending' | 'going' }>('plan_request', { p_plan: id, p_message: message }),
+  planDecide: (id: string, user: string, accept: boolean) => rpc<{ going: number }>('plan_decide', { p_plan: id, p_user: user, p_accept: accept }),
+  planWithdraw: (id: string) => rpc<void>('plan_withdraw', { p_plan: id }),
+  planRequests: (id: string) => rpc<import('@/lib/plans').PlanRequest[]>('plan_requests', { p_plan: id }),
+  plansMine: () => rpc<{ going: import('@/lib/plans').Plan[]; hosting: import('@/lib/plans').Plan[]; past: import('@/lib/plans').Plan[] }>('plans_mine'),
+  planCheckin: (id: string) => rpc<void>('plan_checkin', { p_plan: id }),
+  planArrivals: (id: string) => rpc<{ name: string; here: boolean }[]>('plan_arrivals', { p_plan: id }),
+  planRate: (id: string, rating: 'meh' | 'ok' | 'fire') => rpc<void>('plan_rate', { p_plan: id, p_rating: rating }),
+  planPeople: (id: string) => rpc<{ user_id: string; name: string; age: number | null; host: boolean; came: boolean }[]>('plan_people', { p_plan: id }),
+  planChat: (id: string) => rpc<import('@/lib/plans').PlanMessage[]>('plan_chat', { p_plan: id, p_limit: 100 }),
+  planChatSend: (id: string, body: string) => rpc<void>('plan_chat_send', { p_plan: id, p_body: body }),
+  setCompanyLook: (look: string[]) => rpc<void>('set_company_look', { p_look: look }),
+  companyFeed: () => rpc<CompanyCard[]>('company_feed', { p_limit: 20 }),
+  companyHello: (to: string) => rpc<HelloResult>('company_hello', { p_to: to }),
+  companyPass: (to: string) => rpc<void>('company_pass', { p_to: to }),
+  couplesFeed: () => rpc<CoupleCard[]>('couples_feed', { p_limit: 20 }),
+  couplesHello: (id: string) => rpc<HelloResult>('couples_hello', { p_couple: id }),
+  couplesPass: (id: string) => rpc<void>('couples_pass', { p_couple: id }),
+  myModes: () => rpc<Modes>('my_modes'),
+  setGoals: (goals: Goal[]) => rpc<void>('set_goals', { p_goals: goals }),
+  setStatus: (status: RelStatus) => rpc<{ status: RelStatus; dating_open_at: string | null }>('set_relationship_status', { p_status: status }),
+  setVisibility: (v: { dating: boolean; company: boolean; audience: Audience; paused: boolean }) =>
+    rpc<void>('set_visibility', { p_dating: v.dating, p_company: v.company, p_audience: v.audience, p_paused: v.paused }),
+  coupleCode: () => rpc<{ code: string; expires_at: string }>('couple_create_code'),
+  couplePreview: (code: string) => rpc<{ found: boolean; name?: string; age?: number | null }>('couple_preview', { p_code: code }),
+  coupleAccept: (code: string) => rpc<{ found: boolean; couple_id?: string; partner_id?: string }>('couple_accept', { p_code: code }),
+  myCouple: () => rpc<CoupleInfo>('my_couple'),
+  coupleLeave: () => rpc<void>('couple_leave'),
   discover: (limit = 20) => rpc<DiscoverCard[]>('discover', { p_limit: limit }),
   likesToday: () => rpc<number>('likes_today'),
   pass: (to: string) => rpc<void>('pass_profile', { p_to: to }),

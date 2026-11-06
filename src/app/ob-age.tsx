@@ -32,7 +32,7 @@ export default function ObAge() {
   };
   return (
     <Screen>
-      <OnbHeader step={0} kicker={t('screens.obAge.pervyyShag')} heading={t('screens.obAge.skolkoVamLet')} sub={t('screens.obAge.uchastnikamRenviDolzhnoByt')} />
+      <OnbHeader step={2} kicker={t('screens.obAge.pervyyShag')} heading={t('screens.obAge.skolkoVamLet')} sub={t('screens.obAge.uchastnikamRenviDolzhnoByt')} />
       <Field label={t('screens.obAge.imya')} value={name} onChangeText={setName} placeholder={t('screens.obAge.kakVasNazyvat')} autoComplete="given-name" />
       <Text style={{fontSize:11,marginTop:16}}>{t('screens.obAge.dataRozhdeniya')}</Text>
       <BirthdayPicker value={birthdateLocked ? (profile?.birthdate ?? birthdate) : birthdate} onChange={setBirthdate} disabled={birthdateLocked}/>
