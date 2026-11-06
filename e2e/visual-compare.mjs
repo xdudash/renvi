@@ -1,5 +1,7 @@
 // Mockup vs app, by numbers (web only; not native iOS). `mockup-metrics.json` holds, for every mockup screen at 393×852,
-// the visible text items: [text, x, y, w, h, fontSize, fontWeight] (measured from the mockup, no markup).
+// the visible text items: [text, x, y, w, h, fontSize, fontWeight] (measured from the mockup, no markup). The mockup's phone
+// content area is 393×804 (the 48px above it is the status bar), so the app is opened at 393×804 as well. Positions are
+// compared by the CENTRE of each text box (robust against line-height and box-model differences).
 // For every screen in the e2e route map this opens the app at the same size, matches items by text and reports the vertical
 // offset, the spread of that offset, font-size and weight differences. Informational: it never fails the run, it ranks screens.
 // Run from e2e/ after run-all.sh's seed:  node visual-compare.mjs [only-screen ...]
@@ -14,7 +16,7 @@ const map = { ...(await buildScreenMap()), ...publicScreenMap };
 const out = process.env.MOBILE_QA_OUTPUT ?? 'out/screens';
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
-const options = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
+const options = { viewport: { width: 393, height: 804 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
 const pub = await browser.newContext(options);
 const signed = await browser.newContext({ ...options, storageState: 'out/anna.json' });
 const pages = [await pub.newPage(), await signed.newPage()];
@@ -61,17 +63,18 @@ for (const [name, ref] of Object.entries(mock)) {
     let bi = 0; for (let i = 1; i < c.length; i++) if (Math.abs(c[i][2] - m[2]) < Math.abs(c[bi][2] - m[2])) bi = i;
     pairs.push({ m, a: c.splice(bi, 1)[0] });
   }
-  const dy = pairs.map((p) => p.a[2] - p.m[2]);
+  const cy = (it) => it[2] + it[4] / 2, cx = (it) => it[1] + it[3] / 2;
+  const dy = pairs.map((p) => Math.round(cy(p.a) - cy(p.m)));
   const off = median(dy);
   const spread = Math.max(0, ...dy.map((d) => Math.abs(d - off)));
   const fs = pairs.filter((p) => Math.abs(p.a[5] - p.m[5]) >= 1);
   const fw = pairs.filter((p) => Math.abs(p.a[6] - p.m[6]) >= 200);
-  const dx = pairs.filter((p) => Math.abs(p.a[1] - p.m[1]) >= 4);
+  const dx = pairs.filter((p) => Math.abs(cx(p.a) - cx(p.m)) >= 6);
   rows.push({
     name, total, matched: pairs.length, offset: off, spread, mockH: ref.h,
     fontSize: fs.slice(0, 6).map((p) => `"${p.m[0].slice(0, 22)}" ${p.m[5]}→${p.a[5]}`),
     fontWeight: fw.slice(0, 4).map((p) => `"${p.m[0].slice(0, 22)}" ${p.m[6]}→${p.a[6]}`),
-    shiftX: dx.slice(0, 4).map((p) => `"${p.m[0].slice(0, 22)}" x ${p.m[1]}→${p.a[1]}`),
+    shiftX: dx.slice(0, 4).map((p) => `"${p.m[0].slice(0, 22)}" cx ${Math.round(cx(p.m))}→${Math.round(cx(p.a))}`),
     worstY: pairs.map((p, i) => ({ t: p.m[0].slice(0, 22), d: dy[i] - off })).sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 4),
   });
 }
