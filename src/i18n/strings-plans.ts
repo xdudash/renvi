@@ -32,7 +32,7 @@ export const ruPlans = {
   'plans.aud.couplesC': 'Только пары',
   'plans.card.requested': 'заявка отправлена',
   'plans.card.going': 'ты идёшь ✓',
-  'plans.card.seatsLeft': 'ещё {n} мест',
+  'plans.card.seatsLeft': 'ещё {n} {n#место|места|мест}',
   'plans.card.goingOf': '{going} из {max} идут',
   'plans.feed.h': 'Планы рядом',
   'plans.feed.ideas': 'ИДЕИ НА ЗИМУ',
@@ -188,6 +188,6 @@ export const ruPlans = {
   'plans.after.done': 'Готово',
   'plans.after.nobody': 'Больше никого не было',
   'plans.limit.kicker': 'ЛИМИТ FREE',
-  'plans.limit.h': 'У тебя уже {n} активных плана',
+  'plans.limit.h': 'У тебя уже {n} {n#активный план|активных плана|активных планов}',
   'plans.limit.copy': 'Заверши или отмени один из них, чтобы создать новый.',
 } as const;

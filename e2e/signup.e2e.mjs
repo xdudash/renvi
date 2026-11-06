@@ -66,16 +66,16 @@ await step('ob-age', async () => {
   await click('Продолжить');
   await p.getByText('Подтвердите дату рождения',{exact:true}).waitFor();
   await click('Подтверждаю, сохранить');
-  await p.getByText('Как вас описать?').waitFor();
+  await p.getByText('Твой пол').waitFor();
 });
-await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого вы хотите встретить?').waitFor(); });
+await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого показывать в свиданиях?').waitFor(); });
 await step('ob-seeking', async () => {
   await click('Мужчин');
   await click('Продолжить'); // without consent → toast
   await shot('ob-seeking-consent-required');
   await p.getByRole('checkbox', { name: /Я даю отдельное согласие/ }).click();
   await click('Продолжить');
-  await p.getByText('Чего вы сейчас ищете?').waitFor();
+  await p.getByText('Что ищешь в свиданиях?').waitFor();
 });
 await step('ob-intent', async () => { await shot('ob-intent'); await click('Продолжить'); await p.getByText('Где вас искать?').waitFor(); });
 await step('ob-city', async () => {

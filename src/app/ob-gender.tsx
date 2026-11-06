@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
-import { Btn, Choice, Screen, Tiny, Sheet } from '@/components/ui';
+import { Btn, Screen, Sheet } from '@/components/ui';
+import { BigOption, Hint } from '@/components/Kit';
+import type { IconName } from '@/components/UiIcon';
 import { useDraft } from '@/hooks/useDraft';
 import { OnbHeader, useStepSave } from '@/components/Onboarding';
 import { GENDERS } from '@/lib/catalog';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
+
+const ICON: Record<string, IconName> = { man: 'profile', woman: 'profile', nonbinary: 'people', undisclosed: 'lock' };
 
 // 11 · Гендер
 export default function ObGender() {
@@ -18,13 +22,14 @@ export default function ObGender() {
   const { save, busy } = useStepSave('ob-gender');
   return (
     <Screen>
-      <OnbHeader step={3} kicker={t('screens.obGender.kicker')} heading={t('screens.obGender.heading')} sub={t('screens.obGender.sub')} />
+      <OnbHeader step={3} kicker={t('onbx.gender.kicker')} heading={t('onbx.gender.h')} sub={t('onbx.gender.sub')} />
       {GENDERS.map((g) => (
-        <Choice key={g.key} disabled={locked} selected={selected === g.key} onPress={() => {if(!locked) setV(g.key);}}>
-          <Text style={{ fontSize: 12 }}>{t(g.labelKey)}</Text><Text>{selected === g.key ? '✓' : '○'}</Text>
-        </Choice>
+        <BigOption key={g.key} disabled={locked} on={selected === g.key} icon={ICON[g.key]}
+          title={g.key === 'undisclosed' ? t('onbx.gender.undisclosed') : t(g.labelKey)}
+          sub={g.key === 'undisclosed' ? t('onbx.gender.undisclosedSub') : undefined}
+          onPress={() => { if (!locked) setV(g.key); }} />
       ))}
-      <Tiny>{t(locked?'identity.genderLocked':'identity.locked')}</Tiny>
+      <Hint icon="lock">{locked ? t('identity.genderLocked') : t('onbx.gender.hint')}</Hint>
       <Btn label={t('screens.obGender.continue')} onPress={() => locked?save({}):setConfirming(true)} busy={busy} />
       <Sheet visible={confirming} onClose={()=>setConfirming(false)}>
         <Text accessibilityRole="header" style={{fontSize:22}}>{t('identity.confirmGender')}</Text>
