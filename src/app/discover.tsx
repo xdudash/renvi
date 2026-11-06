@@ -13,7 +13,7 @@ import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useDiscover } from '@/lib/discover';
 import { useSession } from '@/lib/session';
 import { useMyTier, useSparkLimit } from '@/lib/tier';
-import { AD_EVERY, stashAd } from '@/lib/adSlots';
+import { usePeopleAd } from '@/hooks/usePeopleAd';
 import { useLang } from '@/lib/lang';
 import { interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
@@ -36,14 +36,8 @@ export default function Discover() {
   const mine: string[] = profile?.interests ?? [];
   const common = card ? card.interests.filter((x) => mine.includes(x)) : [];
   const { tier } = useMyTier();
-  const shown = useRef(0);
   const left = tier && tier.sparks_left !== null ? Math.max(0, tier.sparks_left - d.likesUsed) : Infinity;
-  // Free accounts: after every AD_EVERY-th person a partner card (only when an ad is booked; Plus never gets one).
-  const maybeAd = () => {
-    shown.current += 1;
-    if (!tier || tier.plus || shown.current % AD_EVERY !== 0) return;
-    api.adNext('people').then((ad) => { if (ad) { stashAd(ad); router.push('/people-ad'); } }, () => {});
-  };
+  const maybeAd = usePeopleAd('discover');
 
   const openProfile = (c: DiscoverCard) => router.push({ pathname: '/profile', params: { id: c.profile_id } });
 

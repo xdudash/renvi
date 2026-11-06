@@ -16,6 +16,7 @@ export default function NotificationSettings() {
     ['dates', t('screens.notificationSettings.predlozhenieVstrechi'), t('screens.notificationSettings.otvetNaPriglashenie'), true],
     ['likes', t('screens.notificationSettings.novyeSimpatii'), t('screens.notificationSettings.kogdaVamOtpraviliIskru'), true],
     ['news', t('screens.notificationSettings.podborkiINovosti'), t('screens.notificationSettings.neChascheParyRaz'), true],
+    ['plan_check', t('screens.notificationSettings.planCheck'), t('screens.notificationSettings.planCheckHint'), true],
     ['digest_push', t('screens.notificationSettings.digestPush'), t('screens.notificationSettings.digestPushHint'), true],
     ['digest_email', t('screens.notificationSettings.digestEmail'), t('screens.notificationSettings.digestEmailHint'), true],
   ];
