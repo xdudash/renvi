@@ -3,6 +3,7 @@
 // Seeded full run (default map) follows run-all.sh and gates on unexpected findings unless --report-only.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 import { APP, URL as API } from './api.mjs';
 import { buildScreenMap, expectedRedirects, publicScreenMap } from './screen-map.mjs';
 import { expectedPath, rowFindings, validateExpectedRedirects } from './inventory.mjs';
@@ -27,6 +28,8 @@ const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
 const output = process.env.MOBILE_QA_OUTPUT ?? 'out/screens';
 const rows = [];
 let diagnosed = 0;
+const sessionsNow = () => { try { return execSync('psql "$DATABASE_URL" -tA -c "select u.email, (select count(*) from auth.sessions s where s.user_id = u.id), (select count(*) from auth.refresh_tokens r where r.user_id::text = u.id::text and not r.revoked) from auth.users u order by u.created_at desc limit 6"', { env: process.env }).toString().replace(/\n/g, ' ; '); } catch (e) { return 'n/a'; } };
+if (!publicOnly && !fixtures) console.log(`DIAG sessions at start: ${sessionsNow()}`);
 try {
   for (const [device, viewport] of Object.entries(devices)) {
     fs.mkdirSync(`${output}/${device}`, { recursive: true });
@@ -61,7 +64,7 @@ try {
         } catch (error) { navigationError = error.message.slice(0, 160); }
         finally { page.off('pageerror', onError); page.off('console', onConsole); page.off('response', onResponse); }
         if (!publicOnly && at !== '' && at !== expectedPath(name, url, redirects) && diagnosed++ < 3) {
-          console.log(`DIAG ${device} ${name}: at=${at} http=${JSON.stringify(bad.slice(0, 8))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
+          console.log(`DIAG ${device} ${name}: sessions=${sessionsNow()} at=${at} http=${JSON.stringify(bad.slice(0, 8))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
         }
         rows.push({ device, name, expected: expectedPath(name, url, redirects), redirectExpected: !!redirects[name], at, errors, navigationError, ...audit });
       }
