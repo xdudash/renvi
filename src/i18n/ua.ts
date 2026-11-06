@@ -1580,7 +1580,7 @@ export const ua: Dictionary = {
   "plans.aud.couplesC": "Лише пари",
   "plans.card.requested": "заявку надіслано",
   "plans.card.going": "ти йдеш ✓",
-  "plans.card.seatsLeft": "ще {n} місць",
+  "plans.card.seatsLeft": "ще {n} {n#місце|місця|місць}",
   "plans.card.goingOf": "{going} з {max} йдуть",
   "plans.feed.h": "Плани поруч",
   "plans.feed.ideas": "ІДЕЇ НА ЗИМУ",
@@ -1736,7 +1736,7 @@ export const ua: Dictionary = {
   "plans.after.done": "Готово",
   "plans.after.nobody": "Більше нікого не було",
   "plans.limit.kicker": "ЛІМІТ FREE",
-  "plans.limit.h": "У тебе вже {n} активні плани",
+  "plans.limit.h": "У тебе вже {n} {n#активний план|активні плани|активних планів}",
   "plans.limit.copy": "Заверши або скасуй один із них, щоб створити новий.",
   // plans:end
   // company:begin
@@ -1835,7 +1835,7 @@ export const ua: Dictionary = {
   "purchase.ok.back": "Повернутися в профіль",
   "limit.kicker": "ЛІМІТ НА СЬОГОДНІ",
   "limit.h": "Іскри закінчилися",
-  "limit.copy": "У Free — {n} іскор на день. Нові з’являться завтра о 00:00.",
+  "limit.copy": "У Free — {n} {n#іскра|іскри|іскор} на день. Нові з’являться завтра о 00:00.",
   "limit.watch": "Подивитися рекламу · +{n} іскор",
   "limit.watchLeft": "Сьогодні ще {n}",
   "limit.noAds": "Сьогодні нагороди за рекламу закінчилися",

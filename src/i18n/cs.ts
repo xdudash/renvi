@@ -1580,7 +1580,7 @@ export const cs: Dictionary = {
   "plans.aud.couplesC": "Jen páry",
   "plans.card.requested": "žádost odeslána",
   "plans.card.going": "jdeš ✓",
-  "plans.card.seatsLeft": "ještě {n} míst",
+  "plans.card.seatsLeft": "ještě {n} {n#místo|místa|míst}",
   "plans.card.goingOf": "{going} z {max} jde",
   "plans.feed.h": "Plány poblíž",
   "plans.feed.ideas": "NÁPADY NA ZIMU",
@@ -1736,7 +1736,7 @@ export const cs: Dictionary = {
   "plans.after.done": "Hotovo",
   "plans.after.nobody": "Nikdo jiný tam nebyl",
   "plans.limit.kicker": "LIMIT FREE",
-  "plans.limit.h": "Už máš {n} aktivní plány",
+  "plans.limit.h": "Už máš {n} {n#aktivní plán|aktivní plány|aktivních plánů}",
   "plans.limit.copy": "Dokonči nebo zruš jeden z nich a vytvoř nový.",
   // plans:end
   // company:begin
@@ -1835,7 +1835,7 @@ export const cs: Dictionary = {
   "purchase.ok.back": "Zpět do profilu",
   "limit.kicker": "LIMIT NA DNES",
   "limit.h": "Jiskry došly",
-  "limit.copy": "Ve Free je {n} jisker denně. Nové budou zítra v 00:00.",
+  "limit.copy": "Ve Free {n#je|jsou|je} {n} {n#jiskra|jiskry|jisker} denně. Nové budou zítra v 00:00.",
   "limit.watch": "Podívat se na reklamu · +{n} jisker",
   "limit.watchLeft": "Dnes ještě {n}×",
   "limit.noAds": "Dnešní odměny za reklamu došly",

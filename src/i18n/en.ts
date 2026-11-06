@@ -1580,7 +1580,7 @@ export const en: Dictionary = {
   "plans.aud.couplesC": "Couples only",
   "plans.card.requested": "request sent",
   "plans.card.going": "you are going ✓",
-  "plans.card.seatsLeft": "{n} spots left",
+  "plans.card.seatsLeft": "{n} {n#spot|spots|spots} left",
   "plans.card.goingOf": "{going} of {max} going",
   "plans.feed.h": "Plans nearby",
   "plans.feed.ideas": "WINTER IDEAS",
@@ -1736,7 +1736,7 @@ export const en: Dictionary = {
   "plans.after.done": "Done",
   "plans.after.nobody": "Nobody else was there",
   "plans.limit.kicker": "FREE LIMIT",
-  "plans.limit.h": "You already have {n} active plans",
+  "plans.limit.h": "You already have {n} active {n#plan|plans|plans}",
   "plans.limit.copy": "Finish or cancel one of them to create a new one.",
   // plans:end
   // company:begin
@@ -1835,7 +1835,7 @@ export const en: Dictionary = {
   "purchase.ok.back": "Back to profile",
   "limit.kicker": "TODAY’S LIMIT",
   "limit.h": "You are out of sparks",
-  "limit.copy": "Free gives {n} sparks a day. New ones arrive tomorrow at 00:00.",
+  "limit.copy": "Free gives {n} {n#spark|sparks|sparks} a day. New ones arrive tomorrow at 00:00.",
   "limit.watch": "Watch an ad · +{n} sparks",
   "limit.watchLeft": "{n} more today",
   "limit.noAds": "No more ad rewards today",

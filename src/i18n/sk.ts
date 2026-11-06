@@ -1580,7 +1580,7 @@ export const sk: Dictionary = {
   "plans.aud.couplesC": "Len páry",
   "plans.card.requested": "žiadosť odoslaná",
   "plans.card.going": "ideš ✓",
-  "plans.card.seatsLeft": "ešte {n} miest",
+  "plans.card.seatsLeft": "ešte {n} {n#miesto|miesta|miest}",
   "plans.card.goingOf": "{going} z {max} ide",
   "plans.feed.h": "Plány v okolí",
   "plans.feed.ideas": "NÁPADY NA ZIMU",
@@ -1736,7 +1736,7 @@ export const sk: Dictionary = {
   "plans.after.done": "Hotovo",
   "plans.after.nobody": "Nikto iný tam nebol",
   "plans.limit.kicker": "LIMIT FREE",
-  "plans.limit.h": "Už máš {n} aktívne plány",
+  "plans.limit.h": "Už máš {n} {n#aktívny plán|aktívne plány|aktívnych plánov}",
   "plans.limit.copy": "Dokonči alebo zruš jeden z nich a vytvor nový.",
   // plans:end
   // company:begin
@@ -1835,7 +1835,7 @@ export const sk: Dictionary = {
   "purchase.ok.back": "Späť do profilu",
   "limit.kicker": "LIMIT NA DNES",
   "limit.h": "Iskry sa minuli",
-  "limit.copy": "vo Free je {n} iskier denne. Nové budú zajtra o 00:00.",
+  "limit.copy": "vo Free {n#je|sú|je} {n} {n#iskra|iskry|iskier} denne. Nové budú zajtra o 00:00.",
   "limit.watch": "Pozrieť reklamu · +{n} iskier",
   "limit.watchLeft": "Dnes ešte {n}×",
   "limit.noAds": "Dnešné odmeny za reklamu sa minuli",
