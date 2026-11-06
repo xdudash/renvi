@@ -14,6 +14,10 @@ verify_jwt = true
 [functions.weekly-digest]
 verify_jwt = false
 
+# Evening «all well?» push for plans; same x-digest-secret as weekly-digest.
+[functions.plan-check]
+verify_jwt = false
+
 [functions.demo-access]
 verify_jwt = true
 
