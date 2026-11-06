@@ -107,6 +107,8 @@ jobs:
         if: success()
         continue-on-error: true
         working-directory: e2e
+        env:
+          VC_DETAIL: ${{ vars.VC_DETAIL || 'top:30' }}
         run: MOBILE_QA_OUTPUT=out/screens/visual node visual-compare.mjs
 
       - name: Upload mobile layout evidence

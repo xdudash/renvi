@@ -40,6 +40,7 @@ const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim().slic
 const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 const rows = [];
+const appItems = {};
 for (const [name, ref] of Object.entries(mock)) {
   if (only.length && !only.includes(name)) continue;
   const entry = map[name];
@@ -52,6 +53,7 @@ for (const [name, ref] of Object.entries(mock)) {
     await page.waitForTimeout(700);
     items = await page.evaluate(extract);
   } catch (e) { rows.push({ name, skipped: `no render: ${e.message.slice(0, 80)}` }); continue; }
+  appItems[name] = items;
   const pool = new Map();
   for (const it of items) { const k = norm(it[0]); if (k.length < 2) continue; (pool.get(k) ?? pool.set(k, []).get(k)).push(it); }
   const pairs = [];
@@ -87,5 +89,15 @@ fs.writeFileSync(`${out}/visual-compare.md`, '# Mockup vs app (web)\n\n```\n' + 
 console.log('VISUAL-COMPARE (mockup vs app, web only)');
 console.log(lines.join('\n'));
 console.log('VISUAL-DETAIL ' + JSON.stringify(rows.filter((r) => !r.skipped).slice(0, 40)));
+// VC_DETAIL=top:30 or a comma list of screen names: prints both item lists, ordered by y, for reading the real differences.
+const want = process.env.VC_DETAIL ?? '';
+const detail = want.startsWith('top:') ? rows.filter((r) => !r.skipped).slice(0, Number(want.slice(4))).map((r) => r.name) : want ? want.split(',') : [];
+const fmt = (it) => `y${String(it[2]).padStart(4)} x${String(it[1]).padStart(3)} ${String(it[3]).padStart(3)}x${String(it[4]).padEnd(3)} fs${it[5]} fw${it[6]} ${it[0].slice(0, 40)}`;
+for (const name of detail) {
+  console.log(`DETAIL ${name} MOCKUP`);
+  for (const it of [...mock[name].items].sort((a, b) => a[2] - b[2] || a[1] - b[1])) console.log('  M ' + fmt(it));
+  console.log(`DETAIL ${name} APP`);
+  for (const it of [...(appItems[name] ?? [])].sort((a, b) => a[2] - b[2] || a[1] - b[1]).slice(0, 80)) console.log('  A ' + fmt(it));
+}
 console.log('VISUAL-SKIPPED ' + rows.filter((r) => r.skipped).map((r) => `${r.name}: ${r.skipped}`).join('; '));
 await browser.close();
