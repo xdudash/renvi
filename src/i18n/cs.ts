@@ -2004,4 +2004,7 @@ export const cs: Dictionary = {
   "screens.notificationSettings.planCheck": "Večer po plánu",
   "screens.notificationSettings.planCheckHint": "Push «Všechno ok?» ve 21:00 v den plánu. Bez názvů a jmen.",
   // planx:end
+  // deletesub:begin
+  "screens.deleteAccount.subscription": "Předplatné Plus se automaticky neruší — zrušte ho v nastavení Apple ID, jinak se platby budou strhávat dál.",
+  // deletesub:end
 };

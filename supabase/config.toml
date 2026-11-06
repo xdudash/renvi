@@ -53,3 +53,7 @@ verify_jwt = true
 
 [functions.boost-sync]
 verify_jwt = true
+
+# Incoming RevenueCat webhook: protected by its own secret (REVENUECAT_WEBHOOK_SECRET), not by a user JWT.
+[functions.revenuecat-webhook]
+verify_jwt = false

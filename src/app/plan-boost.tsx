@@ -116,7 +116,7 @@ const s = StyleSheet.create({
   opt: { padding: 14, borderRadius: 17, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white, gap: 3 },
   optOn: { borderColor: colors.red, backgroundColor: colors.redWash },
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  optH: { fontSize: 15, fontWeight: '800', color: colors.ink },
+  optH: { fontSize: 21, fontWeight: '800', color: colors.ink },
   price: { fontSize: 15, fontWeight: '800', color: colors.redDark },
   sub: { fontSize: 11, color: colors.sub },
   soft: { padding: 14, borderRadius: 17, backgroundColor: colors.redWash, gap: 4 },
