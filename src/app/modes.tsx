@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BackLink, Card, ErrorBlock, Eyebrow, LinkBtn, Loading, Screen, Title, useToast } from '@/components/ui';
@@ -17,8 +17,8 @@ export default function ModesScreen() {
   const toast = useToast();
   const { refresh } = useSession();
   const { modes, loading, error, reload } = useModes();
-  const [local, setLocal] = useState<Modes | null>(null);
-  useEffect(() => { if (modes) setLocal(modes); }, [modes]);
+  const [edited, setLocal] = useState<Modes | null>(null);
+  const local = edited ?? modes;
   if (loading && !local) return <Screen tabs="me"><BackLink onPress={() => router.navigate('/me')} /><Loading /></Screen>;
   if (error && !local) return <Screen tabs="me"><BackLink onPress={() => router.navigate('/me')} /><ErrorBlock message={t('modes.saveFail')} onRetry={reload} /></Screen>;
   if (!local) return null;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { BackLink, Btn, ErrorBlock, Loading, Screen, Title, useToast } from '@/components/ui';
 import { BigOption, Hint } from '@/components/Kit';
@@ -16,7 +16,6 @@ export default function StatusChange() {
   const { modes, loading, error, reload } = useModes();
   const [status, setStatus] = useState<RelStatus | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (modes && status === null) setStatus(modes.status); }, [modes, status]);
   if (loading) return <Screen><BackLink /><Loading /></Screen>;
   if (error || !modes) return <Screen><BackLink /><ErrorBlock message={t('modes.saveFail')} onRetry={reload} /></Screen>;
   const cur = status ?? modes.status;

@@ -43,30 +43,34 @@ export default function ObPair() {
   const inOnboarding = !profile?.onboarding_done;
   const leaveTo = () => router.replace((inOnboarding ? '/ob-age' : '/modes') as never);
 
-  const load = useCallback(async () => {
-    setError(false);
-    try {
-      const c = await api.myCouple();
-      if (!alive.current) return;
-      setCouple(c);
-      if (c?.status === 'pending' && c.code) setCode(c.code);
-    } catch { if (alive.current) setError(true); }
-  }, []);
-  useEffect(() => { load(); }, [load]);
+  const [tick, setTick] = useState(0);
+  const noCode = t('modes.pair.noCode');
+  const toastRef = useRef(toast);
+  useEffect(() => { toastRef.current = toast; });
+  const load = useCallback(() => { setError(false); setTick((n) => n + 1); }, []);
+  useEffect(() => {
+    let on = true;
+    api.myCouple().then(
+      (c) => { if (!on) return; setCouple(c); if (c?.status === 'pending' && c.code) setCode(c.code); },
+      () => { if (on) setError(true); });
+    return () => { on = false; };
+  }, [tick]);
 
   // The invitation code exists only after the first request; ask for it when the person opens the "invite" tab.
-  const ensureCode = useCallback(async () => {
-    try { const r = await api.coupleCode(); if (alive.current) setCode(r.code); }
-    catch { if (alive.current) toast(t('modes.pair.noCode')); }
-  }, [t, toast]);
-  useEffect(() => { if (tab === 'invite' && couple !== undefined && couple?.status !== 'active' && !code) ensureCode(); }, [tab, couple, code, ensureCode]);
+  const needCode = tab === 'invite' && couple !== undefined && couple?.status !== 'active' && !code;
+  useEffect(() => {
+    if (!needCode) return;
+    let on = true;
+    api.coupleCode().then((r) => { if (on) setCode(r.code); }, () => { if (on) toastRef.current(noCode); });
+    return () => { on = false; };
+  }, [needCode, noCode]);
 
   // While waiting for the partner, check now and then whether they have confirmed.
   useEffect(() => {
     if (couple?.status !== 'pending') return;
-    const id = setInterval(load, 6000);
+    const id = setInterval(() => setTick((n) => n + 1), 6000);
     return () => clearInterval(id);
-  }, [couple?.status, load]);
+  }, [couple?.status]);
 
   const preview = async (value: string) => {
     setTyped(value);
