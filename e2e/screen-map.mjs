@@ -29,6 +29,7 @@ export async function buildScreenMap() {
   const map = {
     welcome: ['/', 0], language: ['/language', 0], signin: ['/signin', 0], signup: ['/signup', 0], forgot: ['/forgot', 0],
     confirmation: ['/confirmation?email=anna%40renvi.test', 0], captcha: ['/captcha?email=x', 0], 'invite-link': [`/invite/${encodeURIComponent(invite)}`, 0], 'invite-not-found': ['/invite-not-found', 0],
+    'ob-goals': ['/ob-goals', 1], 'ob-status': ['/ob-status', 1], 'ob-pair': ['/ob-pair', 1], modes: ['/modes', 1], 'status-change': ['/status-change', 1], 'people-locked': ['/people-locked', 1],
     'ob-age': ['/ob-age', 1], 'ob-gender': ['/ob-gender', 1], 'ob-seeking': ['/ob-seeking', 1], 'ob-intent': ['/ob-intent', 1], 'ob-city': ['/ob-city', 1],
     'ob-photos': ['/ob-photos', 1], 'ob-about': ['/ob-about', 1], 'ob-prompts': ['/ob-prompts', 1], 'ob-location': ['/ob-location', 1], 'ob-verify': ['/ob-verify', 1],
     'ob-review': ['/ob-review', 1], 'verification-pending': ['/verification-pending', 1], 'verification-approved': ['/verification-approved', 1],

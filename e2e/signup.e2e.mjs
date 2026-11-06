@@ -39,6 +39,18 @@ await step('signup', async () => {
   await p.locator('input[type="password"]').fill('renvi-test-1');
   await click('Войти');
   // A confirmed account without a profile goes straight to step 1 (no loop back to the welcome screen).
+  await p.waitForURL(/\/ob-goals/,{timeout:15000});
+  await p.getByText('Зачем ты здесь?').waitFor({ timeout: 15000 });
+});
+await step('ob-goals', async () => {
+  await shot('ob-goals');
+  await click('Продолжить');
+  await p.waitForURL(/\/ob-status/,{timeout:15000});
+});
+await step('ob-status', async () => {
+  await p.getByText('Твой статус').waitFor();
+  await shot('ob-status');
+  await click('Продолжить');
   await p.waitForURL(/\/ob-age/,{timeout:15000});
   await p.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
 });

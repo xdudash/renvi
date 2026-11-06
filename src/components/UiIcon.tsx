@@ -4,7 +4,7 @@ import { BrandMark } from './BrandMark';
 
 export type IconName = 'discover' | 'chat' | 'profile' | 'comment' | 'close' | 'arrow' | 'grid' | 'shield' | 'filter' | 'date' | 'pin' | 'spark'
   | 'gift' | 'ball' | 'couple' | 'people'
-  | 'ruler' | 'globe' | 'kids' | 'smoke' | 'glass' | 'dumbbell' | 'cap' | 'paw' | 'star' | 'heart' | 'book' | 'check';
+  | 'ruler' | 'globe' | 'kids' | 'smoke' | 'glass' | 'dumbbell' | 'cap' | 'paw' | 'star' | 'heart' | 'book' | 'check' | 'lock' | 'clock';
 
 const hidden = Platform.OS === 'web' ? ({ 'aria-hidden': true } as object) : { accessibilityElementsHidden: true, importantForAccessibility: 'no' as const };
 
@@ -42,6 +42,8 @@ export function UiIcon({ name, size = 22, color = '#201E1D', paper = '#F7F5F2' }
     heart: <Path d="M12 20s-8-4.7-8-10.5A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8 2.9C20 15.3 12 20 12 20Z" {...sp} />,
     book: <><Path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z" {...sp} /><Path d="M4 21V5M9 7h6" {...sp} /></>,
     check: <Path d="m5 12 4.5 4.5L19 7" {...sp} />,
+    lock: <><Rect x={5} y={11} width={14} height={9} rx={2} {...sp} /><Path d="M8 11V8a4 4 0 0 1 8 0v3" {...sp} /></>,
+    clock: <><Circle cx={12} cy={12} r={9} {...sp} /><Path d="M12 7v5l3 2" {...sp} /></>,
   }[name];
   return <Svg width={size} height={size} viewBox="0 0 24 24" {...hidden}>{body}</Svg>;
 }

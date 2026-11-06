@@ -7,6 +7,9 @@ import { ProfileHero, ProfileMeta } from '@/components/Profile';
 import { SwipeCard, type SwipeCardHandle } from '@/components/SwipeCard';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
+import { LockedMode } from '@/components/LockedMode';
+import { useModes } from '@/hooks/useModes';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useDiscover } from '@/lib/discover';
 import { useSession, useSparkLimit } from '@/lib/session';
 import { useLang } from '@/lib/lang';
@@ -23,6 +26,8 @@ export default function Discover() {
   const { profile } = useSession();
   const limit = useSparkLimit();
   const swipe = useRef<SwipeCardHandle>(null);
+  const { modes, reload: reloadModes } = useModes();
+  useReloadOnFocus(reloadModes);
   useEffect(() => { d.ensure(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const card = d.current;
@@ -59,6 +64,9 @@ export default function Discover() {
     d.setTarget({ kind: 'profile', ref: null, label: t('screens.discover.fotoIzAnkety') });
     router.push('/like-note');
   };
+
+  // The server hides dating from people who are not single; say why instead of showing an empty feed.
+  if (modes && !modes.dating_open) return <Screen tabs="discover"><LockedMode mode="dating" modes={modes} /></Screen>;
 
   let body: React.ReactNode;
   if (d.pending && !card) body = <LoadingCards />;

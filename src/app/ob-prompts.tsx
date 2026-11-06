@@ -28,7 +28,7 @@ export default function ObPrompts() {
   if (error && !edited) return <Screen><ErrorRetryState onRetry={reload} /></Screen>;
   return (
     <Screen>
-      <OnbHeader step={7} kicker={t('screens.obPrompts.kicker')} heading={t('screens.obPrompts.heading')} sub={t('screens.obPrompts.sub')} />
+      <OnbHeader step={9} kicker={t('screens.obPrompts.kicker')} heading={t('screens.obPrompts.heading')} sub={t('screens.obPrompts.sub')} />
       {draft.map((d, i) => (
         <PromptBlock key={i} item={d} exclude={used} onChange={(n) => setDraft(draft.map((x, j) => (j === i ? n : x)))} />
       ))}
