@@ -601,9 +601,11 @@ const styles = StyleSheet.create({
   appbar: { height: 54, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmarkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wordmark: { fontSize: 29, fontWeight: '900', letterSpacing: -2.2, color: colors.ink },
-  barActions: { flexDirection: 'row', gap: 6 },
-  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  iconBtnText: { fontSize: 11, fontWeight: '800', color: colors.ink },
+  // The mockup draws 34 pt buttons 6 pt apart (centres 40 pt apart, last centre 17 pt from the edge + 18 gutter). Ours are
+  // 44 pt (touch target), so each overlaps its neighbour by 2 pt and the group sits 3 pt further out.
+  barActions: { flexDirection: 'row', marginRight: -3 },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginHorizontal: -2 },
+  iconBtnText: { fontSize: 10, fontWeight: '800', color: colors.ink },
   tabs: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 4 },
   tab: { width: '24%', height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 },
   tabIcon: { height: 23, alignItems: 'center', justifyContent: 'center' },
