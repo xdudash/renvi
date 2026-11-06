@@ -118,7 +118,7 @@ await step('status in a relationship closes dating', async () => {
   await gp.waitForURL(/\/modes/, { timeout: 15000 });
   eq(sql(`select relationship_status from public.profiles where id = '${guest.uid}'`), 'relationship', 'status');
   await go(gp, '/discover');
-  await gp.getByText('Свидания закрыты').first().waitFor({ timeout: 15000 });
+  await gp.waitForURL(/\/company/, { timeout: 15000 });
 });
 await step('cleanup', async () => {
   sql(`update public.profiles set vis_company = true`);

@@ -117,7 +117,7 @@ await step('ob-verify', async () => {
   await p.getByText('Селфи отправлено').waitFor({ timeout: 15000 });
 });
 await step('ob-review', async () => { await shot('ob-review'); await click('Продолжить оформление'); await p.getByText(/Анкета выглядит/).waitFor(); });
-await step('ob-done', async () => { await shot('ob-done'); await click('Перейти к знакомствам'); await p.getByText('Фильтры').waitFor({ timeout: 15000 }); });
+await step('ob-done', async () => { await shot('ob-done'); await click('Перейти к знакомствам'); await p.getByLabel('Фильтры').first().waitFor({ timeout: 15000 }); });
 await step('discover', async () => { await shot('discover'); });
 await ctx.storageState({ path: 'out/anna.json' });
 if (errors.length) console.log(errors.slice(0, 5).join('\n'));
