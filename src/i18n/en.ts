@@ -2004,4 +2004,7 @@ export const en: Dictionary = {
   "screens.notificationSettings.planCheck": "Evening after a plan",
   "screens.notificationSettings.planCheckHint": "A «All well?» push at 21:00 on the day of the plan. No titles or names.",
   // planx:end
+  // deletesub:begin
+  "screens.deleteAccount.subscription": "Your Plus subscription is not cancelled automatically — cancel it in your Apple ID settings, or charges will continue.",
+  // deletesub:end
 };
