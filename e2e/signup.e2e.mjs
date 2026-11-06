@@ -68,7 +68,7 @@ await step('ob-age', async () => {
   await click('Подтверждаю, сохранить');
   await p.getByText('Твой пол').waitFor();
 });
-await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого вы хотите встретить?').waitFor(); });
+await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого показывать в свиданиях?').waitFor(); });
 await step('ob-seeking', async () => {
   await click('Мужчин');
   await click('Продолжить'); // without consent → toast
