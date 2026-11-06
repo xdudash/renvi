@@ -45,6 +45,7 @@ run_sql supabase/tests/playbook.sql "playbook (men's course)"
 run_sql supabase/tests/plus_money.sql "plus and money"
 run_sql supabase/tests/chats_unified.sql "unified chat list"
 run_sql supabase/tests/plan_extras.sql "plan extras (21:00 check, polls, company hello)"
+run_sql supabase/tests/revenuecat_events.sql "RevenueCat events"
 
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob
