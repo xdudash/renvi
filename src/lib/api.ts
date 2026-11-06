@@ -113,7 +113,29 @@ export type SparkResult = { status: 'sent' } | { status: 'match'; match_id: stri
 /** Lifetime of a signed media URL (seconds). */
 export const SIGNED_URL_SECONDS = 24 * 3600;
 
+export type RelStatus = 'single' | 'relationship' | 'married' | 'couple';
+export type Goal = 'company' | 'dating' | 'couple' | 'look';
+export type Audience = 'all' | 'women' | 'men';
+export type Modes = {
+  status: RelStatus; goals: Goal[]; dating: boolean; company: boolean; audience: Audience; paused: boolean;
+  dating_open: boolean; dating_open_at: string | null; status_changed_at: string | null;
+};
+export type CoupleInfo = {
+  couple_id: string; status: 'pending' | 'active'; code: string | null; expires_at: string;
+  partner: { id: string; name: string; age: number | null } | null;
+} | null;
+
 export const api = {
+  myModes: () => rpc<Modes>('my_modes'),
+  setGoals: (goals: Goal[]) => rpc<void>('set_goals', { p_goals: goals }),
+  setStatus: (status: RelStatus) => rpc<{ status: RelStatus; dating_open_at: string | null }>('set_relationship_status', { p_status: status }),
+  setVisibility: (v: { dating: boolean; company: boolean; audience: Audience; paused: boolean }) =>
+    rpc<void>('set_visibility', { p_dating: v.dating, p_company: v.company, p_audience: v.audience, p_paused: v.paused }),
+  coupleCode: () => rpc<{ code: string; expires_at: string }>('couple_create_code'),
+  couplePreview: (code: string) => rpc<{ found: boolean; name?: string; age?: number | null }>('couple_preview', { p_code: code }),
+  coupleAccept: (code: string) => rpc<{ found: boolean; couple_id?: string; partner_id?: string }>('couple_accept', { p_code: code }),
+  myCouple: () => rpc<CoupleInfo>('my_couple'),
+  coupleLeave: () => rpc<void>('couple_leave'),
   discover: (limit = 20) => rpc<DiscoverCard[]>('discover', { p_limit: limit }),
   likesToday: () => rpc<number>('likes_today'),
   pass: (to: string) => rpc<void>('pass_profile', { p_to: to }),

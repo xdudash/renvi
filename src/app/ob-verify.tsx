@@ -28,7 +28,7 @@ export default function ObVerify() {
   };
   return (
     <Screen>
-      <OnbHeader step={9} kicker={t('screens.obVerify.podtverzhdenie')} heading={t('screens.obVerify.pokazhiteChtoVyEto')} sub={t('screens.obVerify.selfiSveritModeratorZnacho')} />
+      <OnbHeader step={11} kicker={t('screens.obVerify.podtverzhdenie')} heading={t('screens.obVerify.pokazhiteChtoVyEto')} sub={t('screens.obVerify.selfiSveritModeratorZnacho')} />
       <View style={{ borderRadius: 20, backgroundColor: colors.blush, height: 150, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: 53, color: '#b74e43' }}>◉</Text>
       </View>

@@ -1,5 +1,5 @@
-// Onboarding order from the prototype: 12 numbered steps.
-export const ONBOARDING = ['ob-age', 'ob-gender', 'ob-seeking', 'ob-intent', 'ob-city', 'ob-photos', 'ob-about',
+// Onboarding order from the prototype: goals and status first, then the 12 profile steps (ob-pair is a side step).
+export const ONBOARDING = ['ob-goals', 'ob-status', 'ob-age', 'ob-gender', 'ob-seeking', 'ob-intent', 'ob-city', 'ob-photos', 'ob-about',
   'ob-prompts', 'ob-location', 'ob-verify', 'ob-review', 'ob-done'] as const;
 export type OnbRoute = (typeof ONBOARDING)[number];
 

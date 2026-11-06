@@ -21,7 +21,7 @@ export default function ObAbout() {
   };
   return (
     <Screen>
-      <OnbHeader step={6} kicker={t('screens.obAbout.kicker')} heading={t('screens.obAbout.heading')} sub={t('screens.obAbout.sub')} />
+      <OnbHeader step={8} kicker={t('screens.obAbout.kicker')} heading={t('screens.obAbout.heading')} sub={t('screens.obAbout.sub')} />
       <Field label={t('screens.obAbout.about')} value={bio} onChangeText={setBio} multiline maxLength={500} style={{ minHeight: 83, textAlignVertical: 'top' }} placeholder={t('screens.obAbout.bioPlaceholder')} />
       <Between><Eyebrow>{t('screens.obAbout.interests')}</Eyebrow><Tiny>{t('screens.obAbout.counter', { count: picked.length })}</Tiny></Between>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
