@@ -84,6 +84,24 @@ await step('guest now sees the place and writes in the chat', async () => {
   await go(hp, `/plan-chat?id=${planId}`);
   await hp.getByText('привет всем!').first().waitFor({ timeout: 15000 });
 });
+await step('chat poll: a guest asks, the host votes and closes it', async () => {
+  await go(gp, `/plan-chat?id=${planId}`);
+  await gp.getByRole('button', { name: 'Опрос' }).click();
+  await gp.getByPlaceholder('Где встречаемся?').fill('Куда пойдём после?');
+  await gp.getByPlaceholder('Вариант 1').fill('Фонтан');
+  await gp.getByPlaceholder('Вариант 2').fill('Кафе');
+  await gp.getByText('Создать опрос', { exact: true }).last().click();
+  await gp.getByText('Куда пойдём после?').first().waitFor({ timeout: 15000 });
+  eq(sql(`select count(*) from public.plan_poll_options o join public.plan_polls p on p.id = o.poll_id where p.plan_id = '${planId}'`), '2', 'poll options stored');
+  await go(hp, `/plan-chat?id=${planId}`);
+  await hp.getByText('Куда пойдём после?').first().waitFor({ timeout: 15000 });
+  await hp.getByRole('button', { name: /Фонтан/ }).click();
+  await hp.waitForTimeout(1200);
+  eq(sql(`select count(*) from public.plan_poll_votes v join public.plan_polls p on p.id = v.poll_id where p.plan_id = '${planId}' and v.user_id = '${host.uid}'`), '1', 'host vote stored');
+  await hp.getByText('Закрыть опрос').first().click();
+  await hp.getByText('Опрос закрыт').first().waitFor({ timeout: 15000 });
+  eq(sql(`select count(*) from public.plan_polls where plan_id = '${planId}' and closed_at is not null`), '1', 'poll closed');
+});
 await step('company: a mutual hello opens a chat', async () => {
   // Only the two fixtures stay open to company, so the first card is the other one.
   sql(`update public.profiles set vis_company = false where id not in ('${host.uid}', '${guest.uid}')`);
@@ -127,6 +145,21 @@ await step('status in a relationship closes dating', async () => {
   eq(sql(`select relationship_status from public.profiles where id = '${guest.uid}'`), 'relationship', 'status');
   await go(gp, '/discover');
   await gp.waitForURL(/\/company/, { timeout: 15000 });
+});
+await step('after the plan: the evening check and a company hello', async () => {
+  sql(`update public.plans set starts_at = now() - interval '5 hours' where id = '${planId}';
+       update public.plan_members set arrived_at = now() where plan_id = '${planId}' and user_id = '${guest.uid}';
+       insert into public.plan_checks (plan_id, user_id) values ('${planId}', '${guest.uid}') on conflict do nothing`);
+  await go(gp, `/plan-after?id=${planId}`);
+  await gp.getByText('Всё ок?').first().waitFor({ timeout: 15000 });
+  await gp.getByText('Всё хорошо', { exact: true }).click();
+  await gp.waitForTimeout(1200);
+  eq(sql(`select answer from public.plan_checks where plan_id = '${planId}' and user_id = '${guest.uid}'`), 'ok', 'check answer');
+  await go(hp, `/plan-after?id=${planId}`);
+  await hp.getByText('Гостья Планов').first().waitFor({ timeout: 15000 });
+  await hp.getByRole('button', { name: /В компанию/ }).click();
+  await hp.waitForURL(/\/connected/, { timeout: 15000 });
+  eq(sql(`select count(*) from public.company_hellos where from_id = '${host.uid}' and to_id = '${guest.uid}'`), '1', 'hello stored');
 });
 await step('cleanup', async () => {
   sql(`update public.profiles set vis_company = true`);
