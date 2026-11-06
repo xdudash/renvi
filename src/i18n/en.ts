@@ -1797,7 +1797,7 @@ export const en: Dictionary = {
   "plus.row.sparks": "Sparks a day",
   "plus.row.plans": "Active plans",
   "plus.row.boost": "Plan boost",
-  "plus.row.boostFree": "{price}",
+  "plus.row.boostFree": "paid",
   "plus.row.boostPlus": "1 a week",
   "plus.row.guides": "Playbook",
   "plus.row.guidesFree": "1 lesson",

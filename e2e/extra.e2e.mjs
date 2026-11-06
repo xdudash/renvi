@@ -84,9 +84,9 @@ await step('Daniel hits the daily spark limit: neutral message, no upgrade offer
   await shot(p, 'discover-limit-config');
   const btn = p.getByLabel('Удержать искру').first();
   await btn.hover(); await p.mouse.down(); await p.waitForTimeout(700); await p.mouse.up();
-  await p.getByText('Лимит на сегодня исчерпан').waitFor({ timeout: 10000 });
-  await p.getByText(/Возвращайтесь завтра/).waitFor();
-  if (await p.getByText(/RENVI Plus|Premium|Подписк|тариф/i).count()) throw new Error('upsell shown on the limit screen');
+  await p.getByText('Искры закончились').waitFor({ timeout: 10000 });
+  await p.getByText(/В Free — 1 искр в день/).waitFor();
+  await p.getByText('Без лимита с Plus').waitFor(); // Plus is offered on the limit screen (block M)
   await shot(p, 'like-limit');
   await c.close();
 });

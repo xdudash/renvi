@@ -46,6 +46,8 @@ export async function buildScreenMap() {
     feed: ['/feed', 1], plan: [`/plan?${P}`, 1], 'plan-join': [`/plan-join?${P}`, 1], 'plan-create': ['/plan-create', 1], 'plan-created': [`/plan-created?${P}`, 1],
     'plan-requests': [`/plan-requests?${P}`, 1], 'plan-chat': [`/plan-chat?${P}`, 1], 'my-plans': ['/my-plans', 1], 'plan-day': [`/plan-day?${P}`, 1],
     'plan-after': [`/plan-after?${P}`, 1], 'plan-limit': ['/plan-limit', 1],
+    plans: ['/plans', 1], 'purchase-state': ['/purchase-state', 1], 'purchase-success': ['/purchase-success', 1], 'plan-boost': [`/plan-boost?${P}`, 1],
+    'people-ad': ['/people-ad', 1], 'rewarded-ad': ['/rewarded-ad', 1], guides: ['/guides', 1],
     discover: ['/discover', 1], profile: [`/profile?id=${marek.user.id}`, 1], 'media-viewer': [`/media-viewer?id=${marek.user.id}&at=1`, 1], 'like-note': [`/like-note?id=${daniel.user.id}`, 1],
     filters: ['/filters', 1], 'location-permission': ['/location-permission', 1], 'like-limit': ['/like-limit', 1],
     offline: ['/offline', 1], 'error-retry': ['/error-retry', 1], likes: ['/likes', 1],

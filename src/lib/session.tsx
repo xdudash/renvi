@@ -118,17 +118,5 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 export const useSession = () => useContext(SessionCtx);
 
 /** Fallback while app_config.daily_spark_limit is loading or unreadable; the server enforces the real value. */
-export const DEFAULT_SPARK_LIMIT = 100;
 
 // Anti-abuse daily spark limit, the same for everyone (app_config.daily_spark_limit, editable in the admin panel).
-export function useSparkLimit(): number {
-  const [limit, setLimit] = useState(DEFAULT_SPARK_LIMIT);
-  useEffect(() => {
-    let alive = true;
-    api.config<number>('daily_spark_limit')
-      .then((v) => { if (alive && typeof v === 'number' && v > 0) setLimit(v); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-  return limit;
-}

@@ -30,7 +30,7 @@ update public.app_config set value = '2'::jsonb where key = 'daily_spark_limit';
 -- ---- Free tier ----
 select pg_temp.as_user(pg_temp.uid(1));
 select pg_temp.check((public.my_tier()->>'plus')::boolean = false, 'a new account is Free');
-select pg_temp.check((public.my_tier()->>'spark_limit')::int = 2 and (public.my_tier()->>'plan_limit')::int = 2, 'Free: spark limit from config, 2 plans');
+select pg_temp.check((public.my_tier()->>'spark_limit')::int = 2 and (public.my_tier()->>'plan_limit')::int = 2 and (public.my_tier()->>'free_sparks')::int = 2, 'Free: spark limit from config, 2 plans');
 select pg_temp.check(pg_temp.state('select * from public.subscriptions') = '42501' or (select count(*) from public.subscriptions) = 0, 'subscriptions are not readable for others');
 select pg_temp.check(pg_temp.state(format($$select public.plus_set(%L, now() + interval '1 day', 'x', false)$$, pg_temp.uid(1))) = '42501', 'a client cannot grant itself Plus');
 select pg_temp.check(pg_temp.state(format($$select public.plan_boost_apply(%L, gen_random_uuid(), 3, 'tx0', 'p')$$, pg_temp.uid(1))) = '42501', 'a client cannot apply a paid boost');

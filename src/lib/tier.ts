@@ -61,3 +61,10 @@ export function useMyTier() {
   const uid = session?.user.id ?? null;
   return { uid, ...useTier(uid) };
 }
+
+/** Sparks the person may send today: Infinity for Plus, otherwise the server's limit (base + watched ads). */
+export function useSparkLimit(): number {
+  const { tier } = useMyTier();
+  if (!tier) return 20;
+  return tier.spark_limit === null ? Infinity : tier.spark_limit;
+}

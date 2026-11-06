@@ -15,7 +15,7 @@ export const ruMoney = {
   'plus.row.sparks': 'Искры в день',
   'plus.row.plans': 'Активные планы',
   'plus.row.boost': 'Подъём плана',
-  'plus.row.boostFree': '{price}',
+  'plus.row.boostFree': 'платно',
   'plus.row.boostPlus': '1 в неделю',
   'plus.row.guides': 'Playbook',
   'plus.row.guidesFree': '1 урок',

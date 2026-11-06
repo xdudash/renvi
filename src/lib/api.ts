@@ -16,7 +16,7 @@ export type Lang = 'SK' | 'CS' | 'EN' | 'RU' | 'UA';
 export type Tier = {
   plus: boolean; trial: boolean; expires_at: string | null;
   spark_limit: number | null; sparks_used: number; sparks_left: number | null;
-  ads_left: number; ad_sparks: number; plan_limit: number;
+  ads_left: number; ad_sparks: number; plan_limit: number; free_sparks: number; free_plans: number;
   boost_free_ready: boolean; boost_free_at: string | null;
 };
 export type AdCard = { id: string; partner: string; title: string; body: string | null; image_url: string | null; link_url: string };

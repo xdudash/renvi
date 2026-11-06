@@ -1797,7 +1797,7 @@ export const sk: Dictionary = {
   "plus.row.sparks": "Iskry za deň",
   "plus.row.plans": "Aktívne plány",
   "plus.row.boost": "Zvýraznenie plánu",
-  "plus.row.boostFree": "{price}",
+  "plus.row.boostFree": "platené",
   "plus.row.boostPlus": "1 týždenne",
   "plus.row.guides": "Playbook",
   "plus.row.guidesFree": "1 lekcia",

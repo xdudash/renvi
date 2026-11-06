@@ -281,6 +281,7 @@ begin
     'ads_left', case when plus then 0 else greatest(public.ad_reward_cfg('per_day', 3) - ads_done, 0) end,
     'ad_sparks', public.ad_reward_cfg('sparks', 5),
     'plan_limit', public.plan_limit_for(me),
+    'free_sparks', public.daily_spark_limit(), 'free_plans', 2,
     'boost_free_at', case when plus and last_free is not null and last_free > now() - interval '7 days' then last_free + interval '7 days' end,
     'boost_free_ready', plus and (last_free is null or last_free <= now() - interval '7 days'));
 end $$;

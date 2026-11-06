@@ -1797,7 +1797,7 @@ export const cs: Dictionary = {
   "plus.row.sparks": "Jiskry za den",
   "plus.row.plans": "Aktivní plány",
   "plus.row.boost": "Zvýraznění plánu",
-  "plus.row.boostFree": "{price}",
+  "plus.row.boostFree": "placené",
   "plus.row.boostPlus": "1 týdně",
   "plus.row.guides": "Playbook",
   "plus.row.guidesFree": "1 lekce",

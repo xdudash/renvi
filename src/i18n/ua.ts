@@ -1797,7 +1797,7 @@ export const ua: Dictionary = {
   "plus.row.sparks": "Іскри на день",
   "plus.row.plans": "Активні плани",
   "plus.row.boost": "Підйом плану",
-  "plus.row.boostFree": "{price}",
+  "plus.row.boostFree": "платно",
   "plus.row.boostPlus": "1 на тиждень",
   "plus.row.guides": "Playbook",
   "plus.row.guidesFree": "1 урок",
