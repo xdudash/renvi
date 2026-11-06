@@ -1926,4 +1926,18 @@ export const cs: Dictionary = {
   "adm.ads.switchOff": "Vypnout",
   "adm.ads.switchOn": "Zapnout",
   // adminads:end
+  // invite:begin
+  "invite.h": "{name} tě zve do RENVI",
+  "invite.hAnon": "Kamarád tě zve do RENVI",
+  "invite.lede": "Plány, společnost a rande poblíž — v jedné aplikaci.",
+  "invite.reward": "Vám oběma — týden Plus zdarma",
+  "invite.rewardSub": "připíše se po ověření účtu",
+  "invite.step1": "Plány poblíž: trhy, kluziště, kvízy, sport — klikni „Chci s vámi“.",
+  "invite.step2": "Společnost podle zájmů a, pokud chceš, rande.",
+  "invite.step3": "{name} uvidí, že jsi přišel/přišla, a může tě pozvat na svůj plán.",
+  "invite.step3Anon": "Kamarád uvidí, že jsi přišel/přišla, a může tě pozvat na svůj plán.",
+  "invite.create": "Vytvořit účet",
+  "invite.have": "Už mám účet",
+  "invite.broken": "Odkaz se neotevírá?",
+  // invite:end
 };

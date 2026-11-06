@@ -1926,4 +1926,18 @@ export const en: Dictionary = {
   "adm.ads.switchOff": "Switch off",
   "adm.ads.switchOn": "Switch on",
   // adminads:end
+  // invite:begin
+  "invite.h": "{name} invites you to RENVI",
+  "invite.hAnon": "A friend invites you to RENVI",
+  "invite.lede": "Plans, company and dates nearby — in one app.",
+  "invite.reward": "A free week of Plus for you both",
+  "invite.rewardSub": "added after the account is checked",
+  "invite.step1": "Plans nearby: markets, ice rink, quizzes, sports — tap “Join”.",
+  "invite.step2": "Company by interests and, if you want, dates.",
+  "invite.step3": "{name} will see you joined and can invite you to their plan.",
+  "invite.step3Anon": "Your friend will see you joined and can invite you to their plan.",
+  "invite.create": "Create an account",
+  "invite.have": "I already have an account",
+  "invite.broken": "Link does not open?",
+  // invite:end
 };

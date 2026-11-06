@@ -123,4 +123,26 @@ select pg_temp.check(pg_temp.state($$select public.admin_ad_save(null, '{"slot":
 select pg_temp.as_user(pg_temp.uid(1));
 select pg_temp.check(pg_temp.state('select public.admin_ads()') = '42501', 'a normal user cannot list ads through the admin RPC');
 select pg_temp.check(pg_temp.state($$select public.admin_ad_save(null, '{"slot":"people","partner":"x","title":"yy","link_url":"https://e.co"}'::jsonb)$$) = '42501', 'a normal user cannot save ads');
+
+-- ---- referral: a week of Plus for both ----
+reset role;
+insert into public.admins (user_id) values (pg_temp.uid(3));
+insert into public.referral_codes (user_id, code) values (pg_temp.uid(4), 'MN-0001');
+insert into public.referral_signups (invited_user, code, status) values (pg_temp.uid(5), 'MN-0001', 'verified'), (pg_temp.uid(6), 'MN-0001', 'verified');
+select pg_temp.as_user(pg_temp.uid(3));
+select public.admin_decide_referral(pg_temp.uid(5), true);
+select pg_temp.as_user(pg_temp.uid(4));
+select pg_temp.check((public.my_tier()->>'plus')::boolean and (public.my_tier()->>'promo')::boolean, 'the inviter gets promo Plus after approval');
+select pg_temp.check((public.my_tier()->>'plan_limit')::int = 10, 'promo Plus works like Plus');
+select pg_temp.as_user(pg_temp.uid(5));
+select pg_temp.check((public.my_tier()->>'plus')::boolean, 'the invited person gets promo Plus too');
+select pg_temp.check((public.my_tier()->>'expires_at')::timestamptz between now() + interval '6 days 23 hours' and now() + interval '7 days 1 hour', 'promo lasts 7 days');
+reset role;
+select public.plus_set(pg_temp.uid(5), null, null, false);
+select pg_temp.as_user(pg_temp.uid(5));
+select pg_temp.check((public.my_tier()->>'plus')::boolean, 'a store sync that finds nothing does not erase the promo');
+select pg_temp.as_user(pg_temp.uid(3));
+select public.admin_decide_referral(pg_temp.uid(6), false);
+select pg_temp.as_user(pg_temp.uid(6));
+select pg_temp.check(not (public.my_tier()->>'plus')::boolean, 'a rejected invitation gives nothing');
 rollback;
