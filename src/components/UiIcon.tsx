@@ -4,7 +4,8 @@ import { BrandMark } from './BrandMark';
 
 export type IconName = 'discover' | 'chat' | 'profile' | 'comment' | 'close' | 'arrow' | 'grid' | 'shield' | 'filter' | 'date' | 'pin' | 'spark'
   | 'gift' | 'ball' | 'couple' | 'people'
-  | 'ruler' | 'globe' | 'kids' | 'smoke' | 'glass' | 'dumbbell' | 'cap' | 'paw' | 'star' | 'heart' | 'book' | 'check' | 'lock' | 'clock';
+  | 'ruler' | 'globe' | 'kids' | 'smoke' | 'glass' | 'dumbbell' | 'cap' | 'paw' | 'star' | 'heart' | 'book' | 'check' | 'lock' | 'clock'
+  | 'snow' | 'mountain' | 'spa' | 'bulb' | 'music' | 'dice' | 'film' | 'pot' | 'train' | 'plus' | 'bolt' | 'wave' | 'play';
 
 const hidden = Platform.OS === 'web' ? ({ 'aria-hidden': true } as object) : { accessibilityElementsHidden: true, importantForAccessibility: 'no' as const };
 
@@ -43,6 +44,19 @@ export function UiIcon({ name, size = 22, color = '#201E1D', paper = '#F7F5F2' }
     book: <><Path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z" {...sp} /><Path d="M4 21V5M9 7h6" {...sp} /></>,
     check: <Path d="m5 12 4.5 4.5L19 7" {...sp} />,
     lock: <><Rect x={5} y={11} width={14} height={9} rx={2} {...sp} /><Path d="M8 11V8a4 4 0 0 1 8 0v3" {...sp} /></>,
+    snow: <Path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5" {...sp} />,
+    mountain: <><Path d="M3 19 9.5 8l4 6.5L16 11l5 8z" {...sp} /><Path d="m8 10.5 1.5 1.5 1.5-1.5" {...sp} /></>,
+    spa: <><Path d="M4 14c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2M4 18.5c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2" {...sp} /><Path d="M9 10c0-2 1.5-2.5 1.5-4.5M14 10c0-2 1.5-2.5 1.5-4.5" {...sp} /></>,
+    bulb: <Path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" {...sp} />,
+    music: <><Path d="M9 18V5l11-2v13" {...sp} /><Circle cx={6} cy={18} r={3} {...sp} /><Circle cx={17} cy={16} r={3} {...sp} /></>,
+    dice: <><Rect x={4} y={4} width={16} height={16} rx={4} {...sp} /><Circle cx={9} cy={9} r={1} {...sp} fill={color} /><Circle cx={15} cy={15} r={1} {...sp} fill={color} /><Circle cx={15} cy={9} r={1} {...sp} fill={color} /><Circle cx={9} cy={15} r={1} {...sp} fill={color} /></>,
+    film: <><Rect x={3.5} y={5} width={17} height={14} rx={2} {...sp} /><Path d="M7.5 5v14M16.5 5v14M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4" {...sp} /></>,
+    pot: <Path d="M4 10h16v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM2 10h20M9 6c0-1 1-1.5 1-2.5M14 6c0-1 1-1.5 1-2.5" {...sp} />,
+    train: <><Rect x={6} y={3} width={12} height={14} rx={3} {...sp} /><Path d="M6 11h12M9 21l1.5-4M15 21l-1.5-4" {...sp} /><Circle cx={9} cy={14} r={0.8} {...sp} fill={color} /><Circle cx={15} cy={14} r={0.8} {...sp} fill={color} /></>,
+    plus: <Path d="M12 5v14M5 12h14" {...sp} />,
+    bolt: <Path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z" {...sp} />,
+    wave: <><Path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11" {...sp} /><Path d="M10 10V4.5a1.5 1.5 0 0 1 3 0V10" {...sp} /><Path d="M13 10V5.5a1.5 1.5 0 0 1 3 0V12" {...sp} /><Path d="M16 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-12.6 4.2L4 15a1.6 1.6 0 0 1 2.4-2L7 13.5V11" {...sp} /></>,
+    play: <Path d="M7 4.5v15l12-7.5z" {...sp} />,
     clock: <><Circle cx={12} cy={12} r={9} {...sp} /><Path d="M12 7v5l3 2" {...sp} /></>,
   }[name];
   return <Svg width={size} height={size} viewBox="0 0 24 24" {...hidden}>{body}</Svg>;

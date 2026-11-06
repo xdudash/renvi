@@ -25,12 +25,12 @@ export default function Likes() {
   useReloadOnFocus(() => { reload(); matches.reload(); });
   const count = data?.count ?? 0;
 
-  if (loading) return <Screen tabs="likes"><Loading /></Screen>;
-  if (error) return <Screen tabs="likes"><ErrorRetryState onRetry={reload} /></Screen>;
+  if (loading) return <Screen tabs="discover"><Loading /></Screen>;
+  if (error) return <Screen tabs="discover"><ErrorRetryState onRetry={reload} /></Screen>;
 
   const items = data?.items ?? [];
   return (
-    <Screen tabs="likes">
+    <Screen tabs="discover">
       <Title kicker={t('screens.likes.kicker')} heading={t('screens.likes.heading')} sub={t('screens.likes.sub')} />
       <Segmented items={[{ key: 'new', label: t('screens.likes.segNew', { count }) }, { key: 'matches', label: t('screens.likes.segMatches') }]} value={seg} onChange={setSeg} />
       {seg === 'new'

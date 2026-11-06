@@ -126,6 +126,22 @@ export type CoupleInfo = {
 } | null;
 
 export const api = {
+  plansFeed: (category: string | null) => rpc<import('@/lib/plans').Plan[]>('plans_feed', { p_category: category }),
+  planDetail: (id: string) => rpc<import('@/lib/plans').Plan>('plan_detail', { p_plan: id }),
+  planCreate: (d: import('@/lib/plans').PlanDraft) => rpc<import('@/lib/plans').Plan>('plan_create', { p_data: d }),
+  planSetAuto: (id: string, auto: boolean) => rpc<void>('plan_set_auto', { p_plan: id, p_auto: auto }),
+  planCancel: (id: string) => rpc<void>('plan_cancel', { p_plan: id }),
+  planRequest: (id: string, message: string | null) => rpc<{ status: 'pending' | 'going' }>('plan_request', { p_plan: id, p_message: message }),
+  planDecide: (id: string, user: string, accept: boolean) => rpc<{ going: number }>('plan_decide', { p_plan: id, p_user: user, p_accept: accept }),
+  planWithdraw: (id: string) => rpc<void>('plan_withdraw', { p_plan: id }),
+  planRequests: (id: string) => rpc<import('@/lib/plans').PlanRequest[]>('plan_requests', { p_plan: id }),
+  plansMine: () => rpc<{ going: import('@/lib/plans').Plan[]; hosting: import('@/lib/plans').Plan[]; past: import('@/lib/plans').Plan[] }>('plans_mine'),
+  planCheckin: (id: string) => rpc<void>('plan_checkin', { p_plan: id }),
+  planArrivals: (id: string) => rpc<{ name: string; here: boolean }[]>('plan_arrivals', { p_plan: id }),
+  planRate: (id: string, rating: 'meh' | 'ok' | 'fire') => rpc<void>('plan_rate', { p_plan: id, p_rating: rating }),
+  planPeople: (id: string) => rpc<{ user_id: string; name: string; age: number | null; host: boolean; came: boolean }[]>('plan_people', { p_plan: id }),
+  planChat: (id: string) => rpc<import('@/lib/plans').PlanMessage[]>('plan_chat', { p_plan: id, p_limit: 100 }),
+  planChatSend: (id: string, body: string) => rpc<void>('plan_chat_send', { p_plan: id, p_body: body }),
   myModes: () => rpc<Modes>('my_modes'),
   setGoals: (goals: Goal[]) => rpc<void>('set_goals', { p_goals: goals }),
   setStatus: (status: RelStatus) => rpc<{ status: RelStatus; dating_open_at: string | null }>('set_relationship_status', { p_status: status }),

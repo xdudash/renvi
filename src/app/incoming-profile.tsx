@@ -13,8 +13,8 @@ export default function IncomingProfile() {
   const { data: card, loading } = useProfileCard(id);
   const d = useDiscover();
   const toast = useToast();
-  if (loading) return <Screen tabs="likes"><BackLink /><Loading /></Screen>;
-  if (!card) return <Screen tabs="likes"><BackLink /><StateBlock icon="↗" title={t('screens.incomingProfile.unavailable')} copy={t('screens.incomingProfile.unavailableCopy')} label={t('screens.incomingProfile.toSparks')} onPress={() => router.navigate('/likes')} /></Screen>;
+  if (loading) return <Screen tabs="discover"><BackLink /><Loading /></Screen>;
+  if (!card) return <Screen tabs="discover"><BackLink /><StateBlock icon="↗" title={t('screens.incomingProfile.unavailable')} copy={t('screens.incomingProfile.unavailableCopy')} label={t('screens.incomingProfile.toSparks')} onPress={() => router.navigate('/likes')} /></Screen>;
   const mutual = async () => {
     try {
       const r = await d.spark(card, { kind: 'profile', ref: null, label: t('screens.incomingProfile.photoFromProfile') }, null);
@@ -23,7 +23,7 @@ export default function IncomingProfile() {
     } catch { router.push('/error-retry'); }
   };
   return (
-    <Screen tabs="likes">
+    <Screen tabs="discover">
       <BackLink onPress={() => router.navigate('/likes')} />
       <ProfileHero photos={card.photos} count={card.photos.length} verified={card.verified} overlay={t('screens.incomingProfile.overlay')}
         name={card.display_name} age={card.age} sub={`${card.city} · ${card.distance}`}
