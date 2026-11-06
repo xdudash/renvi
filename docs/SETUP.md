@@ -87,6 +87,26 @@ RENVI бесплатен: покупок, тарифов, RevenueCat и мага
 4. Проверка вручную (отправит сразу, игнорируя день и час, но с учётом журнала): `curl -X POST "https://<ref>.supabase.co/functions/v1/weekly-digest?force=1" -H "x-digest-secret: $DIGEST_CRON_SECRET"`.
 5. Тексты пушей/писем лежат в `supabase/functions/weekly-digest/text.ts` (карта по языку профиля, запасной — русский).
 
+### Вечерняя проверка планов «Всё ок?» (миграция 0041, функция `plan-check`)
+
+В 21:00 по местному времени дня плана хост и принятые участники получают пуш «Как прошёл план? Всё ок?» (без названий и имён); он открывает «Как прошло». Один раз на человека и план.
+
+1. Деплой (секрет тот же, что у `weekly-digest`):
+   ```bash
+   npx supabase functions deploy plan-check --no-verify-jwt
+   ```
+2. Расписание — каждые 15 минут (функция сама отбирает только тех, чьё время пришло; повторов нет):
+   ```sql
+   select cron.schedule('plan-check', '*/15 * * * *', $$
+     select net.http_post(
+       url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/plan-check',
+       headers := jsonb_build_object('Content-Type', 'application/json',
+         'x-digest-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'digest_cron_secret')),
+       body := '{}'::jsonb);
+   $$);
+   ```
+3. Проверка вручную: `curl -X POST "https://<ref>.supabase.co/functions/v1/plan-check" -H "x-digest-secret: $DIGEST_CRON_SECRET"` — ответ `{"ok":true,"candidates":N,"pushed":M}`.
+
 ## 4a. Видеозвонок перед встречей (Daily.co, необязательно)
 
 Короткий видеозвонок двух людей из одного матча до встречи. Без ключа Daily функция отвечает `503 video_unavailable`, и приложение просто не показывает кнопку «Видеозвонок» — всё остальное работает.

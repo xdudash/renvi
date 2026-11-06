@@ -8,6 +8,7 @@ import { ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
 import { UiIcon } from '@/components/UiIcon';
 import { useAsync } from '@/hooks/useAsync';
+import { usePeopleAd } from '@/hooks/usePeopleAd';
 import { api, type CompanyCard } from '@/lib/api';
 import { categoryOf } from '@/lib/plans';
 import { useLang } from '@/lib/lang';
@@ -19,13 +20,14 @@ export default function Company() {
   const { data, loading, error, reload } = useAsync<CompanyCard[]>(() => api.companyFeed(), []);
   const [gone, setGone] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const maybeAd = usePeopleAd('company');
   const card = (data ?? []).find((x) => !gone.includes(x.id));
 
   const next = (id: string) => setGone((g) => [...g, id]);
   const skip = async () => {
     if (!card || busy) return;
     setBusy(true);
-    try { await api.companyPass(card.id); next(card.id); } catch { toast(t('plans.err.generic')); } finally { setBusy(false); }
+    try { await api.companyPass(card.id); next(card.id); maybeAd(); } catch { toast(t('plans.err.generic')); } finally { setBusy(false); }
   };
   const hello = async () => {
     if (!card || busy) return;
@@ -34,7 +36,7 @@ export default function Company() {
       const r = await api.companyHello(card.id);
       next(card.id);
       if (r.connected && r.match_id) router.push({ pathname: '/connected', params: { match: r.match_id, name: card.name, look: card.look.join(',') } });
-      else toast(t('company.sentHello'));
+      else { toast(t('company.sentHello')); maybeAd(); }
     } catch (e: any) { toast(e?.kind === 'rate_limited' ? e.message : t('plans.err.generic')); } finally { setBusy(false); }
   };
 

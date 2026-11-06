@@ -1,5 +1,5 @@
 import { Pressable, Text } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { AdCard } from '@/components/AdCard';
 import { PeopleHead } from '@/components/PeopleHead';
 import { LoadingCards } from '@/components/LoadingCards';
@@ -14,8 +14,10 @@ import { colors } from '@/theme/tokens';
 // people-ad · a partner card between people (every AD_EVERY-th card, Free only). Plus and "no ad booked" see no card.
 export default function PeopleAd() {
   const { t } = useLang();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const tab = from === 'company' ? 'company' : 'discover';
   const { data, loading, error, reload } = useAsync<Ad | null>(async () => takeAd() ?? api.adNext('people'), []);
-  const next = () => (router.canGoBack() ? router.back() : router.replace('/discover'));
+  const next = () => (router.canGoBack() ? router.back() : router.replace(tab === 'company' ? '/company' : '/discover'));
   let body: React.ReactNode;
   if (loading && data === null) body = <LoadingCards />;
   else if (error?.kind === 'offline') body = <OfflineState onRetry={reload} />;
@@ -28,7 +30,7 @@ export default function PeopleAd() {
   );
   return (
     <Screen tabs="discover">
-      <PeopleHead active="discover" />
+      <PeopleHead active={tab} />
       {body}
       <Btn kind="secondary" label={t('ad.next')} onPress={next} />
     </Screen>

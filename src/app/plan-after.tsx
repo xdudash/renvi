@@ -20,6 +20,9 @@ export default function PlanAfter() {
   const people = useAsync(() => api.planPeople(planId), [planId]);
   const mine = useAsync(() => api.plansMine().then((r) => r.past.find((p) => p.id === planId)?.my_rating ?? null), [planId]);
   const [picked, setPicked] = useState<'meh' | 'ok' | 'fire' | null>(null);
+  const check = useAsync(() => api.planCheckMine(planId), [planId]);
+  const [checked, setChecked] = useState<'ok' | 'help' | null>(null);
+  const [greeted, setGreeted] = useState<string[]>([]);
   if ((plan.loading && !plan.data) || (people.loading && !people.data) || mine.loading) return <Screen tabs="feed"><BackLink /><Loading /></Screen>;
   if (plan.error || people.error || !plan.data || !people.data) return <Screen tabs="feed"><BackLink /><ErrorBlock message={t('plans.err.generic')} onRetry={() => { plan.reload(); people.reload(); }} /></Screen>;
   const p = plan.data;
@@ -28,6 +31,22 @@ export default function PlanAfter() {
     setPicked(r);
     try { await api.planRate(planId, r); toast(t('plans.after.thanks')); } catch { setPicked(null); toast(t('plans.err.generic')); }
   };
+  const answer = async (ok: boolean) => {
+    try {
+      await api.planCheckAnswer(planId, ok);
+      setChecked(ok ? 'ok' : 'help');
+      if (ok) toast(t('plans.check.thanks')); else router.push('/safety');
+    } catch { toast(t('plans.err.generic')); }
+  };
+  const greet = async (userId: string, name: string) => {
+    try {
+      const r = await api.planCompanyHello(planId, userId);
+      setGreeted((g) => [...g, userId]);
+      if (r.connected && r.match_id) router.push({ pathname: '/connected', params: { match: r.match_id, name } });
+      else toast(t('plans.after.companySent'));
+    } catch (e: any) { toast(e?.code === 'P0007' || e?.code === 'P0002' ? t('plans.after.companyClosed') : t('plans.err.generic')); }
+  };
+  const asked = check.data ? (checked ?? check.data.answer) : null;
   return (
     <Screen tabs="feed">
       <BackLink onPress={() => router.replace('/my-plans')} />
@@ -39,6 +58,16 @@ export default function PlanAfter() {
           </Pressable>
         ))}
       </View>
+      {check.data && asked !== 'ok' ? (
+        <Card tight>
+          <Eyebrow>{t('plans.check.h')}</Eyebrow>
+          <Text style={s.empty}>{t('plans.check.sub')}</Text>
+          <View style={s.three}>
+            <View style={{ flex: 1 }}><Btn label={t('plans.check.ok')} onPress={() => answer(true)} /></View>
+            <View style={{ flex: 1 }}><Btn kind="secondary" label={t('plans.check.help')} onPress={() => answer(false)} /></View>
+          </View>
+        </Card>
+      ) : null}
       <Card tight>
         <Eyebrow>{t('plans.after.came')}</Eyebrow>
         {people.data.length === 0 ? <Text style={s.empty}>{t('plans.after.nobody')}</Text> : null}
@@ -49,7 +78,9 @@ export default function PlanAfter() {
               <Text style={s.name}>{x.name}{x.age ? `, ${x.age}` : ''}</Text>
               {x.host ? <Text style={s.sub}>{t('plans.d.host')}</Text> : null}
             </View>
-            {!x.came ? <Tag label="—" /> : null}
+            {!x.came ? <Tag label="—" /> : greeted.includes(x.user_id) ? <Tag label="✓" /> : (
+              <Pressable accessibilityRole="button" accessibilityLabel={`${t('plans.after.company')}: ${x.name}`} onPress={() => greet(x.user_id, x.name)} style={s.greet}><Text style={s.greetText}>{t('plans.after.company')}</Text></Pressable>
+            )}
           </View>
         ))}
       </Card>
@@ -71,5 +102,7 @@ const s = StyleSheet.create({
   name: { fontSize: 13, fontWeight: '700', color: colors.ink },
   sub: { fontSize: 10.5, color: colors.sub },
   empty: { fontSize: 12, color: colors.sub, marginVertical: 10 },
+  greet: { minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 22, borderWidth: 1, borderColor: colors.ink },
+  greetText: { fontSize: 11.5, fontWeight: '800', color: colors.ink },
   bad: { fontSize: 12, fontWeight: '700', color: '#A42623' },
 });

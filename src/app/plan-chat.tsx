@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { BackLink, ErrorBlock, Loading, TabBar, TopBar, useToast } from '@/components/ui';
 import { UiIcon } from '@/components/UiIcon';
+import { PlanPolls, PollComposer } from '@/components/PlanPolls';
 import { useAsync } from '@/hooks/useAsync';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -27,6 +28,8 @@ export default function PlanChat() {
   const [failed, setFailed] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [composing, setComposing] = useState(false);
+  const [pollTick, setPollTick] = useState(0);
   const scroll = useRef<ScrollViewInstance>(null);
 
   const load = useCallback(() => {
@@ -35,7 +38,7 @@ export default function PlanChat() {
   useEffect(() => {
     load();
     const ch = supabase.channel(`plan-chat:${planId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plan_messages', filter: `plan_id=eq.${planId}` }, () => load())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plan_messages', filter: `plan_id=eq.${planId}` }, () => { load(); setPollTick((n) => n + 1); })
       .subscribe((status) => { if (status === 'SUBSCRIBED') load(); });
     return () => { supabase.removeChannel(ch); };
   }, [planId, load]);
@@ -69,6 +72,7 @@ export default function PlanChat() {
         </View>
         <ScrollView ref={scroll} contentContainerStyle={s.msgs} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled">
           {p.place ? <View style={s.pinned}><UiIcon name="pin" size={16} /><Text style={s.pinnedText}>{t('plans.chat.place', { place: p.place })}</Text></View> : null}
+          <PlanPolls planId={planId} isHost={p.is_host} version={pollTick} />
           {msgs.length === 0 ? <Text style={s.empty}>{t('plans.chat.empty')}</Text> : null}
           {msgs.map((m, i) => {
             const head = i === 0 || new Date(m.created_at).toDateString() !== new Date(msgs[i - 1].created_at).toDateString();
@@ -82,12 +86,15 @@ export default function PlanChat() {
             );
           })}
         </ScrollView>
+        {composing ? <PollComposer planId={planId} onDone={(created) => { setComposing(false); if (created) setPollTick((n) => n + 1); }} /> : (
         <View style={s.composer}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('plans.poll.btn')} onPress={() => setComposing(true)} style={s.pollBtn}><UiIcon name="check" size={20} /></Pressable>
           <TextInput value={text} onChangeText={setText} placeholder={t('plans.chat.ph')} placeholderTextColor="#aaa" style={s.input} multiline maxLength={1000} accessibilityLabel={t('plans.chat.ph')} />
           <Pressable accessibilityRole="button" accessibilityLabel={t('plans.chat.send')} onPress={send} disabled={sending} style={[s.send, (!text.trim() || sending) && { opacity: 0.45 }]}>
             <Svg width={20} height={20} viewBox="0 0 24 24"><Path d="M12 19V5m-6 6 6-6 6 6" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg>
           </Pressable>
         </View>
+        )}
       </KeyboardAvoidingView>
     );
   }
@@ -120,5 +127,6 @@ const s = StyleSheet.create({
   bubbleText: { fontSize: 14, lineHeight: 19, color: colors.ink },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 17, paddingTop: 8, paddingBottom: 4, backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line },
   input: { flex: 1, borderWidth: 1, borderColor: '#e4e0d8', backgroundColor: colors.white, borderRadius: 22, paddingHorizontal: 15, paddingVertical: 12, fontSize: 15, maxHeight: 120 },
+  pollBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
 });

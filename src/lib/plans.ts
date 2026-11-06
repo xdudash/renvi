@@ -18,6 +18,10 @@ export type Plan = {
 };
 export type PlanRequest = { user_id: string; name: string; age: number | null; message: string | null; status: string | null; plans: number };
 export type PlanMessage = { id: string; user_id: string; name: string; host: boolean; body: string; created_at: string };
+export type PlanPoll = {
+  id: string; question: string; closed: boolean; mine: boolean; author: string | null; my_option: string | null;
+  options: { id: string; label: string; votes: number }[];
+};
 export type PlanDraft = {
   category: PlanCategory; title: string; starts_at: string; price_text: string; area: string; place: string; max_people: number;
   audience: PlanAudience; age_min: number | null; age_max: number | null; description: string; bring: string[]; auto_accept: boolean;
