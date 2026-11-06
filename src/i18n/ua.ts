@@ -2004,4 +2004,7 @@ export const ua: Dictionary = {
   "screens.notificationSettings.planCheck": "Увечері після плану",
   "screens.notificationSettings.planCheckHint": "Пуш «Усе гаразд?» о 21:00 в день плану. Без назв та імен.",
   // planx:end
+  // deletesub:begin
+  "screens.deleteAccount.subscription": "Підписка Plus не скасовується автоматично — скасуйте її в налаштуваннях Apple ID, інакше списання триватимуть.",
+  // deletesub:end
 };
