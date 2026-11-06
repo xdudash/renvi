@@ -208,3 +208,18 @@ Workflow `.github/workflows/web-deploy.yml` собирает веб-версию
 - Прямые ссылки (`/renvi/admin`, `/renvi/invite/КОД`) работают: `404.html` — копия `index.html`.
 - В `version.json` лежит коммит сборки. Открытая вкладка раз в 5 минут и при возврате на вкладку сравнивает его со своим и показывает «Вышла новая версия RENVI · Обновить».
 - Админка открывается по адресу `/renvi/admin`; доступ проверяет сервер (`is_admin`).
+
+## RevenueCat: входящий webhook (миграция 0043, функция `revenuecat-webhook`)
+
+Подписка Plus обновляется двумя путями, которые не конфликтуют: приложение вызывает `plus-sync` после покупки и раз в сутки,
+а RevenueCat сам шлёт события (продление, истечение, возврат, проблемы с оплатой) в `revenuecat-webhook`.
+Оба пути спрашивают у RevenueCat актуальную запись подписчика и пишут её через `plus_set()`; тело события доступа не даёт.
+Реферальный Plus (`promo_until`) хранится отдельно и остаётся при любом ответе магазина.
+
+1. Развернуть функцию (после миграций 0039–0040 и 0043): `supabase functions deploy revenuecat-webhook --no-verify-jwt` (в `config.toml` уже `verify_jwt = false`).
+2. Секреты Edge Functions: `REVENUECAT_WEBHOOK_SECRET` (любая длинная случайная строка; без неё функция отвечает 401 на всё), `REVENUECAT_SECRET_KEY` (secret API key RevenueCat v1; нужен и для `plus-sync`/`boost-sync`). Значения в Git и чат не писать.
+3. RevenueCat → Project → Integrations → Webhooks: URL `https://<project-ref>.supabase.co/functions/v1/revenuecat-webhook`, Authorization header = то же значение `REVENUECAT_WEBHOOK_SECRET` (подходит и с префиксом `Bearer `). Окружения Production и Sandbox. Кнопка «Send test event» должна вернуть 200 (`ignored: test`).
+4. Разовые покупки (бусты) обрабатывает только `boost-sync`; webhook отвечает на них 200 без действий. RevenueCat на `plus-sync`/`boost-sync` не направлять.
+5. Старую развёрнутую функцию `revenuecat-webhook` (она использовала `billing_events`/`billing_commit`) заменяет именно эта; отдельного удаления не требуется, но до деплоя новой версии RevenueCat на неё направлять нельзя.
+
+Поведение: повторная доставка того же события → 200 `duplicate`; более старое, чем уже обработанное для этого человека → 200 `stale`; та же доставка, пока первая в работе → 503 (RevenueCat повторит); RevenueCat недоступен или ошибка БД → 5xx, запись о событии снимается и повтор обработается заново. Журнал хранит события 90 дней.
