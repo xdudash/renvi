@@ -39,7 +39,7 @@ await step('invite link with a real code attaches the referral', async () => {
   await go(q, '/delete-confirm');
   await q.getByRole('checkbox', { name: /Я понимаю/ }).click();
   await q.getByText('Удалить аккаунт', { exact: true }).last().click();
-  await q.getByText('Начать знакомство').waitFor({ timeout: 15000 });
+  await q.getByText('Начать', { exact: true }).waitFor({ timeout: 15000 });
   if (psql(`select count(*) from auth.users where email='friend@renvi.test'`) !== '0') throw new Error('account still exists');
   await c.close();
 });

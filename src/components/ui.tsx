@@ -262,6 +262,24 @@ export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'p
     </View>
   );
 }
+// Small rounded label from the prototype (.x-tag): language codes, statuses, kinds of people.
+export type TagTone = 'gray' | 'pink' | 'green' | 'amber' | 'blue' | 'red';
+const TAG_TONES: Record<TagTone, { bg: string; fg: string }> = {
+  gray: { bg: '#EFEAE3', fg: '#5E5852' },
+  pink: { bg: '#F7E3EC', fg: '#8C2457' },
+  green: { bg: colors.greenWash, fg: colors.green },
+  amber: { bg: colors.amberWash, fg: colors.amber },
+  blue: { bg: '#E6EEF8', fg: '#2F5F95' },
+  red: { bg: colors.redWash, fg: colors.redDark },
+};
+export function Tag({ label, tone = 'gray', width }: { label: string; tone?: TagTone; width?: number }) {
+  const t = TAG_TONES[tone];
+  return (
+    <View style={[styles.tag, { backgroundColor: t.bg }, width ? { width, justifyContent: 'center' } : null]}>
+      <Text style={[styles.tagText, { color: t.fg }]}>{label}</Text>
+    </View>
+  );
+}
 export function Choice({ children, selected, onPress, disabled }: {
   children: React.ReactNode; selected?: boolean; onPress?: () => void; disabled?: boolean;
 }) {
@@ -604,6 +622,8 @@ const styles = StyleSheet.create({
   pill: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6, marginRight: 7, marginBottom: 7 },
   pillText: { fontSize: 11, lineHeight: 14 },
   pillWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
+  tagText: { fontSize: 9.5, lineHeight: 13, fontWeight: '800', letterSpacing: 0.19 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },

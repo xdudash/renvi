@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { BackLink, Btn, Choice, Screen, Title } from '@/components/ui';
-import { LANGUAGE_FLAGS, LANGUAGE_NAMES, useLang } from '@/lib/lang';
+import { BackLink, Btn, Choice, Screen, Tag, Title } from '@/components/ui';
+import { LANGUAGE_NAMES, useLang } from '@/lib/lang';
 import { useSession } from '@/lib/session';
 import { api, type Lang } from '@/lib/api';
 
@@ -17,10 +17,13 @@ export default function Language() {
     <Screen>
       <BackLink />
       <Title kicker={t('screens.language.kicker')} heading={t('screens.language.heading')} sub={t('screens.language.sub')} />
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: 18 }}>
         {(Object.keys(LANGUAGE_NAMES) as Lang[]).map((k) => (
           <Choice key={k} selected={lang === k} onPress={() => pick(k)}>
-            <Text style={{ fontSize: 12 }}><Text style={{ fontSize: 17 }}>{LANGUAGE_FLAGS[k]}</Text>{'　'}{LANGUAGE_NAMES[k]}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Tag label={k} width={30} />
+              <Text style={{ fontSize: 13, fontWeight: '700' }}>{LANGUAGE_NAMES[k]}</Text>
+            </View>
             <Text>{lang === k ? '✓' : '○'}</Text>
           </Choice>
         ))}

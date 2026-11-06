@@ -17,7 +17,7 @@ const click = async (text) => { await p.getByText(text, { exact: true }).last().
 const { step, finish } = createRunner({ label: 'signup', stopOnFail: true, onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 
 await p.goto(APP + '/', { waitUntil: 'networkidle' });
-await step('welcome', async () => { await shot('welcome'); await click('Начать знакомство'); });
+await step('welcome', async () => { await shot('welcome'); await click('Начать'); });
 await step('signup', async () => {
   await p.getByPlaceholder('name@example.com').fill('anna@renvi.test');
   await p.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
