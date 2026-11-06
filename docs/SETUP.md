@@ -36,7 +36,7 @@
    npx supabase secrets set RESEND_API_KEY=... EXPORT_FROM_EMAIL="RENVI <no-reply@ваш-домен>"
    ```
 6. **Database → Webhooks** (для push): вебхуки на функцию `push`, метод POST, заголовок `x-push-secret: <PUSH_WEBHOOK_SECRET>`:
-   `messages` (INSERT), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
+   `messages` (INSERT), `plan_messages` (INSERT — сообщения групповых чатов планов, миграция 0045), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
 7. **Администраторы**: SQL Editor →
    `insert into public.admins (user_id) select id from auth.users where email = 'founder@...';`
    Админка открывается в веб-версии по адресу `/admin`. Так добавляется только первый админ; следующих добавляет

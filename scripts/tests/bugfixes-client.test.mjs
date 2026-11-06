@@ -60,6 +60,7 @@ test('B4 push taps open only app routes, once', async () => {
   assert.equal(pushRoute({ route: '/chat?match=1' }), '/chat?match=1');
   assert.equal(pushRoute({ route: '/video-call?match=1' }), '/video-call?match=1');
   assert.equal(pushRoute({ route: '/discover' }), '/discover');
+  assert.equal(pushRoute({ route: '/plan-chat?id=11111111-2222-3333-4444-555555555555' }), '/plan-chat?id=11111111-2222-3333-4444-555555555555');
   for (const bad of ['//evil.example/x', 'https://evil.example', '/admin/users', '/\\evil', 'chat', 5, null]) assert.equal(pushRoute({ route: bad }), null, String(bad));
   assert.equal(pushRoute(null), null);
   assert.equal(responseKey({ notification: { request: { identifier: 'n1' } } }), 'n1');
