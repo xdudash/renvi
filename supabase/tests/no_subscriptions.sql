@@ -33,18 +33,18 @@ create or replace function pg_temp.uid(n int) returns uuid language sql immutabl
 $$;
 
 -- ================= catalog: nothing paid is left =================
-select pg_temp.check(to_regclass('public.subscriptions') is null and to_regclass('public.billing_events') is null,
-  'subscriptions and billing_events tables are gone');
+select pg_temp.check(to_regclass('public.billing_events') is null and not has_table_privilege('authenticated', 'public.subscriptions', 'insert, update, delete'),
+  'billing_events is gone and clients cannot write subscriptions (0039: only the service role does)');
 select pg_temp.check(not exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace
-  and proname in ('my_tier', 'tier_flag', 'daily_like_limit', 'admin_reset_free', 'billing_commit', 'guard_subscription_write')),
-  'plan helpers, billing commit and reset-to-Free are gone');
+  and proname in ('tier_flag', 'daily_like_limit', 'admin_reset_free', 'billing_commit', 'guard_subscription_write')),
+  'the old plan helpers, billing commit and reset-to-Free stay gone');
 select pg_temp.check(not exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace
-  and prosrc ~* '\y(subscriptions|billing_events|tier_flag|my_tier|daily_like_limit|tier_limits|prices_preliminary)\y'),
-  'no database function refers to subscriptions or tiers');
+  and prosrc ~* '\y(billing_events|tier_flag|daily_like_limit|tier_limits|prices_preliminary)\y'),
+  'no database function refers to the removed billing tables or tier limits');
 select pg_temp.check(not exists (select 1 from public.app_config where key in ('tier_limits', 'prices_preliminary')),
   'tier limits and prices are removed from app_config');
-select pg_temp.check((select value from public.app_config where key = 'daily_spark_limit') = '100'::jsonb,
-  'daily_spark_limit defaults to 100');
+select pg_temp.check((select value from public.app_config where key = 'daily_spark_limit') = '20'::jsonb,
+  'daily_spark_limit defaults to 20 (0039, as in the mockup)');
 select pg_temp.check(not ((select value from public.app_config where key = 'legal_urls') ? 'subscriptions')
   and not ((select value from public.app_config where key = 'referral') ? 'reward_days'),
   'no subscriptions document and no referral reward days in config');

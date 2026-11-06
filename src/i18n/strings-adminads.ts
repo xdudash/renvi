@@ -1,0 +1,23 @@
+// Russian source for the "adminads" block of the RENVI для всех prototype. Spread into ru.ts.
+export const ruAdminads = {
+  'adm.nav.ads': 'Реклама',
+  'adm.ads.title': 'Реклама',
+  'adm.ads.sub': 'Карточки партнёров для Free: между людьми и перед наградой +5 искр. Plus их не видит.',
+  'adm.ads.failed': 'Не удалось загрузить рекламу',
+  'adm.ads.new': 'Новая карточка',
+  'adm.ads.slotPeople': 'Между людьми',
+  'adm.ads.slotRewarded': 'За награду',
+  'adm.ads.partner': 'Партнёр',
+  'adm.ads.adTitle': 'Заголовок',
+  'adm.ads.body': 'Текст (необязательно)',
+  'adm.ads.image': 'Ссылка на картинку https://… (необязательно)',
+  'adm.ads.link': 'Ссылка при нажатии https://…',
+  'adm.ads.hint': 'Ссылки только https. Реклама должна быть честно помечена как реклама, без обещаний знакомств и без чувствительных тем.',
+  'adm.ads.add': 'Добавить',
+  'adm.ads.empty': 'Рекламы пока нет: Free видит пустое место, а не заглушку.',
+  'adm.ads.on': 'включена',
+  'adm.ads.off': 'выключена',
+  'adm.ads.stats': 'Показов: {views} · переходов: {clicks}',
+  'adm.ads.switchOff': 'Выключить',
+  'adm.ads.switchOn': 'Включить',
+} as const;

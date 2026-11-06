@@ -5,7 +5,7 @@ import { Avatar, BackLink, Btn, Card, Field, Row, Screen, Tiny, Title, useToast 
 import { useDiscover } from '@/lib/discover';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
-import { useSparkLimit } from '@/lib/session';
+import { useSparkLimit } from '@/lib/tier';
 import { useLang } from '@/lib/lang';
 
 // 28 · Лайк с комментарием

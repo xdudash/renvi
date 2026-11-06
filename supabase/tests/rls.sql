@@ -66,7 +66,8 @@ select pg_temp.check(public.distance_label('00000000-0000-0000-0000-000000000001
 
 select pg_temp.expect_error($q$update public.profiles set verification_status = 'approved' where id = '00000000-0000-0000-0000-000000000001'$q$,
   'client cannot approve own verification');
-select pg_temp.check(to_regclass('public.subscriptions') is null, 'there is no subscriptions table (RENVI is free)');
+select pg_temp.expect_error($q$insert into public.subscriptions (user_id, expires_at) values ('00000000-0000-0000-0000-000000000001', now() + interval '1 year')$q$,
+  'client cannot grant itself a subscription');
 select pg_temp.expect_error($q$select public.save_onboarding('{"birthdate":"2015-01-01"}'::jsonb)$q$,
   'under 18 birth date rejected');
 

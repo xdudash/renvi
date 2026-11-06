@@ -11,11 +11,13 @@ import { PeopleHead } from '@/components/PeopleHead';
 import { useModes } from '@/hooks/useModes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useSparkLimit } from '@/lib/session';
+import { useSession } from '@/lib/session';
+import { useMyTier, useSparkLimit } from '@/lib/tier';
+import { AD_EVERY, stashAd } from '@/lib/adSlots';
 import { useLang } from '@/lib/lang';
 import { interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
-import type { DiscoverCard } from '@/lib/api';
+import { api, type DiscoverCard } from '@/lib/api';
 
 // 25 · Главная карточка. The card fills one screen (photo, name, a line of chips, the buttons); everything else —
 // answers, more photos, details — is on the full profile ("Профиль" or a tap on the name).
@@ -33,7 +35,15 @@ export default function Discover() {
   const card = d.current;
   const mine: string[] = profile?.interests ?? [];
   const common = card ? card.interests.filter((x) => mine.includes(x)) : [];
-  const left = Math.max(0, limit - d.likesUsed);
+  const { tier } = useMyTier();
+  const shown = useRef(0);
+  const left = tier && tier.sparks_left !== null ? Math.max(0, tier.sparks_left - d.likesUsed) : Infinity;
+  // Free accounts: after every AD_EVERY-th person a partner card (only when an ad is booked; Plus never gets one).
+  const maybeAd = () => {
+    shown.current += 1;
+    if (!tier || tier.plus || shown.current % AD_EVERY !== 0) return;
+    api.adNext('people').then((ad) => { if (ad) { stashAd(ad); router.push('/people-ad'); } }, () => {});
+  };
 
   const openProfile = (c: DiscoverCard) => router.push({ pathname: '/profile', params: { id: c.profile_id } });
 
@@ -48,11 +58,12 @@ export default function Discover() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (r.status === 'match') router.push('/match');
       else toast(t('screens.discover.iskraOtpravlena'));
+      maybeAd();
     } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
   const doPass = async (flung: boolean) => {
     if (!flung) await swipe.current?.fling('left');
-    try { await d.pass(); } catch { swipe.current?.reset(); router.push('/error-retry'); }
+    try { await d.pass(); maybeAd(); } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
   // Undo of the last pass is available to everyone.
   const onUndo = async () => {

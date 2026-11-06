@@ -86,13 +86,13 @@ await step('admin signs in and sees the dashboard with the sidebar', async () =>
   await signInUi(ap, 'admin@renvi.test', 'renvi-admin-1');
   await go(ap, '/admin');
   await ap.getByText('По странам').first().waitFor({ timeout: 10000 });
-  for (const label of ['Жалобы', 'Апелляции', 'Пользователи', 'Настройки', 'Админы', 'Журнал'])
+  for (const label of ['Жалобы', 'Апелляции', 'Пользователи', 'Настройки', 'Админы', 'Журнал', 'Реклама'])
     must(await ap.getByRole('link', { name: label }).count(), 'sidebar link missing: ' + label);
 });
 
 await step('every admin screen opens without an error (desktop)', async () => {
   for (const path of ['/admin', '/admin/reports', '/admin/appeals', '/admin/verification', '/admin/users', '/admin/analytics',
-    '/admin/config', '/admin/audit', '/admin/errors', '/admin/admins', '/admin/demo']) {
+    '/admin/config', '/admin/audit', '/admin/errors', '/admin/admins', '/admin/demo', '/admin/ads']) {
     await go(ap, path);
     const text = await ap.innerText('body');
     must(!/Ошибка:|Нет доступа|Не удалось проверить/.test(text), `${path} shows an error: ${text.replace(/\s+/g, ' ').slice(0, 160)}`);
@@ -264,7 +264,7 @@ await step('phone 393px: every admin screen has no horizontal overflow and a wor
   await signInUi(page, 'admin@renvi.test', 'renvi-admin-1');
   const bad = [];
   const screens = ['/admin', '/admin/reports', '/admin/appeals', '/admin/verification', '/admin/users', '/admin/analytics', '/admin/config',
-    '/admin/audit', '/admin/errors', '/admin/admins', '/admin/demo', '/admin/user/' + warnee.uid];
+    '/admin/audit', '/admin/errors', '/admin/admins', '/admin/demo', '/admin/ads', '/admin/user/' + warnee.uid];
   for (const path of screens) {
     await go(page, path);
     const { outside } = await page.evaluate(auditLayout);

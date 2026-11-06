@@ -42,6 +42,7 @@ run_sql supabase/tests/modes_pairs.sql "modes, status and couples"
 run_sql supabase/tests/plans.sql "plans"
 run_sql supabase/tests/company_couples.sql "company and couples"
 run_sql supabase/tests/playbook.sql "playbook (men's course)"
+run_sql supabase/tests/plus_money.sql "plus and money"
 
 # Edge Function unit tests (pure TypeScript, no network).
 shopt -s nullglob

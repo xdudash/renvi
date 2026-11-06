@@ -42,3 +42,10 @@ content_path = "./supabase/templates/recovery.html"
 # Disposable local Mailpit test traffic, not hosted SMTP policy.
 [auth.rate_limit]
 email_sent = 1000
+
+# RENVI Plus / plan boosts (caller only; ask RevenueCat with REVENUECAT_SECRET_KEY).
+[functions.plus-sync]
+verify_jwt = true
+
+[functions.boost-sync]
+verify_jwt = true
