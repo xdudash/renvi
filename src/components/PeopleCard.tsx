@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Photo } from '@/components/Photo';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { colors } from '@/theme/tokens';

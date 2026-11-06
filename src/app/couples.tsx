@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Btn, Screen, StateBlock, Tag, useToast } from '@/components/ui';
+import { Screen, StateBlock, Tag, useToast } from '@/components/ui';
 import { PeopleHead } from '@/components/PeopleHead';
 import { PersonPhoto, cardStyles as c } from '@/components/PeopleCard';
 import { LockedMode } from '@/components/LockedMode';

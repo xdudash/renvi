@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Screen, StateBlock, Tag, Tiny, useToast, Eyebrow } from '@/components/ui';
-import { Btn } from '@/components/ui';
+import { Btn, Eyebrow, Screen, StateBlock, Tag, Tiny, useToast } from '@/components/ui';
 import { PeopleHead } from '@/components/PeopleHead';
 import { PersonPhoto, cardStyles as c } from '@/components/PeopleCard';
 import { ErrorRetryState, OfflineState } from '@/components/States';

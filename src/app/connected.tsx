@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Btn, Eyebrow, Screen } from '@/components/ui';
+import { Btn, Screen } from '@/components/ui';
 import { GreenCard } from '@/components/Kit';
 import { categoryOf } from '@/lib/plans';
 import { useLang } from '@/lib/lang';
@@ -18,7 +18,7 @@ export default function Connected() {
           <View style={s.av}><Text style={s.avText}>★</Text></View>
           <View style={s.av}><Text style={s.avText}>{(name ?? '?').slice(0, 1).toUpperCase()}</Text></View>
         </View>
-        <Eyebrow style={{ color: '#BFE0CB', marginTop: 16 }}>{couples ? t('connected.coupleKicker') : t('connected.kicker')}</Eyebrow>
+        <Text style={s.kicker}>{(couples ? t('connected.coupleKicker') : t('connected.kicker')).toUpperCase()}</Text>
         <Text style={s.h}>{t('connected.h')}</Text>
         <Text style={s.p}>{couples ? t('connected.coupleCopy', { name: name ?? '' }) : t('connected.copy', { name: name ?? '' })}{common ? ` ${t('connected.common', { look: common })}` : ''}</Text>
         {!couples ? (
@@ -36,6 +36,7 @@ export default function Connected() {
 }
 
 const s = StyleSheet.create({
+  kicker: { fontSize: 9.5, fontWeight: '800', letterSpacing: 1.4, color: '#BFE0CB', marginTop: 16 },
   faces: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   av: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#ffffff33', alignItems: 'center', justifyContent: 'center' },
   avText: { fontSize: 22, fontWeight: '800', color: '#fff' },
