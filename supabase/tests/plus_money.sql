@@ -110,4 +110,17 @@ select pg_temp.check(pg_temp.state(format($$select public.plan_boost_apply(%L, %
 select pg_temp.check(pg_temp.state(format($$select public.plan_boost_apply(%L, %L, 5, 'tx-3', 'p')$$, pg_temp.uid(7), (select id from t_plans where n = 2))) = '22023', 'only 3 and 24 hour boosts exist');
 select pg_temp.as_user(pg_temp.uid(2));
 select pg_temp.check((public.plans_feed()->2->>'title') = 'Plan 3', 'boosted plans come before the unboosted one in the feed');
+
+-- ---- admin ads ----
+reset role;
+insert into public.admins (user_id) values (pg_temp.uid(8));
+select pg_temp.as_user(pg_temp.uid(8));
+create temp table t_newad as select public.admin_ad_save(null, '{"slot":"people","partner":"Cafe","title":"Coffee deal","link_url":"https://cafe.example/x"}'::jsonb) as id;
+select pg_temp.check(jsonb_array_length(public.admin_ads()) >= 3, 'an admin lists the ads');
+select public.admin_ad_save((select id from t_newad), '{"active":false}'::jsonb);
+select pg_temp.check(not (select (x->>'active')::boolean from jsonb_array_elements(public.admin_ads()) x where x->>'title' = 'Coffee deal'), 'an admin can switch an ad off');
+select pg_temp.check(pg_temp.state($$select public.admin_ad_save(null, '{"slot":"people","partner":"x","title":"yy","link_url":"http://insecure"}'::jsonb)$$) = '23514', 'an ad link must be https');
+select pg_temp.as_user(pg_temp.uid(1));
+select pg_temp.check(pg_temp.state('select public.admin_ads()') = '42501', 'a normal user cannot list ads through the admin RPC');
+select pg_temp.check(pg_temp.state($$select public.admin_ad_save(null, '{"slot":"people","partner":"x","title":"yy","link_url":"https://e.co"}'::jsonb)$$) = '42501', 'a normal user cannot save ads');
 rollback;

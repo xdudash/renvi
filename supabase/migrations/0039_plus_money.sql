@@ -340,3 +340,40 @@ revoke all on function public.ad_next(text), public.ad_click(uuid), public.ad_re
   public.plan_boost_free(uuid), public.my_tier(), public.playbook_state(), public.playbook_mark_done(int), public.playbook_set_trainer(int) from public, anon;
 grant execute on function public.ad_next(text), public.ad_click(uuid), public.ad_reward_start(), public.ad_reward_claim(uuid),
   public.plan_boost_free(uuid), public.my_tier(), public.playbook_state(), public.playbook_mark_done(int), public.playbook_set_trainer(int) to authenticated;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 8. Admin panel: ads (list with numbers, save, switch on/off). Every change is written to the admin audit log.
+-- ---------------------------------------------------------------------------------------------------------------
+create or replace function public.admin_ads() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  perform public.admin_guard();
+  return coalesce((select jsonb_agg(to_jsonb(a) order by a.created_at desc) from public.ads a), '[]'::jsonb);
+end $$;
+
+create or replace function public.admin_ad_save(p_id uuid, p_data jsonb) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare rid uuid;
+begin
+  perform public.admin_guard();
+  if p_id is null then
+    insert into public.ads (slot, partner, title, body, image_url, link_url, active, starts_at, ends_at)
+    values (p_data->>'slot', trim(p_data->>'partner'), trim(p_data->>'title'), nullif(trim(p_data->>'body'), ''), nullif(trim(p_data->>'image_url'), ''),
+            trim(p_data->>'link_url'), coalesce((p_data->>'active')::boolean, true), nullif(p_data->>'starts_at', '')::timestamptz, nullif(p_data->>'ends_at', '')::timestamptz)
+    returning id into rid;
+  else
+    update public.ads set slot = coalesce(p_data->>'slot', slot), partner = coalesce(trim(p_data->>'partner'), partner),
+           title = coalesce(trim(p_data->>'title'), title), body = case when p_data ? 'body' then nullif(trim(p_data->>'body'), '') else body end,
+           image_url = case when p_data ? 'image_url' then nullif(trim(p_data->>'image_url'), '') else image_url end,
+           link_url = coalesce(trim(p_data->>'link_url'), link_url), active = coalesce((p_data->>'active')::boolean, active),
+           starts_at = case when p_data ? 'starts_at' then nullif(p_data->>'starts_at', '')::timestamptz else starts_at end,
+           ends_at = case when p_data ? 'ends_at' then nullif(p_data->>'ends_at', '')::timestamptz else ends_at end
+     where id = p_id returning id into rid;
+    if rid is null then raise exception 'not available' using errcode = 'P0002'; end if;
+  end if;
+  perform public.admin_log('ads.save', null, rid::text, 'ad ' || coalesce(p_data->>'title', ''), jsonb_build_object('slot', p_data->>'slot', 'active', p_data->>'active'));
+  return rid;
+end $$;
+
+revoke all on function public.admin_ads(), public.admin_ad_save(uuid, jsonb) from public, anon;
+grant execute on function public.admin_ads(), public.admin_ad_save(uuid, jsonb) to authenticated;

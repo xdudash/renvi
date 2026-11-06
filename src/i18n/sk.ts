@@ -1904,4 +1904,26 @@ export const sk: Dictionary = {
   "me.guidesSub": "Playbook a ďalšie lekcie",
   "plans.limit.plus": "Viac plánov — s Plus (až {n})",
   // money:end
+  // adminads:begin
+  "adm.nav.ads": "Reklama",
+  "adm.ads.title": "Reklama",
+  "adm.ads.sub": "Karty partnerov pre Free: medzi ľuďmi a pred odmenou +5 iskier. Plus ich nevidí.",
+  "adm.ads.failed": "Reklamu sa nepodarilo načítať",
+  "adm.ads.new": "Nová karta",
+  "adm.ads.slotPeople": "Medzi ľuďmi",
+  "adm.ads.slotRewarded": "Za odmenu",
+  "adm.ads.partner": "Partner",
+  "adm.ads.adTitle": "Nadpis",
+  "adm.ads.body": "Text (nepovinné)",
+  "adm.ads.image": "Odkaz na obrázok https://… (nepovinné)",
+  "adm.ads.link": "Odkaz po kliknutí https://…",
+  "adm.ads.hint": "Odkazy len https. Reklama musí byť jasne označená ako reklama, bez sľubov zoznámenia a citlivých tém.",
+  "adm.ads.add": "Pridať",
+  "adm.ads.empty": "Reklama zatiaľ nie je: Free neuvidí zástupný obsah.",
+  "adm.ads.on": "zapnutá",
+  "adm.ads.off": "vypnutá",
+  "adm.ads.stats": "Zobrazení: {views} · kliknutí: {clicks}",
+  "adm.ads.switchOff": "Vypnúť",
+  "adm.ads.switchOn": "Zapnúť",
+  // adminads:end
 };

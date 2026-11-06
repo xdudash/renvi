@@ -1904,4 +1904,26 @@ export const en: Dictionary = {
   "me.guidesSub": "The Playbook and more lessons",
   "plans.limit.plus": "More plans with Plus (up to {n})",
   // money:end
+  // adminads:begin
+  "adm.nav.ads": "Ads",
+  "adm.ads.title": "Ads",
+  "adm.ads.sub": "Partner cards for Free: between people and before the +5 sparks reward. Plus never sees them.",
+  "adm.ads.failed": "Could not load the ads",
+  "adm.ads.new": "New card",
+  "adm.ads.slotPeople": "Between people",
+  "adm.ads.slotRewarded": "Rewarded",
+  "adm.ads.partner": "Partner",
+  "adm.ads.adTitle": "Title",
+  "adm.ads.body": "Text (optional)",
+  "adm.ads.image": "Image link https://… (optional)",
+  "adm.ads.link": "Link on tap https://…",
+  "adm.ads.hint": "Links must be https. An ad must be clearly marked as an ad, with no dating promises and no sensitive topics.",
+  "adm.ads.add": "Add",
+  "adm.ads.empty": "No ads yet: Free sees nothing, not a placeholder.",
+  "adm.ads.on": "on",
+  "adm.ads.off": "off",
+  "adm.ads.stats": "Views: {views} · clicks: {clicks}",
+  "adm.ads.switchOff": "Switch off",
+  "adm.ads.switchOn": "Switch on",
+  // adminads:end
 };

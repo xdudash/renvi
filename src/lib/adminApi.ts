@@ -107,6 +107,11 @@ export type AdminRow = { user_id: string; email: string; name: string | null; cr
 export type ErrorEvent = { id: string; area: string; message: string; created_at: string; user_id: string | null };
 export type DemoAccount = { id: string; email: string; display_name: string | null };
 
+export type AdminAd = {
+  id: string; slot: 'people' | 'rewarded'; partner: string; title: string; body: string | null; image_url: string | null;
+  link_url: string; active: boolean; starts_at: string | null; ends_at: string | null; impressions: number; clicks: number; created_at: string;
+};
+
 export const adminApi = {
   dashboard: () => call<Dashboard>('admin_dashboard'),
 
@@ -165,6 +170,8 @@ export const adminApi = {
     if (error) throw new AdminError(error.message, error.code);
     return { rows: (data ?? []) as ErrorEvent[], total: count ?? (data?.length ?? 0) };
   },
+  ads: () => call<AdminAd[]>('admin_ads').then((rows) => rows ?? []),
+  adSave: (id: string | null, data: Partial<Omit<AdminAd, 'id' | 'impressions' | 'clicks' | 'created_at'>>) => call<string>('admin_ad_save', { p_id: id, p_data: data }),
   demoAccounts: () => call<DemoAccount[]>('admin_demo_accounts').then((rows) => rows ?? []),
 
   admins: () => call<AdminRow[]>('admin_list_admins'),

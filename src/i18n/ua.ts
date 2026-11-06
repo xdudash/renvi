@@ -1904,4 +1904,26 @@ export const ua: Dictionary = {
   "me.guidesSub": "Playbook та інші уроки",
   "plans.limit.plus": "Більше планів — з Plus (до {n})",
   // money:end
+  // adminads:begin
+  "adm.nav.ads": "Реклама",
+  "adm.ads.title": "Реклама",
+  "adm.ads.sub": "Картки партнерів для Free: між людьми й перед нагородою +5 іскор. Plus їх не бачить.",
+  "adm.ads.failed": "Не вдалося завантажити рекламу",
+  "adm.ads.new": "Нова картка",
+  "adm.ads.slotPeople": "Між людьми",
+  "adm.ads.slotRewarded": "За нагороду",
+  "adm.ads.partner": "Партнер",
+  "adm.ads.adTitle": "Заголовок",
+  "adm.ads.body": "Текст (необов’язково)",
+  "adm.ads.image": "Посилання на картинку https://… (необов’язково)",
+  "adm.ads.link": "Посилання після натискання https://…",
+  "adm.ads.hint": "Посилання лише https. Реклама має бути чесно позначена як реклама, без обіцянок знайомств і чутливих тем.",
+  "adm.ads.add": "Додати",
+  "adm.ads.empty": "Реклами поки немає: Free не бачить заглушки.",
+  "adm.ads.on": "увімкнена",
+  "adm.ads.off": "вимкнена",
+  "adm.ads.stats": "Показів: {views} · переходів: {clicks}",
+  "adm.ads.switchOff": "Вимкнути",
+  "adm.ads.switchOn": "Увімкнути",
+  // adminads:end
 };
