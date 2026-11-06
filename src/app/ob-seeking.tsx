@@ -16,7 +16,7 @@ export default function ObSeeking() {
   const { save, busy } = useStepSave('ob-seeking');
   return (
     <Screen>
-      <OnbHeader step={2} kicker={t('screens.obSeeking.kicker')} heading={t('screens.obSeeking.heading')} sub={t('screens.obSeeking.sub')} />
+      <OnbHeader step={4} kicker={t('screens.obSeeking.kicker')} heading={t('screens.obSeeking.heading')} sub={t('screens.obSeeking.sub')} />
       {SEEKING.map((g) => (
         <Choice key={g.key} selected={v === g.key} onPress={() => setV(g.key)}>
           <Text style={{ fontSize: 12 }}>{t(g.labelKey)}</Text><Text>{v === g.key ? '✓' : '○'}</Text>

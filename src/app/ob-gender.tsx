@@ -18,7 +18,7 @@ export default function ObGender() {
   const { save, busy } = useStepSave('ob-gender');
   return (
     <Screen>
-      <OnbHeader step={1} kicker={t('screens.obGender.kicker')} heading={t('screens.obGender.heading')} sub={t('screens.obGender.sub')} />
+      <OnbHeader step={3} kicker={t('screens.obGender.kicker')} heading={t('screens.obGender.heading')} sub={t('screens.obGender.sub')} />
       {GENDERS.map((g) => (
         <Choice key={g.key} disabled={locked} selected={selected === g.key} onPress={() => {if(!locked) setV(g.key);}}>
           <Text style={{ fontSize: 12 }}>{t(g.labelKey)}</Text><Text>{selected === g.key ? '✓' : '○'}</Text>

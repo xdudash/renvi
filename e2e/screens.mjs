@@ -3,6 +3,7 @@
 // Seeded full run (default map) follows run-all.sh and gates on unexpected findings unless --report-only.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 import { APP, URL as API } from './api.mjs';
 import { buildScreenMap, expectedRedirects, publicScreenMap } from './screen-map.mjs';
 import { expectedPath, rowFindings, validateExpectedRedirects } from './inventory.mjs';
@@ -26,6 +27,9 @@ if (configProblems.length) throw new Error(`Invalid expectedRedirects: ${configP
 const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
 const output = process.env.MOBILE_QA_OUTPUT ?? 'out/screens';
 const rows = [];
+let diagnosed = 0;
+const sessionsNow = () => { try { return execSync('psql "$DATABASE_URL" -tA -c "select u.email, (select count(*) from auth.sessions s where s.user_id = u.id), (select count(*) from auth.refresh_tokens r where r.user_id::text = u.id::text and not r.revoked) from auth.users u where u.email like \'anna%\'"', { env: process.env }).toString().replace(/\n/g, ' ; '); } catch (e) { return 'n/a'; } };
+if (!publicOnly && !fixtures) console.log(`DIAG sessions at start: ${sessionsNow()}`);
 try {
   for (const [device, viewport] of Object.entries(devices)) {
     fs.mkdirSync(`${output}/${device}`, { recursive: true });
@@ -42,6 +46,12 @@ try {
         const page = pages[who], errors = [];
         const onError = (error) => errors.push(error.message.slice(0, 160));
         page.on('pageerror', onError);
+        const consoleLog = [];
+        const onConsole = (m) => { if (['error', 'warning'].includes(m.type())) consoleLog.push(m.text().slice(0, 200)); };
+        page.on('console', onConsole);
+        const bad = [];
+        const onResponse = async (r) => { if (r.status() >= 400) { const body = r.url().includes('/auth/') ? ' ' + (await r.text().catch(() => '')).slice(0, 200) : ''; bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(/^https?:\/\/[^/]+/, '').slice(0, 120)}${body}`); } };
+        page.on('response', onResponse);
         let audit = null, at = '', navigationError = '';
         try {
           await page.goto(APP + url, { waitUntil: 'networkidle', timeout: 20000 });
@@ -52,7 +62,10 @@ try {
           await page.screenshot({ path: `${output}/${device}/${name}.png` });
           if (fixtures) await checkMobileInteraction(page, name, `${output}/${device}`);
         } catch (error) { navigationError = error.message.slice(0, 160); }
-        finally { page.off('pageerror', onError); }
+        finally { page.off('pageerror', onError); page.off('console', onConsole); page.off('response', onResponse); }
+        if (!publicOnly && at !== '' && at !== expectedPath(name, url, redirects) && diagnosed++ < 3) {
+          console.log(`DIAG ${device} ${name}: sessions=${sessionsNow()} at=${at} http=${JSON.stringify(bad.slice(0, 8))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
+        }
         rows.push({ device, name, expected: expectedPath(name, url, redirects), redirectExpected: !!redirects[name], at, errors, navigationError, ...audit });
       }
     } finally { await Promise.all(contexts.map((context) => context.close())); }

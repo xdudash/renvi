@@ -18,6 +18,7 @@ import { LESSON_COUNT, nextLesson, usePlaybook } from '@/lib/playbook';
 import { playbookContent } from '@/playbook';
 
 const ROWS = [
+  ['modes.rowTitle', 'modes.rowSub', '/modes'],
   ['screens.me.rowLang', 'screens.me.rowLangSub', '/settings'],
   ['screens.me.rowPrivacy', 'screens.me.rowPrivacySub', '/privacy-data'],
   ['screens.me.rowReferral', 'screens.me.rowReferralSub', '/referral'],
