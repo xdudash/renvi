@@ -1,9 +1,34 @@
-// Database Webhook target (messages, matches, dates, video_calls INSERT/UPDATE). Sends a push WITHOUT names or message text.
+// Database Webhook target (messages, plan_messages, matches, dates, video_calls INSERT/UPDATE). Sends a push WITHOUT names or message text.
 // Configure: Database → Webhooks → HTTP request to this function with header x-push-secret = PUSH_WEBHOOK_SECRET.
 import { admin, json } from '../_shared/clients.ts';
 import { secretMatches } from '../_shared/secret.ts';
+import { planChatRoute, planMessageText } from './text.ts';
 
 type Payload = { type: 'INSERT' | 'UPDATE'; table: string; record: Record<string, any>; old_record?: Record<string, any> };
+
+// Group chat of a plan: the database picks the recipients (members, blocks, preferences, rate limit, no repeats).
+async function planMessage(db: ReturnType<typeof admin>, p: Payload) {
+  if (p.type !== 'INSERT') return json({ ok: true, sent: 0 });
+  const route = planChatRoute(p.record?.plan_id);
+  if (!route || typeof p.record?.id !== 'string') return json({ ok: true, sent: 0 });
+  const { data: who, error } = await db.rpc('plan_message_push', { p_message: p.record.id });
+  if (error) { console.error('plan_message_push failed', error.message); return json({ error: 'query_failed' }, 500); }
+  const rows = (who ?? []) as { user_id: string; language: string | null }[];
+  if (!rows.length) return json({ ok: true, sent: 0 });
+  const { data: tokens } = await db.from('push_tokens').select('token,user_id').in('user_id', rows.map((r) => r.user_id));
+  const lang = new Map(rows.map((r) => [r.user_id, r.language]));
+  const list = tokens ?? [];
+  if (!list.length) return json({ ok: true, sent: 0 });
+  const res = await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(list.map((t) => { const x = planMessageText(lang.get(t.user_id)); return { to: t.token, title: x.title, body: x.body, data: { route }, sound: 'default' }; })),
+  });
+  const out = await res.json().catch(() => null);
+  const bad = (out?.data ?? []).map((r: any, i: number) => (r?.details?.error === 'DeviceNotRegistered' ? list[i].token : null)).filter(Boolean);
+  if (bad.length) await db.from('push_tokens').delete().in('token', bad);
+  return json({ ok: true, sent: list.length });
+}
 
 Deno.serve(async (req) => {
   const secret = Deno.env.get('PUSH_WEBHOOK_SECRET');
@@ -15,6 +40,7 @@ Deno.serve(async (req) => {
   if (!secretMatches(req.headers.get('x-push-secret'), secret)) return json({ error: 'unauthorized' }, 401);
   const p = (await req.json()) as Payload;
   const db = admin();
+  if (p.table === 'plan_messages') return await planMessage(db, p);
   const partnerOf = async (matchId: string, me: string) => {
     const { data } = await db.from('matches').select('user_a,user_b').eq('id', matchId).maybeSingle();
     return data ? (data.user_a === me ? data.user_b : data.user_a) : null;

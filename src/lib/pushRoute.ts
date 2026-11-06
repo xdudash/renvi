@@ -1,6 +1,6 @@
 // Pure: which in-app route a tapped push notification may open. Server pushes (supabase/functions/push,
 // weekly-digest) send data.route = '/chat?match=…', '/video-call?match=…' or '/discover'.
-const ALLOWED = new Set(['/chat', '/video-call', '/discover', '/likes', '/chats', '/me', '/date-incoming', '/date-accepted', '/date-pending', '/date-declined', '/plan-after']);
+const ALLOWED = new Set(['/chat', '/video-call', '/discover', '/likes', '/chats', '/me', '/date-incoming', '/date-accepted', '/date-pending', '/date-declined', '/plan-after', '/plan-chat']);
 
 export function pushRoute(data: unknown): string | null {
   const route = (data as { route?: unknown } | null | undefined)?.route;
