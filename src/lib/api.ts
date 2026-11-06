@@ -13,6 +13,15 @@ export type Seeking = 'men' | 'women' | 'everyone';
 export type Intent = 'serious' | 'casual' | 'friends' | 'unsure';
 export type Lang = 'SK' | 'CS' | 'EN' | 'RU' | 'UA';
 
+export type Tier = {
+  plus: boolean; trial: boolean; expires_at: string | null;
+  spark_limit: number | null; sparks_used: number; sparks_left: number | null;
+  ads_left: number; ad_sparks: number; plan_limit: number;
+  boost_free_ready: boolean; boost_free_at: string | null;
+};
+export type AdCard = { id: string; partner: string; title: string; body: string | null; image_url: string | null; link_url: string };
+export type AdReward = { reward_id: string; seconds: number; sparks: number; ad: AdCard };
+
 export type PhotoRow = { id: string; kind: 'photo' | 'video'; path: string };
 export type PromptRow = { id?: string; question: string; answer: string };
 
@@ -166,6 +175,12 @@ export const api = {
   coupleAccept: (code: string) => rpc<{ found: boolean; couple_id?: string; partner_id?: string }>('couple_accept', { p_code: code }),
   myCouple: () => rpc<CoupleInfo>('my_couple'),
   coupleLeave: () => rpc<void>('couple_leave'),
+  myTier: () => rpc<Tier>('my_tier'),
+  adNext: (slot: 'people' | 'rewarded') => rpc<AdCard | null>('ad_next', { p_slot: slot }),
+  adClick: (id: string) => rpc<void>('ad_click', { p_ad: id }),
+  adRewardStart: () => rpc<AdReward>('ad_reward_start'),
+  adRewardClaim: (id: string) => rpc<Tier>('ad_reward_claim', { p_reward: id }),
+  planBoostFree: (id: string) => rpc<{ boosted_until: string }>('plan_boost_free', { p_plan: id }),
   discover: (limit = 20) => rpc<DiscoverCard[]>('discover', { p_limit: limit }),
   likesToday: () => rpc<number>('likes_today'),
   pass: (to: string) => rpc<void>('pass_profile', { p_to: to }),

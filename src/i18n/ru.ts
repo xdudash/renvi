@@ -17,6 +17,7 @@ import { ruDocs } from './strings-docs.ts';
 import { ruModes } from './strings-modes.ts';
 import { ruPlans } from './strings-plans.ts';
 import { ruCompany } from './strings-company.ts';
+import { ruMoney } from './strings-money.ts';
 const ruBase = {
   'chatOffline.saved': 'Нет связи с сервером. Неотправленные сообщения сохранены на этом устройстве.',
   'chatOffline.photo': 'Неотправленное фото',
@@ -36,7 +37,7 @@ const ruBase = {
 } as const;
 
 // Screen and component strings live in strings-a.ts / strings-b.ts (one file per half); feature strings in strings-*.ts.
-export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo, ...ruDetails, ...ruDocs, ...ruModes, ...ruPlans, ...ruCompany } as const;
+export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo, ...ruDetails, ...ruDocs, ...ruModes, ...ruPlans, ...ruCompany, ...ruMoney } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;
