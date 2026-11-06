@@ -118,8 +118,15 @@ export type Goal = 'company' | 'dating' | 'couple' | 'look';
 export type Audience = 'all' | 'women' | 'men';
 export type Modes = {
   status: RelStatus; goals: Goal[]; dating: boolean; company: boolean; audience: Audience; paused: boolean;
-  dating_open: boolean; dating_open_at: string | null; status_changed_at: string | null;
+  dating_open: boolean; dating_open_at: string | null; status_changed_at: string | null; company_look: string[];
 };
+export type CompanyCard = {
+  id: string; name: string; age: number | null; status: RelStatus; city: string | null; about: string | null; look: string[];
+  photo: string | null; common: number; plans: number; said_hello: boolean;
+};
+export type CouplePerson = { id: string; name: string; age: number | null; photo: string | null };
+export type CoupleCard = { couple_id: string; people: [CouplePerson, CouplePerson]; city: string | null; about: string | null; tags: string[]; said_hello: boolean };
+export type HelloResult = { connected: boolean; match_id?: string };
 export type CoupleInfo = {
   couple_id: string; status: 'pending' | 'active'; code: string | null; expires_at: string;
   partner: { id: string; name: string; age: number | null } | null;
@@ -142,6 +149,13 @@ export const api = {
   planPeople: (id: string) => rpc<{ user_id: string; name: string; age: number | null; host: boolean; came: boolean }[]>('plan_people', { p_plan: id }),
   planChat: (id: string) => rpc<import('@/lib/plans').PlanMessage[]>('plan_chat', { p_plan: id, p_limit: 100 }),
   planChatSend: (id: string, body: string) => rpc<void>('plan_chat_send', { p_plan: id, p_body: body }),
+  setCompanyLook: (look: string[]) => rpc<void>('set_company_look', { p_look: look }),
+  companyFeed: () => rpc<CompanyCard[]>('company_feed', { p_limit: 20 }),
+  companyHello: (to: string) => rpc<HelloResult>('company_hello', { p_to: to }),
+  companyPass: (to: string) => rpc<void>('company_pass', { p_to: to }),
+  couplesFeed: () => rpc<CoupleCard[]>('couples_feed', { p_limit: 20 }),
+  couplesHello: (id: string) => rpc<HelloResult>('couples_hello', { p_couple: id }),
+  couplesPass: (id: string) => rpc<void>('couples_pass', { p_couple: id }),
   myModes: () => rpc<Modes>('my_modes'),
   setGoals: (goals: Goal[]) => rpc<void>('set_goals', { p_goals: goals }),
   setStatus: (status: RelStatus) => rpc<{ status: RelStatus; dating_open_at: string | null }>('set_relationship_status', { p_status: status }),

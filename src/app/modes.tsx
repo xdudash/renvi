@@ -7,6 +7,7 @@ import { UiIcon } from '@/components/UiIcon';
 import { api, type Audience, type Modes } from '@/lib/api';
 import { useModes } from '@/hooks/useModes';
 import { openDate, statusTitleKey } from '@/lib/modes';
+import { FEED_CHIPS, categoryOf } from '@/lib/plans';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
@@ -40,6 +41,11 @@ export default function ModesScreen() {
       setLocal(fresh);
     } catch { setLocal(prev); toast(t('modes.saveFail')); }
   };
+  const applyLook = async (look: string[]) => {
+    const prev = m;
+    setLocal({ ...m, company_look: look });
+    try { await api.setCompanyLook(look); } catch { setLocal(prev); toast(t('modes.saveFail')); }
+  };
   const datingSub = isSingle
     ? (m.dating_open ? t('modes.datingOpen') : t('modes.datingWait', { date: openDate(m.dating_open_at) }))
     : t('modes.datingClosed', { status: statusLabel });
@@ -71,6 +77,18 @@ export default function ModesScreen() {
             ))}
           </View>
         ) : null}
+        {m.company && !isCouple ? (
+          <View style={s.look}>
+            <Text style={s.lookTitle}>{t('company.lookTitle')}</Text>
+            <Text style={s.lookSub}>{t('company.lookSub')}</Text>
+            <View style={s.chips}>
+              {FEED_CHIPS.map((k) => {
+                const on = (m.company_look ?? []).includes(k);
+                return <FilterChip key={k} on={on} label={t(categoryOf(k).label)} onPress={() => applyLook(on ? m.company_look.filter((x) => x !== k) : [...(m.company_look ?? []), k].slice(0, 8))} />;
+              })}
+            </View>
+          </View>
+        ) : null}
         <SetRow title={t('modes.pairs')} sub={isCouple ? t('modes.pairsOn') : t('modes.pairsOff')}
           right={isCouple ? <UiIcon name="check" size={18} color={colors.green} /> : <LinkBtn label={t('modes.link')} onPress={() => router.push('/ob-pair')} />} />
         <SetRow last title={t('modes.plans')} sub={t('modes.plansSub')} right={<Text style={s.always}>{t('modes.always')}</Text>} />
@@ -88,5 +106,8 @@ const s = StyleSheet.create({
   statusName: { fontSize: 13, fontWeight: '700', color: colors.ink, marginTop: 3 },
   change: { fontSize: 11, fontWeight: '700', color: colors.redDark },
   chips: { flexDirection: 'row', flexWrap: 'wrap', paddingBottom: 10 },
+  look: { paddingBottom: 6 },
+  lookTitle: { fontSize: 12, fontWeight: '700', color: colors.ink },
+  lookSub: { fontSize: 10.5, color: colors.sub, marginTop: 2, marginBottom: 8 },
   always: { fontSize: 10.5, color: colors.sub },
 });

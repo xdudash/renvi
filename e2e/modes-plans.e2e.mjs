@@ -84,6 +84,22 @@ await step('guest now sees the place and writes in the chat', async () => {
   await go(hp, `/plan-chat?id=${planId}`);
   await hp.getByText('привет всем!').first().waitFor({ timeout: 15000 });
 });
+await step('company: a mutual hello opens a chat', async () => {
+  // Only the two fixtures stay open to company, so the first card is the other one.
+  sql(`update public.profiles set vis_company = false where id not in ('${host.uid}', '${guest.uid}')`);
+  await go(gp, '/company');
+  await gp.getByText('Хост Планов').first().waitFor({ timeout: 15000 });
+  await gp.getByText('Привет', { exact: true }).last().click();
+  await gp.waitForTimeout(1500);
+  eq(sql(`select count(*) from public.company_hellos where from_id = '${guest.uid}' and to_id = '${host.uid}'`), '1', 'hello stored');
+  eq(sql(`select count(*) from public.matches where kind = 'company'`), '0', 'no chat after one hello');
+  await go(hp, '/company');
+  await hp.getByText('Гостья Планов').first().waitFor({ timeout: 15000 });
+  await hp.getByText('Привет', { exact: true }).last().click();
+  await hp.waitForURL(/\/connected/, { timeout: 15000 });
+  await hp.getByText('Вы на связи').waitFor();
+  eq(sql(`select count(*) from public.matches where kind = 'company' and (user_a = '${host.uid}' or user_b = '${host.uid}')`), '1', 'company chat opened');
+});
 await step('visibility modes: switching dating off is saved', async () => {
   await go(gp, '/modes');
   await gp.getByText('Ты решаешь сам').waitFor({ timeout: 15000 });
@@ -102,9 +118,12 @@ await step('status in a relationship closes dating', async () => {
   await gp.waitForURL(/\/modes/, { timeout: 15000 });
   eq(sql(`select relationship_status from public.profiles where id = '${guest.uid}'`), 'relationship', 'status');
   await go(gp, '/discover');
-  await gp.getByText('Свидания закрыты').first().waitFor({ timeout: 15000 });
+  await gp.waitForURL(/\/company/, { timeout: 15000 });
 });
 await step('cleanup', async () => {
+  sql(`update public.profiles set vis_company = true`);
+  sql(`delete from public.matches where kind = 'company'`);
+  sql(`delete from public.company_hellos`);
   sql(`update public.profiles set relationship_status = 'single', dating_open_at = null where id = '${guest.uid}'`);
   sql(`delete from public.plans where host_id = '${host.uid}'`);
 });
