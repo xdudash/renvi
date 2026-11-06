@@ -1,7 +1,7 @@
 // Maps database / network errors to user-facing states. Messages follow the current app language.
 import { tr } from '@/i18n/current';
 
-export type AppErrorKind = 'offline' | 'limit' | 'rate_limited' | 'blocked' | 'not_found' | 'unauthorized' | 'server';
+export type AppErrorKind = 'offline' | 'limit' | 'rate_limited' | 'blocked' | 'not_found' | 'unauthorized' | 'closed' | 'server';
 
 export class AppError extends Error {
   kind: AppErrorKind;
@@ -37,6 +37,8 @@ function classify(e: unknown): AppError {
   // Server-side hourly rate limit (report(), submit_appeal()): SQLSTATE P0429 'rate limited'.
   if (err?.code === 'P0429' || msg.includes('rate limited')) return new AppError('rate_limited', tr('lib.errors.rateLimited'));
   if (err?.code === 'P0003' || msg.includes('daily limit')) return new AppError('limit', tr('lib.errors.limit'));
+  // A mode (company / couples / dating) is closed for this person: an expected state the screen shows, not a failure to log.
+  if (err?.code === 'P0007') return new AppError('closed', tr('lib.errors.notFound'));
   if (err?.code === 'P0002' || msg.includes('not available')) return new AppError('not_found', tr('lib.errors.notFound'));
   // Server action guard (migration 0020): the caller's own account is suspended or banned.
   if (msg.includes('account restricted')) return new AppError('blocked', tr('lib.errors.accountRestricted'));
