@@ -1,4 +1,4 @@
-import { Share } from 'react-native';
+import { Share, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Btn, ErrorBlock, Eyebrow, Loading, Screen, StateBlock, useToast } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
