@@ -42,6 +42,7 @@ export async function buildScreenMap() {
     'ob-photos': ['/ob-photos', 1], 'ob-about': ['/ob-about', 1], 'ob-prompts': ['/ob-prompts', 1], 'ob-location': ['/ob-location', 1], 'ob-verify': ['/ob-verify', 1],
     'ob-review': ['/ob-review', 1], 'verification-pending': ['/verification-pending', 1], 'verification-approved': ['/verification-approved', 1],
     'verification-rejected': ['/verification-rejected', 1], 'ob-done': ['/ob-done', 1],
+    company: ['/company', 1], couples: ['/couples', 1], connected: ['/connected?match=x&name=%D0%AD%D0%BC%D0%BC%D0%B0', 1],
     feed: ['/feed', 1], plan: [`/plan?${P}`, 1], 'plan-join': [`/plan-join?${P}`, 1], 'plan-create': ['/plan-create', 1], 'plan-created': [`/plan-created?${P}`, 1],
     'plan-requests': [`/plan-requests?${P}`, 1], 'plan-chat': [`/plan-chat?${P}`, 1], 'my-plans': ['/my-plans', 1], 'plan-day': [`/plan-day?${P}`, 1],
     'plan-after': [`/plan-after?${P}`, 1], 'plan-limit': ['/plan-limit', 1],

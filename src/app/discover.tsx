@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ActionSet, Between, Chip, Eyebrow, LinkBtn, Screen, Tiny, useIncomingCount, useToast } from '@/components/ui';
+import { ActionSet, Chip, LinkBtn, Screen, Tiny, useToast } from '@/components/ui';
 import { ProfileHero, ProfileMeta } from '@/components/Profile';
 import { SwipeCard, type SwipeCardHandle } from '@/components/SwipeCard';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
-import { LockedMode } from '@/components/LockedMode';
+import { PeopleHead } from '@/components/PeopleHead';
 import { useModes } from '@/hooks/useModes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useDiscover } from '@/lib/discover';
@@ -26,7 +26,6 @@ export default function Discover() {
   const { profile } = useSession();
   const limit = useSparkLimit();
   const swipe = useRef<SwipeCardHandle>(null);
-  const incoming = useIncomingCount();
   const { modes, reload: reloadModes } = useModes();
   useReloadOnFocus(reloadModes);
   useEffect(() => { d.ensure(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,7 +66,7 @@ export default function Discover() {
   };
 
   // The server hides dating from people who are not single; say why instead of showing an empty feed.
-  if (modes && !modes.dating_open) return <Screen tabs="discover"><LockedMode mode="dating" modes={modes} /></Screen>;
+  if (modes && !modes.dating_open) return <Redirect href={modes.status === 'couple' ? '/couples' : '/company'} />;
 
   let body: React.ReactNode;
   if (d.pending && !card) body = <LoadingCards />;
@@ -102,18 +101,11 @@ export default function Discover() {
 
   return (
     <Screen tabs="discover" scroll={false}>
-      <Between style={{ marginTop: 1, marginBottom: 4, flexWrap: 'nowrap' }}>
-        <Eyebrow>{t('screens.discover.segodnyaVV', { city: (profile?.city ?? '').toUpperCase() })}</Eyebrow>
-        <View style={st.headerActions}>
-          {card ? (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} hitSlop={8} style={st.undo}>
-              <Text style={st.undoText}>↶</Text>
-            </Pressable>
-          ) : null}
-          <LinkBtn label={incoming > 0 ? t('modes.incomingN', { n: incoming }) : t('modes.incoming')} icon="spark" onPress={() => router.push('/likes')} />
-          <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />
-        </View>
-      </Between>
+      <PeopleHead active="discover" extra={card ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} hitSlop={8} style={st.undo}>
+          <Text style={st.undoText}>↶</Text>
+        </Pressable>
+      ) : null} />
       {/* Only when it matters: the daily limit is close. */}
       {card && left <= 3 ? <Tiny>{t('screens.discover.vIzLimitLaykov', { left, limit })}</Tiny> : null}
       {body}
