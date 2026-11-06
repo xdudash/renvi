@@ -7,9 +7,9 @@ import { colors } from '@/theme/tokens';
 // .x-step, .x-chip, .x-dark, .x-green). Sizes come from measuring the prototype.
 
 /** Large option with an icon, title, caption and a round check (.x-big). */
-export function BigOption({ on, icon, title, sub, onPress }: { on: boolean; icon: IconName; title: string; sub?: string; onPress: () => void }) {
+export function BigOption({ on, icon, title, sub, onPress, disabled }: { on: boolean; icon: IconName; title: string; sub?: string; onPress: () => void; disabled?: boolean }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} style={[s.big, on && s.bigOn]}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: on, disabled: !!disabled }} disabled={disabled} onPress={onPress} style={[s.big, on && s.bigOn, disabled && !on && { opacity: 0.55 }]}>
       <View style={s.ico}><UiIcon name={icon} size={20} color="#5E5852" /></View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={s.bigTitle}>{title}</Text>

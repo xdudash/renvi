@@ -1,0 +1,22 @@
+// Russian source for the "onbx" block of the RENVI для всех prototype. Spread into ru.ts.
+export const ruOnbx = {
+  'onbx.gender.kicker': 'О ТЕБЕ',
+  'onbx.gender.h': 'Твой пол',
+  'onbx.gender.sub': 'Нужен для подбора и для планов «только девушки» / «только парни».',
+  'onbx.gender.undisclosed': 'Не указывать',
+  'onbx.gender.undisclosedSub': 'тогда планы «только девушки / парни» будут недоступны',
+  'onbx.gender.hint': 'После регистрации пол поменять нельзя.',
+  'onbx.seeking.kicker': 'ТОЛЬКО ДЛЯ СВИДАНИЙ',
+  'onbx.seeking.h': 'Кого показывать в свиданиях?',
+  'onbx.seeking.sub': 'В Компании и Планах ты видишь всех — это только для свиданий.',
+  'onbx.seeking.women': 'Женщин',
+  'onbx.seeking.men': 'Мужчин',
+  'onbx.seeking.all': 'Всех',
+  'onbx.intent.kicker': 'ТОЛЬКО ДЛЯ СВИДАНИЙ',
+  'onbx.intent.h': 'Что ищешь в свиданиях?',
+  'onbx.intent.sub': 'Этот вопрос видят только те, кто включил свидания. Поменять можно в любой момент.',
+  'onbx.intent.serious.sub': 'строить близость и смотреть, куда это приведёт',
+  'onbx.intent.casual.sub': 'знакомства без лишних ожиданий',
+  'onbx.intent.unsure.sub': 'открыт(а) к разным вариантам',
+  'onbx.intent.friends.sub': 'расширить круг близких по духу людей',
+} as const;
