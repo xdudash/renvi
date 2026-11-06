@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -27,7 +27,7 @@ export default function PlanChat() {
   const [failed, setFailed] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
 
   const load = useCallback(() => {
     api.planChat(planId).then((m) => { setMsgs(m); setFailed(false); }, (e) => { if (e?.kind === 'not_found') setDenied(true); else setFailed(true); });
@@ -56,7 +56,6 @@ export default function PlanChat() {
   else if ((!msgs && !failed) || plan.loading) body = <View style={s.main}><BackLink onPress={() => router.back()} /><Loading /></View>;
   else if (failed || !p || !msgs) body = <View style={s.main}><BackLink onPress={() => router.back()} /><ErrorBlock message={t('plans.err.generic')} onRetry={() => { setFailed(false); load(); plan.reload(); }} /></View>;
   else {
-    let lastDay = '';
     body = (
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={s.head}>
@@ -71,9 +70,8 @@ export default function PlanChat() {
         <ScrollView ref={scroll} contentContainerStyle={s.msgs} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled">
           {p.place ? <View style={s.pinned}><UiIcon name="pin" size={16} /><Text style={s.pinnedText}>{t('plans.chat.place', { place: p.place })}</Text></View> : null}
           {msgs.length === 0 ? <Text style={s.empty}>{t('plans.chat.empty')}</Text> : null}
-          {msgs.map((m) => {
-            const day = new Date(m.created_at).toDateString();
-            const head = day !== lastDay; lastDay = day;
+          {msgs.map((m, i) => {
+            const head = i === 0 || new Date(m.created_at).toDateString() !== new Date(msgs[i - 1].created_at).toDateString();
             const mine = m.user_id === me;
             return (
               <View key={m.id}>

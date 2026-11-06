@@ -9,7 +9,6 @@ import { api } from '@/lib/api';
 import { formatTime, minutesTo, type Plan } from '@/lib/plans';
 import { inviteUrl } from '@/lib/referral';
 import { useLang } from '@/lib/lang';
-import { colors } from '@/theme/tokens';
 
 // plan-day · the screen for the day of the meeting: check in, directions, share with someone close, safety notes.
 export default function PlanDay() {
@@ -44,7 +43,7 @@ export default function PlanDay() {
     <Screen tabs="feed">
       <BackLink onPress={() => router.back()} />
       <DarkCard>
-        <Eyebrow style={{ color: '#F3B7AE' }}>{m > 0 ? t('plans.day.kicker', { m }) : t('plans.day.kickerNow', { time: formatTime(p.starts_at) })}</Eyebrow>
+        <Text style={s.kicker}>{(m > 0 ? t('plans.day.kicker', { m }) : t('plans.day.kickerNow', { time: formatTime(p.starts_at) })).toUpperCase()}</Text>
         <Text style={s.title}>{p.title}</Text>
         <Text style={s.sub}>{place} · {formatTime(p.starts_at)}</Text>
         <View style={s.two}>
@@ -71,6 +70,7 @@ export default function PlanDay() {
 }
 
 const s = StyleSheet.create({
+  kicker: { fontSize: 9.5, fontWeight: '800', letterSpacing: 1.4, color: '#F3B7AE' },
   title: { fontSize: 20, fontWeight: '900', letterSpacing: -0.6, color: '#fff', marginTop: 5 },
   sub: { fontSize: 11.5, color: '#cfc8bf', marginTop: 3 },
   two: { flexDirection: 'row', gap: 8, marginTop: 12 },

@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Btn, Card, ErrorBlock, Eyebrow, Loading, Screen, StateBlock } from '@/components/ui';
 import { StepList } from '@/components/Kit';
@@ -17,7 +18,7 @@ export default function PlanJoin() {
   return (
     <Screen tabs="feed">
       <StateBlock icon="✓" title={plan.title} copy={t('plans.join.next')} />
-      <Eyebrow style={{ textAlign: 'center' }}>{joined ? t('plans.join.kickerIn') : t('plans.join.kicker')}</Eyebrow>
+      <View style={{ alignItems: 'center' }}><Eyebrow>{joined ? t('plans.join.kickerIn') : t('plans.join.kicker')}</Eyebrow></View>
       <Card><StepList items={[joined ? t('plans.d.goingNow') : t('plans.join.s1'), t('plans.join.s2'), t('plans.join.s3')]} /></Card>
       {joined ? <Btn label={t('plans.d.openChat')} onPress={() => router.replace({ pathname: '/plan-chat', params: { id: plan.id } })} /> : null}
       <Btn label={t('plans.join.others')} onPress={() => router.replace('/feed')} />

@@ -27,7 +27,6 @@ export default function PlanScreen() {
 
   const full = plan.going >= plan.max_people;
   const mine = plan.my_status;
-  const inPlan = mine === 'going' || mine === 'host';
   const canJoin = plan.open && !plan.is_host && !full && (mine === null || mine === 'left' || mine === 'cancelled');
   const run = async (fn: () => Promise<unknown>, after?: () => void) => {
     setBusy(true);
