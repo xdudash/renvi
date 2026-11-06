@@ -101,6 +101,16 @@ jobs:
         working-directory: e2e
         run: MOBILE_QA_OUTPUT=out/screens/seeded node screens.mjs
 
+      # Informational (never gates): ranks screens by their numeric difference from the mockup at 393x852.
+      # The full report is in the mobile-web-layouts artifact (visual/visual-compare.md and .json).
+      - name: Mockup comparison (informational)
+        if: success()
+        continue-on-error: true
+        working-directory: e2e
+        env:
+          VC_DETAIL: ${{ vars.VC_DETAIL || 'top:30' }}
+        run: MOBILE_QA_OUTPUT=out/screens/visual node visual-compare.mjs
+
       - name: Upload mobile layout evidence
         if: always()
         uses: actions/upload-artifact@v4
