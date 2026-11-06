@@ -26,6 +26,7 @@ if (configProblems.length) throw new Error(`Invalid expectedRedirects: ${configP
 const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
 const output = process.env.MOBILE_QA_OUTPUT ?? 'out/screens';
 const rows = [];
+let diagnosed = 0;
 try {
   for (const [device, viewport] of Object.entries(devices)) {
     fs.mkdirSync(`${output}/${device}`, { recursive: true });
@@ -42,6 +43,9 @@ try {
         const page = pages[who], errors = [];
         const onError = (error) => errors.push(error.message.slice(0, 160));
         page.on('pageerror', onError);
+        const consoleLog = [];
+        const onConsole = (m) => { if (['error', 'warning'].includes(m.type())) consoleLog.push(m.text().slice(0, 200)); };
+        page.on('console', onConsole);
         let audit = null, at = '', navigationError = '';
         try {
           await page.goto(APP + url, { waitUntil: 'networkidle', timeout: 20000 });
@@ -52,7 +56,10 @@ try {
           await page.screenshot({ path: `${output}/${device}/${name}.png` });
           if (fixtures) await checkMobileInteraction(page, name, `${output}/${device}`);
         } catch (error) { navigationError = error.message.slice(0, 160); }
-        finally { page.off('pageerror', onError); }
+        finally { page.off('pageerror', onError); page.off('console', onConsole); }
+        if (!publicOnly && at !== '' && at !== expectedPath(name, url, redirects) && diagnosed++ < 3) {
+          console.log(`DIAG ${device} ${name}: at=${at} console=${JSON.stringify(consoleLog.slice(0, 6))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
+        }
         rows.push({ device, name, expected: expectedPath(name, url, redirects), redirectExpected: !!redirects[name], at, errors, navigationError, ...audit });
       }
     } finally { await Promise.all(contexts.map((context) => context.close())); }
