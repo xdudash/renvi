@@ -43,6 +43,7 @@ run_sql supabase/tests/plans.sql "plans"
 run_sql supabase/tests/company_couples.sql "company and couples"
 run_sql supabase/tests/playbook.sql "playbook (men's course)"
 run_sql supabase/tests/plus_money.sql "plus and money"
+run_sql supabase/tests/chats_unified.sql "unified chat list"
 run_sql supabase/tests/plan_extras.sql "plan extras (21:00 check, polls, company hello)"
 
 # Edge Function unit tests (pure TypeScript, no network).

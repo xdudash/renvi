@@ -1940,6 +1940,22 @@ export const en: Dictionary = {
   "invite.have": "I already have an account",
   "invite.broken": "Link does not open?",
   // invite:end
+  // chatsx:begin
+  "chats.kicker": "CHATS",
+  "chats.heading": "Your conversations",
+  "chats.lede": "Personal and group chats in one list.",
+  "chats.f.all": "All",
+  "chats.f.plans": "Plans",
+  "chats.f.company": "Company",
+  "chats.f.dating": "Dating",
+  "chats.f.archive": "Archive",
+  "chats.tag.company": "COMPANY",
+  "chats.tag.couples": "COUPLES",
+  "chats.plan.tag": "PLAN",
+  "chats.plan.empty": "Write first",
+  "chats.plan.going": "Going: {n}",
+  "chats.footer": "No ads in group chats; photos open only by consent.",
+  // chatsx:end
   // onbx:begin
   "onbx.gender.kicker": "ABOUT YOU",
   "onbx.gender.h": "Your gender",
