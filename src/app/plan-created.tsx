@@ -19,7 +19,7 @@ export default function PlanCreated() {
   return (
     <Screen tabs="feed">
       <StateBlock icon="✓" title={plan.title} copy={t('plans.created.copy')} />
-      <Eyebrow style={{ textAlign: 'center' }}>{t('plans.created.kicker')}</Eyebrow>
+      <View style={{ alignItems: 'center' }}><Eyebrow>{t('plans.created.kicker')}</Eyebrow></View>
       <Btn kind="secondary" label={t('plans.created.share')} onPress={() => Share.share({ message: t('plans.shareText', { title: plan.title, url }) }).catch(() => toast(t('plans.err.generic')))} />
       <Btn label={t('plans.created.open')} onPress={() => router.replace({ pathname: '/plan-requests', params: { id: plan.id } })} />
     </Screen>
