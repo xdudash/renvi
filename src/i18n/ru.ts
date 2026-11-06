@@ -22,6 +22,7 @@ import { ruAdminads } from './strings-adminads.ts';
 import { ruInvite } from './strings-invite.ts';
 import { ruOnbx } from './strings-onbx.ts';
 import { ruPlanx } from './strings-planx.ts';
+import { ruDeletesub } from './strings-deletesub.ts';
 const ruBase = {
   'chatOffline.saved': 'Нет связи с сервером. Неотправленные сообщения сохранены на этом устройстве.',
   'chatOffline.photo': 'Неотправленное фото',
@@ -41,7 +42,7 @@ const ruBase = {
 } as const;
 
 // Screen and component strings live in strings-a.ts / strings-b.ts (one file per half); feature strings in strings-*.ts.
-export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo, ...ruDetails, ...ruDocs, ...ruModes, ...ruPlans, ...ruCompany, ...ruMoney, ...ruAdminads, ...ruInvite, ...ruOnbx, ...ruPlanx } as const;
+export const ru = { ...ruBase, ...ruA, ...ruB, ...ruLib, ...ruDigest, ...ruVideo, ...ruClient, ...ruAdmin, ...ruWeb, ...ruAnalytics, ...ruIdentity, ...ruDemo, ...ruDetails, ...ruDocs, ...ruModes, ...ruPlans, ...ruCompany, ...ruMoney, ...ruAdminads, ...ruInvite, ...ruOnbx, ...ruPlanx, ...ruDeletesub } as const;
 
 export type TranslationKey = keyof typeof ru;
 export type Dictionary = Partial<Record<TranslationKey, string>>;
