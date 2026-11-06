@@ -46,6 +46,9 @@ try {
         const consoleLog = [];
         const onConsole = (m) => { if (['error', 'warning'].includes(m.type())) consoleLog.push(m.text().slice(0, 200)); };
         page.on('console', onConsole);
+        const bad = [];
+        const onResponse = (r) => { if (r.status() >= 400) bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(/^https?:\/\/[^/]+/, '').slice(0, 120)}`); };
+        page.on('response', onResponse);
         let audit = null, at = '', navigationError = '';
         try {
           await page.goto(APP + url, { waitUntil: 'networkidle', timeout: 20000 });
@@ -56,9 +59,9 @@ try {
           await page.screenshot({ path: `${output}/${device}/${name}.png` });
           if (fixtures) await checkMobileInteraction(page, name, `${output}/${device}`);
         } catch (error) { navigationError = error.message.slice(0, 160); }
-        finally { page.off('pageerror', onError); page.off('console', onConsole); }
+        finally { page.off('pageerror', onError); page.off('console', onConsole); page.off('response', onResponse); }
         if (!publicOnly && at !== '' && at !== expectedPath(name, url, redirects) && diagnosed++ < 3) {
-          console.log(`DIAG ${device} ${name}: at=${at} console=${JSON.stringify(consoleLog.slice(0, 6))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
+          console.log(`DIAG ${device} ${name}: at=${at} http=${JSON.stringify(bad.slice(0, 8))} text=${JSON.stringify((await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 300))}`);
         }
         rows.push({ device, name, expected: expectedPath(name, url, redirects), redirectExpected: !!redirects[name], at, errors, navigationError, ...audit });
       }
