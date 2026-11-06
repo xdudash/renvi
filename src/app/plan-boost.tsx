@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { BackLink, Btn, ErrorBlock, Loading, Screen, StateBlock, Tiny, Title, useToast } from '@/components/ui';
 import { DarkCard, Tappable } from '@/components/Kit';
 import { useAsync } from '@/hooks/useAsync';
-import { api, type Tier } from '@/lib/api';
+import { api } from '@/lib/api';
 import { toAppError } from '@/lib/errors';
 import { boostPrices, buyBoost, initPurchases, purchasesAvailable, syncBoost } from '@/lib/purchases';
 import { formatDate, type Plan } from '@/lib/plans';

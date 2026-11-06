@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { Screen, StateBlock } from '@/components/ui';
 import { useMyTier } from '@/lib/tier';
@@ -9,6 +10,7 @@ import { Text } from 'react-native';
 export default function PurchaseSuccess() {
   const { t } = useLang();
   const { tier } = useMyTier();
+  const [now] = useState(() => Date.now());
   return (
     <Screen>
       <StateBlock
@@ -17,7 +19,7 @@ export default function PurchaseSuccess() {
         copy={t('purchase.ok.copy')}
         label={t('purchase.ok.back')}
         onPress={() => router.replace('/me')}
-        secondary={tier?.plus && tier.trial && tier.expires_at ? <Text style={{ fontSize: 11, color: colors.sub, textAlign: 'center' }}>{t('purchase.ok.trial', { n: Math.max(1, Math.round((Date.parse(tier.expires_at) - Date.now()) / 86400000)) })}</Text> : null}
+        secondary={tier?.plus && tier.trial && tier.expires_at ? <Text style={{ fontSize: 11, color: colors.sub, textAlign: 'center' }}>{t('purchase.ok.trial', { n: Math.max(1, Math.round((Date.parse(tier.expires_at) - now) / 86400000)) })}</Text> : null}
       />
     </Screen>
   );
