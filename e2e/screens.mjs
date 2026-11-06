@@ -28,7 +28,7 @@ const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
 const output = process.env.MOBILE_QA_OUTPUT ?? 'out/screens';
 const rows = [];
 let diagnosed = 0;
-const sessionsNow = () => { try { return execSync('psql "$DATABASE_URL" -tA -c "select u.email, (select count(*) from auth.sessions s where s.user_id = u.id), (select count(*) from auth.refresh_tokens r where r.user_id::text = u.id::text and not r.revoked) from auth.users u order by u.created_at desc limit 6"', { env: process.env }).toString().replace(/\n/g, ' ; '); } catch (e) { return 'n/a'; } };
+const sessionsNow = () => { try { return execSync('psql "$DATABASE_URL" -tA -c "select u.email, (select count(*) from auth.sessions s where s.user_id = u.id), (select count(*) from auth.refresh_tokens r where r.user_id::text = u.id::text and not r.revoked) from auth.users u where u.email like \'anna%\'"', { env: process.env }).toString().replace(/\n/g, ' ; '); } catch (e) { return 'n/a'; } };
 if (!publicOnly && !fixtures) console.log(`DIAG sessions at start: ${sessionsNow()}`);
 try {
   for (const [device, viewport] of Object.entries(devices)) {
@@ -50,7 +50,7 @@ try {
         const onConsole = (m) => { if (['error', 'warning'].includes(m.type())) consoleLog.push(m.text().slice(0, 200)); };
         page.on('console', onConsole);
         const bad = [];
-        const onResponse = (r) => { if (r.status() >= 400) bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(/^https?:\/\/[^/]+/, '').slice(0, 120)}`); };
+        const onResponse = async (r) => { if (r.status() >= 400) { const body = r.url().includes('/auth/') ? ' ' + (await r.text().catch(() => '')).slice(0, 200) : ''; bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(/^https?:\/\/[^/]+/, '').slice(0, 120)}${body}`); } };
         page.on('response', onResponse);
         let audit = null, at = '', navigationError = '';
         try {
