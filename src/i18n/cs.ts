@@ -1940,4 +1940,20 @@ export const cs: Dictionary = {
   "invite.have": "Už mám účet",
   "invite.broken": "Odkaz se neotevírá?",
   // invite:end
+  // chatsx:begin
+  "chats.kicker": "CHATY",
+  "chats.heading": "Tvoje rozhovory",
+  "chats.lede": "Osobní i skupinové — v jednom seznamu.",
+  "chats.f.all": "Vše",
+  "chats.f.plans": "Plány",
+  "chats.f.company": "Parta",
+  "chats.f.dating": "Rande",
+  "chats.f.archive": "Archiv",
+  "chats.tag.company": "PARTA",
+  "chats.tag.couples": "PÁRY",
+  "chats.plan.tag": "PLÁN",
+  "chats.plan.empty": "Napište jako první",
+  "chats.plan.going": "Jdou: {n}",
+  "chats.footer": "Ve skupinových chatech není reklama a fotky se otevírají se souhlasem.",
+  // chatsx:end
 };

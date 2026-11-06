@@ -638,7 +638,8 @@ const styles = StyleSheet.create({
   stateBlock: { alignItems: 'center', paddingVertical: 35, paddingHorizontal: 16 },
   stateIcon: { fontSize: 44, color: colors.red, marginBottom: 16 },
   stateTitle: { fontSize: 31, fontWeight: '800', lineHeight: 33, letterSpacing: -1.5, color: colors.ink, textAlign: 'center', marginBottom: 10 },
-  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingVertical: 7 },
+  // Mockup: a 31 pt high link whose text centre sits 15.5 pt below its top. Ours keeps a 44 pt target, so it overlaps its neighbours by 6.5 pt.
+  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', marginTop: -6, marginBottom: -7 },
   backText: { fontSize: 12, fontWeight: '700', color: colors.redDark },
   meter: { height: 5, borderRadius: 9, backgroundColor: '#ece9e2', overflow: 'hidden', marginVertical: 8 },
   meterFill: { height: 5, borderRadius: 8, backgroundColor: colors.red },

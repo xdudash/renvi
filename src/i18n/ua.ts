@@ -1940,4 +1940,20 @@ export const ua: Dictionary = {
   "invite.have": "У мене вже є акаунт",
   "invite.broken": "Посилання не відкривається?",
   // invite:end
+  // chatsx:begin
+  "chats.kicker": "ЧАТИ",
+  "chats.heading": "Твої розмови",
+  "chats.lede": "Особисті й групові — в одному списку.",
+  "chats.f.all": "Усі",
+  "chats.f.plans": "Плани",
+  "chats.f.company": "Компанія",
+  "chats.f.dating": "Побачення",
+  "chats.f.archive": "Архів",
+  "chats.tag.company": "КОМПАНІЯ",
+  "chats.tag.couples": "ПАРИ",
+  "chats.plan.tag": "ПЛАН",
+  "chats.plan.empty": "Напишіть першим",
+  "chats.plan.going": "Йдуть: {n}",
+  "chats.footer": "У групових чатах немає реклами, а фото відкриваються за згодою.",
+  // chatsx:end
 };
