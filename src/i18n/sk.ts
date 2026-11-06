@@ -1940,4 +1940,25 @@ export const sk: Dictionary = {
   "invite.have": "Už mám účet",
   "invite.broken": "Odkaz sa neotvára?",
   // invite:end
+  // onbx:begin
+  "onbx.gender.kicker": "O TEBE",
+  "onbx.gender.h": "Tvoje pohlavie",
+  "onbx.gender.sub": "Potrebné na výber ľudí a na plány „iba dievčatá“ / „iba chalani“.",
+  "onbx.gender.undisclosed": "Neuvádzať",
+  "onbx.gender.undisclosedSub": "vtedy plány „iba dievčatá / chalani“ nebudú dostupné",
+  "onbx.gender.hint": "Po registrácii sa pohlavie zmeniť nedá.",
+  "onbx.seeking.kicker": "IBA PRE RANDENIE",
+  "onbx.seeking.h": "Koho zobrazovať v randení?",
+  "onbx.seeking.sub": "V Spoločnosti a Plánoch vidíš všetkých — toto je len pre randenie.",
+  "onbx.seeking.women": "Ženy",
+  "onbx.seeking.men": "Mužov",
+  "onbx.seeking.all": "Všetkých",
+  "onbx.intent.kicker": "IBA PRE RANDENIE",
+  "onbx.intent.h": "Čo hľadáš v randení?",
+  "onbx.intent.sub": "Túto otázku vidia len tí, čo majú zapnuté randenie. Dá sa zmeniť kedykoľvek.",
+  "onbx.intent.serious.sub": "budovať blízkosť a pozrieť sa, kam to vedie",
+  "onbx.intent.casual.sub": "zoznamovanie bez zbytočných očakávaní",
+  "onbx.intent.unsure.sub": "otvorený/á rôznym možnostiam",
+  "onbx.intent.friends.sub": "rozšíriť okruh blízkych ľudí",
+  // onbx:end
 };

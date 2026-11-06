@@ -1940,4 +1940,25 @@ export const ua: Dictionary = {
   "invite.have": "У мене вже є акаунт",
   "invite.broken": "Посилання не відкривається?",
   // invite:end
+  // onbx:begin
+  "onbx.gender.kicker": "ПРО ТЕБЕ",
+  "onbx.gender.h": "Твоя стать",
+  "onbx.gender.sub": "Потрібна для підбору й для планів «тільки дівчата» / «тільки хлопці».",
+  "onbx.gender.undisclosed": "Не вказувати",
+  "onbx.gender.undisclosedSub": "тоді плани «тільки дівчата / хлопці» будуть недоступні",
+  "onbx.gender.hint": "Після реєстрації стать змінити не можна.",
+  "onbx.seeking.kicker": "ЛИШЕ ДЛЯ ЗУСТРІЧЕЙ",
+  "onbx.seeking.h": "Кого показувати в побаченнях?",
+  "onbx.seeking.sub": "У Компанії та Планах ти бачиш усіх — це лише для побачень.",
+  "onbx.seeking.women": "Жінок",
+  "onbx.seeking.men": "Чоловіків",
+  "onbx.seeking.all": "Усіх",
+  "onbx.intent.kicker": "ЛИШЕ ДЛЯ ЗУСТРІЧЕЙ",
+  "onbx.intent.h": "Що шукаєш у побаченнях?",
+  "onbx.intent.sub": "Це питання бачать лише ті, хто ввімкнув побачення. Змінити можна будь-коли.",
+  "onbx.intent.serious.sub": "будувати близькість і дивитися, куди це приведе",
+  "onbx.intent.casual.sub": "знайомства без зайвих очікувань",
+  "onbx.intent.unsure.sub": "відкритий/а до різних варіантів",
+  "onbx.intent.friends.sub": "розширити коло близьких за духом людей",
+  // onbx:end
 };

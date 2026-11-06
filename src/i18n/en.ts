@@ -1940,4 +1940,25 @@ export const en: Dictionary = {
   "invite.have": "I already have an account",
   "invite.broken": "Link does not open?",
   // invite:end
+  // onbx:begin
+  "onbx.gender.kicker": "ABOUT YOU",
+  "onbx.gender.h": "Your gender",
+  "onbx.gender.sub": "Used for matching and for «women only» / «men only» plans.",
+  "onbx.gender.undisclosed": "Prefer not to say",
+  "onbx.gender.undisclosedSub": "then «women only / men only» plans will not be available",
+  "onbx.gender.hint": "Your gender cannot be changed after sign-up.",
+  "onbx.seeking.kicker": "DATING ONLY",
+  "onbx.seeking.h": "Who should we show in dating?",
+  "onbx.seeking.sub": "In Company and Plans you see everyone — this is for dating only.",
+  "onbx.seeking.women": "Women",
+  "onbx.seeking.men": "Men",
+  "onbx.seeking.all": "Everyone",
+  "onbx.intent.kicker": "DATING ONLY",
+  "onbx.intent.h": "What are you looking for in dating?",
+  "onbx.intent.sub": "Only people who turned dating on see this question. You can change it any time.",
+  "onbx.intent.serious.sub": "build closeness and see where it leads",
+  "onbx.intent.casual.sub": "meeting people without big expectations",
+  "onbx.intent.unsure.sub": "open to different options",
+  "onbx.intent.friends.sub": "widen your circle of like-minded people",
+  // onbx:end
 };
