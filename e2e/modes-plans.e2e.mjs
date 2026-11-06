@@ -100,6 +100,14 @@ await step('company: a mutual hello opens a chat', async () => {
   await hp.getByText('Вы на связи').waitFor();
   eq(sql(`select count(*) from public.matches where kind = 'company' and (user_a = '${host.uid}' or user_b = '${host.uid}')`), '1', 'company chat opened');
 });
+await step('company: a partner card keeps the Company tab and goes back to people', async () => {
+  sql(`delete from public.ads; insert into public.ads (slot, partner, title, link_url) values ('people', 'Кофейня Тест', 'Кофе вдвоём', 'https://example.com/coffee')`);
+  await go(gp, '/people-ad?from=company');
+  await gp.getByText('Кофе вдвоём').waitFor({ timeout: 15000 });
+  await gp.getByText('Дальше к людям').click();
+  await gp.waitForURL(/\/company/, { timeout: 15000 });
+  sql(`delete from public.ads`);
+});
 await step('visibility modes: switching dating off is saved', async () => {
   await go(gp, '/modes');
   await gp.getByText('Ты решаешь сам').waitFor({ timeout: 15000 });
