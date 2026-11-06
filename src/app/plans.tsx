@@ -90,7 +90,7 @@ export default function Plans() {
         <Card><Tiny>{purchasesAvailable() ? t('plus.storeError') : t('plus.unavailable')}</Tiny></Card>
       )}
 
-      <Btn kind="ghost" label={t('plus.restore')} onPress={() => router.push({ pathname: '/purchase-state', params: { mode: 'restore' } })} />
+      {purchasesAvailable() ? <Btn kind="ghost" label={t('plus.restore')} onPress={() => router.push({ pathname: '/purchase-state', params: { mode: 'restore' } })} /> : null}
       <Tiny>{t('plus.legal')}</Tiny>
       <LinkBtn label={t('plus.terms')} onPress={() => router.push('/legal')} />
     </Screen>
