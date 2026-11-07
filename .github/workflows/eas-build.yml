@@ -6,7 +6,7 @@ on:
       job:
         description: What to run
         type: choice
-        options: [build, update, submit]
+        options: [build, update, submit, logs]
         default: build
       platform:
         description: Platform
@@ -188,3 +188,26 @@ jobs:
           else
             eas submit --platform ios --profile production --latest --non-interactive --no-wait
           fi
+
+  logs:
+    name: EAS build logs
+    if: inputs.job == 'logs'
+    runs-on: ubuntu-24.04
+    environment: preview
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 27.1.0
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Print build status and log tail
+        env:
+          BUILD_ID: ${{ inputs.build_id }}
+        run: |
+          eas build:view "$BUILD_ID" --json > build.json || true
+          jq '{status, errorCode: .error.errorCode, errorMessage: .error.message, buildProfile, gitCommitHash, appBuildVersion}' build.json || cat build.json
+          for u in $(jq -r '.logFiles[]?' build.json); do
+            curl -sL "$u" -o log.txt && echo "--- log tail ---" && grep -iE 'error|fail|✖|Unknown|Run script' log.txt | tail -40
+          done
