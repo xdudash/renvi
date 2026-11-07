@@ -1,12 +1,17 @@
 import { Text } from 'react-native';
-import { Btn, Card, CheckRow, Choice, Screen, Tiny, useToast } from '@/components/ui';
+import { Btn, CheckRow, Screen, Tiny, useToast } from '@/components/ui';
+import { BigOption } from '@/components/Kit';
+import type { IconName } from '@/components/UiIcon';
 import { useDraft } from '@/hooks/useDraft';
 import { OnbHeader, useStepSave } from '@/components/Onboarding';
-import { SEEKING } from '@/lib/catalog';
 import { useSession } from '@/lib/session';
 import { useLang } from '@/lib/lang';
 
-// 12 · Кого ищу · согласие
+const ORDER = ['women', 'men', 'everyone'] as const;
+const TITLE = { women: 'onbx.seeking.women', men: 'onbx.seeking.men', everyone: 'onbx.seeking.all' } as const;
+const ICON: Record<string, IconName> = { women: 'profile', men: 'profile', everyone: 'people' };
+
+// 12 · Кого показывать в свиданиях · согласие
 export default function ObSeeking() {
   const { t } = useLang();
   const { profile } = useSession();
@@ -16,18 +21,14 @@ export default function ObSeeking() {
   const { save, busy } = useStepSave('ob-seeking');
   return (
     <Screen>
-      <OnbHeader step={2} kicker={t('screens.obSeeking.kicker')} heading={t('screens.obSeeking.heading')} sub={t('screens.obSeeking.sub')} />
-      {SEEKING.map((g) => (
-        <Choice key={g.key} selected={v === g.key} onPress={() => setV(g.key)}>
-          <Text style={{ fontSize: 12 }}>{t(g.labelKey)}</Text><Text>{v === g.key ? '✓' : '○'}</Text>
-        </Choice>
+      <OnbHeader step={4} kicker={t('onbx.seeking.kicker')} heading={t('onbx.seeking.h')} sub={t('onbx.seeking.sub')} />
+      {ORDER.map((k) => (
+        <BigOption key={k} on={v === k} icon={ICON[k]} title={t(TITLE[k])} onPress={() => setV(k)} />
       ))}
-      <Card>
-        <CheckRow left on={consent} onPress={() => setConsent(!consent)}>
-          <Text style={{ fontSize: 12 }}>{t('screens.obSeeking.consent')}</Text>
-        </CheckRow>
+      <CheckRow left on={consent} onPress={() => setConsent(!consent)}>
+        <Text style={{ fontSize: 13.5, fontWeight: '700' }}>{t('screens.obSeeking.consent')}</Text>
         <Tiny>{t('screens.obSeeking.consentNote')}</Tiny>
-      </Card>
+      </CheckRow>
       <Btn label={t('screens.obSeeking.continue')} busy={busy} onPress={() => (consent ? save({ seeking: v, sensitive_consent: true }) : toast(t('screens.obSeeking.consentRequired')))} />
     </Screen>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Btn, CheckRow, Field, LinkBtn, SafeBanner, Screen, Sheet, useToast } from '@/components/ui';
+import { Btn, CheckRow, Eyebrow, Field, LinkBtn, SafeBanner, Screen, Sheet, useToast } from '@/components/ui';
 import { useDraft } from '@/hooks/useDraft';
 import { OnbHeader, useStepSave } from '@/components/Onboarding';
 import { useSession } from '@/lib/session';
@@ -32,9 +32,9 @@ export default function ObAge() {
   };
   return (
     <Screen>
-      <OnbHeader step={0} kicker={t('screens.obAge.pervyyShag')} heading={t('screens.obAge.skolkoVamLet')} sub={t('screens.obAge.uchastnikamRenviDolzhnoByt')} />
+      <OnbHeader step={2} kicker={t('screens.obAge.pervyyShag')} heading={t('screens.obAge.skolkoVamLet')} sub={t('screens.obAge.uchastnikamRenviDolzhnoByt')} />
       <Field label={t('screens.obAge.imya')} value={name} onChangeText={setName} placeholder={t('screens.obAge.kakVasNazyvat')} autoComplete="given-name" />
-      <Text style={{fontSize:11,marginTop:16}}>{t('screens.obAge.dataRozhdeniya')}</Text>
+      <Eyebrow style={{ marginTop: 16, marginBottom: 4 }}>{t('screens.obAge.dataRozhdeniya')}</Eyebrow>
       <BirthdayPicker value={birthdateLocked ? (profile?.birthdate ?? birthdate) : birthdate} onChange={setBirthdate} disabled={birthdateLocked}/>
       <Text style={{fontSize:12,color:'#706862'}}>{t(birthdateLocked?'identity.birthdayLocked':'identity.locked')}</Text>
       <CheckRow left on={adult} onPress={() => setAdult(!adult)}><Text style={{ fontSize: 12 }}>{t('screens.obAge.mneUzheIspolnilos18')}</Text></CheckRow>

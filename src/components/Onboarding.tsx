@@ -16,15 +16,15 @@ export function OnbHeader({ step, kicker, heading, sub }: { step: number; kicker
       <View style={s.between}>
         <Eyebrow>{kicker}</Eyebrow>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: -12 }}>
-          <Text style={s.stepnum}>{step + 1} / 12</Text>
+          <Text style={s.stepnum}>{step + 1} / {ONBOARDING.length}</Text>
           {/* Leaving mid-profile: progress is saved; the user can come back or sign in with another account. */}
           <Pressable accessibilityRole="button" style={s.signOutBtn} onPress={async () => { await signOut(); router.replace('/'); }}>
             <Text style={s.signOut}>{t('screens.settings.signOut')}</Text>
           </Pressable>
         </View>
       </View>
-      <View style={s.progress} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 12, now: step + 1 }}>
-        <View style={[s.progressFill, { width: `${Math.round(((step + 1) / 12) * 100)}%` }]} />
+      <View style={s.progress} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: ONBOARDING.length, now: step + 1 }}>
+        <View style={[s.progressFill, { width: `${Math.round(((step + 1) / ONBOARDING.length) * 100)}%` }]} />
       </View>
       <Text style={s.h1} accessibilityRole="header">{heading}</Text>
       <Text style={s.lede}>{sub}</Text>

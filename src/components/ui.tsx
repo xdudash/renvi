@@ -58,14 +58,16 @@ export function usePressScale(to = 0.96) {
 const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
 // ---------- layout ----------
-export type TabKey = 'discover' | 'likes' | 'chats' | 'me';
+export type TabKey = 'feed' | 'discover' | 'likes' | 'chats' | 'me';
 
 // Same rule as the prototype: no tab bar on the first launch, account and onboarding screens.
 const NO_TABS = ['/', '/language', '/signin', '/signup', '/forgot', '/captcha', '/confirmation'];
 const ME_SCREENS = ['/me', '/playbook', '/edit-', '/opening-moves', '/privacy', '/settings', '/support-help', '/notification-settings', '/legal', '/data-export', '/delete-', '/blocked', '/referral', '/share-sheet', '/verification-', '/account-', '/report', '/appeal', '/community-rules'];
 const CHAT_SCREENS = ['/chat', '/icebreakers', '/push-prompt', '/photo-', '/message-', '/archive', '/muted', '/unmatch', '/support-share', '/date-', '/video-call'];
+const FEED_SCREENS = ['/feed', '/plan', '/my-plans'];
 function tabFor(path: string): TabKey {
-  if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'likes';
+  if (FEED_SCREENS.some((p) => path === p || path.startsWith(p + '-'))) return 'feed';
+  if (path.startsWith('/likes') || path === '/incoming-profile' || path === '/match') return 'discover';
   if (CHAT_SCREENS.some((p) => path.startsWith(p))) return 'chats';
   if (ME_SCREENS.some((p) => path.startsWith(p))) return 'me';
   return 'discover';
@@ -129,9 +131,9 @@ export function IconButton({ label, onPress, text }: { label: string; onPress: (
   );
 }
 
-const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' | 'chats' | 'me'; icon: IconName }[] = [
+const TABS: { href: string; labelKey: TranslationKey; key: TabKey; icon: IconName }[] = [
+  { href: '/feed', labelKey: 'tabs.feed', key: 'feed', icon: 'date' },
   { href: '/discover', labelKey: 'tabs.discover', key: 'discover', icon: 'discover' },
-  { href: '/likes', labelKey: 'tabs.likes', key: 'likes', icon: 'spark' },
   { href: '/chats', labelKey: 'tabs.chats', key: 'chats', icon: 'chat' },
   { href: '/me', labelKey: 'tabs.me', key: 'me', icon: 'profile' },
 ];
@@ -139,7 +141,7 @@ const TABS: { href: string; labelKey: TranslationKey; key: 'discover' | 'likes' 
 // Number of new incoming sparks for the tab badge (visible on every plan; the list itself is plan-gated).
 // Every Screen renders its own TabBar: one shared, briefly cached request instead of one per screen mount.
 const incomingBadge = createCachedLoader(() => api.incoming().then((r) => r.count), 30_000);
-function useIncomingCount() {
+export function useIncomingCount() {
   const { session } = useSession();
   const uid = session?.user.id ?? null;
   const [state, setState] = useState<{ uid: string | null; n: number }>({ uid: null, n: 0 });
@@ -170,7 +172,7 @@ export function TabBar({ active }: { active?: string }) {
   return (
     <View style={[styles.tabs, { paddingBottom: bottom > 0 ? Math.max(bottom - 12, 8) : 8 }]} accessibilityRole="tablist">
       {TABS.map((tab) => (
-        <TabItem key={tab.key} tab={tab} on={active === tab.key} label={t(tab.labelKey)} badge={tab.key === 'likes' ? incoming : 0} />
+        <TabItem key={tab.key} tab={tab} on={active === tab.key} label={t(tab.labelKey)} badge={tab.key === 'discover' ? incoming : 0} />
       ))}
     </View>
   );
@@ -259,6 +261,24 @@ export function Chip({ label, tone = 'plain', icon }: { label: string; tone?: 'p
     <View style={[styles.pill, { backgroundColor: t.bg, borderColor: t.border }, icon && styles.pillWithIcon]}>
       {icon ? <UiIcon name={icon} size={14} color={t.fg} /> : null}
       <Text style={[styles.pillText, { color: t.fg }]}>{label}</Text>
+    </View>
+  );
+}
+// Small rounded label from the prototype (.x-tag): language codes, statuses, kinds of people.
+export type TagTone = 'gray' | 'pink' | 'green' | 'amber' | 'blue' | 'red';
+const TAG_TONES: Record<TagTone, { bg: string; fg: string }> = {
+  gray: { bg: '#EFEAE3', fg: '#5E5852' },
+  pink: { bg: '#F7E3EC', fg: '#8C2457' },
+  green: { bg: colors.greenWash, fg: colors.green },
+  amber: { bg: colors.amberWash, fg: colors.amber },
+  blue: { bg: '#E6EEF8', fg: '#2F5F95' },
+  red: { bg: colors.redWash, fg: colors.redDark },
+};
+export function Tag({ label, tone = 'gray', width }: { label: string; tone?: TagTone; width?: number }) {
+  const t = TAG_TONES[tone];
+  return (
+    <View style={[styles.tag, { backgroundColor: t.bg }, width ? { width, justifyContent: 'center' } : null]}>
+      <Text style={[styles.tagText, { color: t.fg }]}>{label}</Text>
     </View>
   );
 }
@@ -581,9 +601,11 @@ const styles = StyleSheet.create({
   appbar: { height: 54, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmarkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wordmark: { fontSize: 29, fontWeight: '900', letterSpacing: -2.2, color: colors.ink },
-  barActions: { flexDirection: 'row', gap: 6 },
-  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  iconBtnText: { fontSize: 11, fontWeight: '800', color: colors.ink },
+  // The mockup draws 34 pt buttons 6 pt apart (centres 40 pt apart, last centre 17 pt from the edge + 18 gutter). Ours are
+  // 44 pt (touch target), so each overlaps its neighbour by 2 pt and the group sits 3 pt further out.
+  barActions: { flexDirection: 'row', marginRight: -3 },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginHorizontal: -2 },
+  iconBtnText: { fontSize: 10, fontWeight: '800', color: colors.ink },
   tabs: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.paper, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 4 },
   tab: { width: '24%', height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 },
   tabIcon: { height: 23, alignItems: 'center', justifyContent: 'center' },
@@ -604,6 +626,8 @@ const styles = StyleSheet.create({
   pill: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6, marginRight: 7, marginBottom: 7 },
   pillText: { fontSize: 11, lineHeight: 14 },
   pillWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
+  tagText: { fontSize: 9.5, lineHeight: 13, fontWeight: '800', letterSpacing: 0.19 },
   choice: { borderWidth: 1, borderColor: colors.line, borderRadius: 13, backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 11, marginVertical: 6, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   check: { flexShrink: 0, width: 13, height: 13, borderRadius: 3, borderWidth: 1, borderColor: '#767676', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },
@@ -616,7 +640,8 @@ const styles = StyleSheet.create({
   stateBlock: { alignItems: 'center', paddingVertical: 35, paddingHorizontal: 16 },
   stateIcon: { fontSize: 44, color: colors.red, marginBottom: 16 },
   stateTitle: { fontSize: 31, fontWeight: '800', lineHeight: 33, letterSpacing: -1.5, color: colors.ink, textAlign: 'center', marginBottom: 10 },
-  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingVertical: 7 },
+  // Mockup: a 31 pt high link whose text centre sits 15.5 pt below its top. Ours keeps a 44 pt target, so it overlaps its neighbours by 6.5 pt.
+  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', marginTop: -6, marginBottom: -7 },
   backText: { fontSize: 12, fontWeight: '700', color: colors.redDark },
   meter: { height: 5, borderRadius: 9, backgroundColor: '#ece9e2', overflow: 'hidden', marginVertical: 8 },
   meterFill: { height: 5, borderRadius: 8, backgroundColor: colors.red },

@@ -16,8 +16,11 @@ import type { TranslationKey } from '@/i18n';
 import { useLang } from '@/lib/lang';
 import { LESSON_COUNT, nextLesson, usePlaybook } from '@/lib/playbook';
 import { playbookContent } from '@/playbook';
+import { useMyTier } from '@/lib/tier';
+import { formatDate } from '@/lib/plans';
 
 const ROWS = [
+  ['modes.rowTitle', 'modes.rowSub', '/modes'],
   ['screens.me.rowLang', 'screens.me.rowLangSub', '/settings'],
   ['screens.me.rowPrivacy', 'screens.me.rowPrivacySub', '/privacy-data'],
   ['screens.me.rowReferral', 'screens.me.rowReferralSub', '/referral'],
@@ -36,6 +39,7 @@ const VERIFY: Record<string, readonly [TranslationKey, string]> = {
 export default function Me() {
   const { t } = useLang();
   const { profile, signOut } = useSession();
+  const { tier } = useMyTier();
   const { items, reload: reloadPhotos } = useMyPhotos();
   const { items: prompts, reload: reloadPrompts } = useMyPrompts();
   const incoming = useAsync(() => api.incoming(), []);
@@ -75,6 +79,8 @@ export default function Me() {
       </View>
       <Text style={{ fontSize: 24, fontWeight: '800', letterSpacing: -1, marginTop: 23, marginBottom: 8, color: colors.ink }}>{t('screens.me.settingsHelp')}</Text>
       <Card tight>
+        <Row label={t('me.plusRow')} sub={tier?.plus && tier.expires_at ? t('me.plusSubOn', { date: formatDate(tier.expires_at) }) : t('me.plusSubFree')} onPress={() => router.push('/plans')} />
+        <Row label={t('me.guidesRow')} sub={t('me.guidesSub')} onPress={() => router.push('/guides')} />
         {ROWS.map(([a, b, c]) => <Row key={c} label={t(a)} sub={t(b)} onPress={() => router.push(c as never)} />)}
         <Row label={t(v[0])} sub={t('screens.me.selfieCheck')} onPress={() => router.push(v[1] as never)} />
         <Row label={t('screens.settings.signOut')} sub={t('screens.me.signOutSub')} right="⎋" onPress={async () => { await signOut(); router.replace('/'); }} />

@@ -4,7 +4,9 @@ import { router } from 'expo-router';
 import { VerifiedBadge } from './ui';
 import { useAsync } from '@/hooks/useAsync';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
-import { api, type MatchRow } from '@/lib/api';
+import { api, type MatchRow, type PlanChatRow } from '@/lib/api';
+import { categoryOf, formatWhen } from '@/lib/plans';
+import { UiIcon } from './UiIcon';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
 import { localeOf } from '@/i18n/current';
@@ -26,7 +28,7 @@ const when = (iso: string | null) => {
   return d.toLocaleDateString(localeOf(), { day: 'numeric', month: 'short' });
 };
 
-export function ChatRow({ m, sub }: { m: MatchRow; sub?: string }) {
+export function ChatRow({ m, sub, tag }: { m: MatchRow; sub?: string; tag?: string }) {
   const { t } = useLang();
   const { url, verified } = usePartnerPhoto(m);
   const unread = m.unread > 0;
@@ -42,11 +44,38 @@ export function ChatRow({ m, sub }: { m: MatchRow; sub?: string }) {
           {verified ? <VerifiedBadge size={15} /> : null}
           <Text style={[s.time, unread && { color: colors.red, fontWeight: '700' }]}>{when(m.last_at ?? m.created_at)}</Text>
         </View>
+        {tag ? <Text style={s.tag} numberOfLines={1}>{tag}</Text> : null}
         <View style={s.bottom}>
           <Text numberOfLines={1} style={[s.last, unread && { color: colors.ink, fontWeight: '600' }, !m.last_body && { color: colors.red, fontWeight: '700' }]}>
             {sub ?? (m.last_body ?? t('chats.sayHiNeutral'))}{m.muted ? t('components.chatRow.muted') : ''}
           </Text>
           {unread ? <View style={s.badge}><Text style={s.badgeText}>{m.unread}</Text></View> : null}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/** Group chat of a plan, in the same list as personal chats. */
+export function PlanChatRowView({ p }: { p: PlanChatRow }) {
+  const { t } = useLang();
+  const cat = categoryOf(p.category);
+  const last = p.last_body ? `${p.last_name ? p.last_name + ': ' : ''}${p.last_body}` : t('chats.plan.empty');
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/plan-chat', params: { id: p.plan_id } })}
+      style={({ pressed }) => [s.row, pressed && { backgroundColor: '#f3efe9' }]}>
+      <View style={[s.ring]}>
+        <View style={[s.avatar, { backgroundColor: colors.blush, alignItems: 'center', justifyContent: 'center' }]}><UiIcon name={cat.icon} size={24} color={colors.ink} /></View>
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View style={s.top}>
+          <Text style={s.name} numberOfLines={1}>{p.title}</Text>
+          <Text style={s.time}>{when(p.last_at)}</Text>
+        </View>
+        <Text style={s.tag} numberOfLines={1}>{t('chats.plan.tag')} · {formatWhen(p.starts_at)}</Text>
+        <View style={s.bottom}>
+          <Text numberOfLines={1} style={s.last}>{last}</Text>
+          <Text style={s.going}>{t('chats.plan.going', { n: p.going })}</Text>
         </View>
       </View>
     </Pressable>
@@ -74,8 +103,10 @@ const s = StyleSheet.create({
   avatar: { width: 56, height: 56, borderRadius: 28 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   name: { flexShrink: 1, fontWeight: '800', fontSize: 15, color: colors.ink },
+  tag: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, color: colors.red, marginTop: 2 },
   time: { marginLeft: 'auto', fontSize: 11, color: colors.muted },
   bottom: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  going: { fontSize: 11, fontWeight: '700', color: colors.sub },
   last: { flex: 1, fontSize: 13, color: colors.sub },
   badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },

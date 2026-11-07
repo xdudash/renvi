@@ -17,7 +17,7 @@ const click = async (text) => { await p.getByText(text, { exact: true }).last().
 const { step, finish } = createRunner({ label: 'signup', stopOnFail: true, onFail: (name) => shot('FAIL-' + name.replace(/[^\w-]+/g, '_')) });
 
 await p.goto(APP + '/', { waitUntil: 'networkidle' });
-await step('welcome', async () => { await shot('welcome'); await click('Начать знакомство'); });
+await step('welcome', async () => { await shot('welcome'); await click('Начать'); });
 await step('signup', async () => {
   await p.getByPlaceholder('name@example.com').fill('anna@renvi.test');
   await p.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
@@ -39,6 +39,18 @@ await step('signup', async () => {
   await p.locator('input[type="password"]').fill('renvi-test-1');
   await click('Войти');
   // A confirmed account without a profile goes straight to step 1 (no loop back to the welcome screen).
+  await p.waitForURL(/\/ob-goals/,{timeout:15000});
+  await p.getByText('Зачем ты здесь?').waitFor({ timeout: 15000 });
+});
+await step('ob-goals', async () => {
+  await shot('ob-goals');
+  await click('Продолжить');
+  await p.waitForURL(/\/ob-status/,{timeout:15000});
+});
+await step('ob-status', async () => {
+  await p.getByText('Твой статус').waitFor();
+  await shot('ob-status');
+  await click('Продолжить');
   await p.waitForURL(/\/ob-age/,{timeout:15000});
   await p.getByText('Сколько вам лет?').waitFor({ timeout: 15000 });
 });
@@ -54,16 +66,16 @@ await step('ob-age', async () => {
   await click('Продолжить');
   await p.getByText('Подтвердите дату рождения',{exact:true}).waitFor();
   await click('Подтверждаю, сохранить');
-  await p.getByText('Как вас описать?').waitFor();
+  await p.getByText('Твой пол').waitFor();
 });
-await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого вы хотите встретить?').waitFor(); });
+await step('ob-gender', async () => { await click('Женщина'); await shot('ob-gender'); await click('Продолжить'); await p.getByText('Подтвердите гендер',{exact:true}).waitFor(); await click('Подтверждаю, сохранить'); await p.getByText('Кого показывать в свиданиях?').waitFor(); });
 await step('ob-seeking', async () => {
   await click('Мужчин');
   await click('Продолжить'); // without consent → toast
   await shot('ob-seeking-consent-required');
   await p.getByRole('checkbox', { name: /Я даю отдельное согласие/ }).click();
   await click('Продолжить');
-  await p.getByText('Чего вы сейчас ищете?').waitFor();
+  await p.getByText('Что ищешь в свиданиях?').waitFor();
 });
 await step('ob-intent', async () => { await shot('ob-intent'); await click('Продолжить'); await p.getByText('Где вас искать?').waitFor(); });
 await step('ob-city', async () => {
@@ -105,7 +117,7 @@ await step('ob-verify', async () => {
   await p.getByText('Селфи отправлено').waitFor({ timeout: 15000 });
 });
 await step('ob-review', async () => { await shot('ob-review'); await click('Продолжить оформление'); await p.getByText(/Анкета выглядит/).waitFor(); });
-await step('ob-done', async () => { await shot('ob-done'); await click('Перейти к знакомствам'); await p.getByText('Фильтры').waitFor({ timeout: 15000 }); });
+await step('ob-done', async () => { await shot('ob-done'); await click('Перейти к знакомствам'); await p.getByLabel('Фильтры').first().waitFor({ timeout: 15000 }); });
 await step('discover', async () => { await shot('discover'); });
 await ctx.storageState({ path: 'out/anna.json' });
 if (errors.length) console.log(errors.slice(0, 5).join('\n'));

@@ -36,7 +36,7 @@
    npx supabase secrets set RESEND_API_KEY=... EXPORT_FROM_EMAIL="RENVI <no-reply@ваш-домен>"
    ```
 6. **Database → Webhooks** (для push): вебхуки на функцию `push`, метод POST, заголовок `x-push-secret: <PUSH_WEBHOOK_SECRET>`:
-   `messages` (INSERT), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
+   `messages` (INSERT), `plan_messages` (INSERT — сообщения групповых чатов планов, миграция 0045), `matches` (INSERT), `dates` (INSERT, UPDATE), `video_calls` (INSERT, UPDATE — если включаете видеозвонки). Тексты пушей без имён и сообщений.
 7. **Администраторы**: SQL Editor →
    `insert into public.admins (user_id) select id from auth.users where email = 'founder@...';`
    Админка открывается в веб-версии по адресу `/admin`. Так добавляется только первый админ; следующих добавляет
@@ -86,6 +86,26 @@ RENVI бесплатен: покупок, тарифов, RevenueCat и мага
 3. Настройка времени: в админке «Настройки» ключ `digest` → `{"enabled": true, "weekday": 0, "hour_utc": 17}` (`weekday`: 0 — воскресенье … 6 — суббота, время UTC; `enabled: false` выключает рассылку).
 4. Проверка вручную (отправит сразу, игнорируя день и час, но с учётом журнала): `curl -X POST "https://<ref>.supabase.co/functions/v1/weekly-digest?force=1" -H "x-digest-secret: $DIGEST_CRON_SECRET"`.
 5. Тексты пушей/писем лежат в `supabase/functions/weekly-digest/text.ts` (карта по языку профиля, запасной — русский).
+
+### Вечерняя проверка планов «Всё ок?» (миграция 0041, функция `plan-check`)
+
+В 21:00 по местному времени дня плана хост и принятые участники получают пуш «Как прошёл план? Всё ок?» (без названий и имён); он открывает «Как прошло». Один раз на человека и план.
+
+1. Деплой (секрет тот же, что у `weekly-digest`):
+   ```bash
+   npx supabase functions deploy plan-check --no-verify-jwt
+   ```
+2. Расписание — каждые 15 минут (функция сама отбирает только тех, чьё время пришло; повторов нет):
+   ```sql
+   select cron.schedule('plan-check', '*/15 * * * *', $$
+     select net.http_post(
+       url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/plan-check',
+       headers := jsonb_build_object('Content-Type', 'application/json',
+         'x-digest-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'digest_cron_secret')),
+       body := '{}'::jsonb);
+   $$);
+   ```
+3. Проверка вручную: `curl -X POST "https://<ref>.supabase.co/functions/v1/plan-check" -H "x-digest-secret: $DIGEST_CRON_SECRET"` — ответ `{"ok":true,"candidates":N,"pushed":M}`.
 
 ## 4a. Видеозвонок перед встречей (Daily.co, необязательно)
 
@@ -188,3 +208,18 @@ Workflow `.github/workflows/web-deploy.yml` собирает веб-версию
 - Прямые ссылки (`/renvi/admin`, `/renvi/invite/КОД`) работают: `404.html` — копия `index.html`.
 - В `version.json` лежит коммит сборки. Открытая вкладка раз в 5 минут и при возврате на вкладку сравнивает его со своим и показывает «Вышла новая версия RENVI · Обновить».
 - Админка открывается по адресу `/renvi/admin`; доступ проверяет сервер (`is_admin`).
+
+## RevenueCat: входящий webhook (миграция 0043, функция `revenuecat-webhook`)
+
+Подписка Plus обновляется двумя путями, которые не конфликтуют: приложение вызывает `plus-sync` после покупки и раз в сутки,
+а RevenueCat сам шлёт события (продление, истечение, возврат, проблемы с оплатой) в `revenuecat-webhook`.
+Оба пути спрашивают у RevenueCat актуальную запись подписчика и пишут её через `plus_set()`; тело события доступа не даёт.
+Реферальный Plus (`promo_until`) хранится отдельно и остаётся при любом ответе магазина.
+
+1. Развернуть функцию (после миграций 0039–0040 и 0043): `supabase functions deploy revenuecat-webhook --no-verify-jwt` (в `config.toml` уже `verify_jwt = false`).
+2. Секреты Edge Functions: `REVENUECAT_WEBHOOK_SECRET` (любая длинная случайная строка; без неё функция отвечает 401 на всё), `REVENUECAT_SECRET_KEY` (secret API key RevenueCat v1; нужен и для `plus-sync`/`boost-sync`). Значения в Git и чат не писать.
+3. RevenueCat → Project → Integrations → Webhooks: URL `https://<project-ref>.supabase.co/functions/v1/revenuecat-webhook`, Authorization header = то же значение `REVENUECAT_WEBHOOK_SECRET` (подходит и с префиксом `Bearer `). Окружения Production и Sandbox. Кнопка «Send test event» должна вернуть 200 (`ignored: test`).
+4. Разовые покупки (бусты) обрабатывает только `boost-sync`; webhook отвечает на них 200 без действий. RevenueCat на `plus-sync`/`boost-sync` не направлять.
+5. Старую развёрнутую функцию `revenuecat-webhook` (она использовала `billing_events`/`billing_commit`) заменяет именно эта; отдельного удаления не требуется, но до деплоя новой версии RevenueCat на неё направлять нельзя.
+
+Поведение: повторная доставка того же события → 200 `duplicate`; более старое, чем уже обработанное для этого человека → 200 `stale`; та же доставка, пока первая в работе → 503 (RevenueCat повторит); RevenueCat недоступен или ошибка БД → 5xx, запись о событии снимается и повтор обработается заново. Журнал хранит события 90 дней.

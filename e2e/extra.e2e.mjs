@@ -84,9 +84,9 @@ await step('Daniel hits the daily spark limit: neutral message, no upgrade offer
   await shot(p, 'discover-limit-config');
   const btn = p.getByLabel('Удержать искру').first();
   await btn.hover(); await p.mouse.down(); await p.waitForTimeout(700); await p.mouse.up();
-  await p.getByText('Лимит на сегодня исчерпан').waitFor({ timeout: 10000 });
-  await p.getByText(/Возвращайтесь завтра/).waitFor();
-  if (await p.getByText(/RENVI Plus|Premium|Подписк|тариф/i).count()) throw new Error('upsell shown on the limit screen');
+  await p.getByText('Искры закончились').waitFor({ timeout: 10000 });
+  await p.getByText(/В Free — 1 искра в день/).waitFor();
+  await p.getByText('Без лимита с Plus').waitFor(); // Plus is offered on the limit screen (block M)
   await shot(p, 'like-limit');
   await c.close();
 });
@@ -119,7 +119,7 @@ await step('block from profile menu, then unblock', async () => {
 await step('sign out from settings', async () => {
   await go(p, '/settings');
   await p.getByText('Выйти из аккаунта', { exact: true }).click();
-  await p.getByText('Начать знакомство').waitFor();
+  await p.getByText('Начать', { exact: true }).waitFor();
 });
 await step('sign back in', async () => {
   await go(p, '/signin');
@@ -132,9 +132,9 @@ await step('invite link with a real code attaches the referral', async () => {
   const code = (await rpc(anna.access_token, 'my_referral')).code;
   const c = await mk(); const q = await c.newPage();
   await go(q, '/invite/' + code);
-  await q.getByText(/Приглашение от Анна/).waitFor();
+  await q.getByText(/Анна зовёт тебя в RENVI/).waitFor();
   await shot(q, 'invite-link');
-  await q.getByText('Продолжить регистрацию', { exact: true }).click();
+  await q.getByText('Создать аккаунт', { exact: true }).click();
   await q.getByPlaceholder('name@example.com').fill('friend@renvi.test');
   await q.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await q.getByRole('checkbox', { name: /Мне исполнилось 18 лет/ }).click();
@@ -153,7 +153,7 @@ await step('invite link with a real code attaches the referral', async () => {
   await go(q, '/delete-confirm');
   await q.getByRole('checkbox', { name: /Я понимаю/ }).click();
   await q.getByText('Удалить аккаунт', { exact: true }).last().click();
-  await q.getByText('Начать знакомство').waitFor({ timeout: 15000 });
+  await q.getByText('Начать', { exact: true }).waitFor({ timeout: 15000 });
   if (psql(`select count(*) from auth.users where email='friend@renvi.test'`) !== '0') throw new Error('account still exists');
   await c.close();
 });

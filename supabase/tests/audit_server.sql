@@ -237,7 +237,7 @@ select pg_temp.check((select suspended_until = 'infinity' from public.profiles w
 delete from auth.users where id = pg_temp.uid(50);
 select pg_temp.check(not exists (select 1 from public.profiles where id = pg_temp.uid(50)), 'S3 deleting the auth user still removes the profile');
 
--- ================= S7: obsolete since 0029 (subscriptions removed) =================
-select pg_temp.check(to_regclass('public.subscriptions') is null, 'S7 no subscriptions table is left to orphan rows');
+-- ================= S7: subscription rows go with the account (0039 brought subscriptions back) =================
+select pg_temp.check((select confdeltype from pg_constraint where conrelid = 'public.subscriptions'::regclass and contype = 'f') = 'c', 'S7 subscription rows are deleted with the auth user');
 
 rollback;

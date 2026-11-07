@@ -9,7 +9,9 @@ for (const l of ['sk', 'cs', 'en', 'ua']) {
     if (typeof v !== 'string') { console.error(`i18n: ${l}.ts "${k}" is not a string`); bad++; }
     else if (k in ru) {
       // Same {placeholders} as the Russian source, otherwise a value would render as a literal "{name}" or be dropped.
-      const ph = (x) => (String(x).match(/\{\w+\}/g) ?? []).sort().join(',');
+      const ph = (x) => [...new Set((String(x).match(/\{\w+(?:#[^}]*)?\}/g) ?? []).map((m) => m.replace(/#.*\}$/, '}')))].sort().join(',');
+      // A plural group must have exactly three forms: {n#one|few|many}.
+      for (const g of String(v).match(/\{\w+#[^}]*\}/g) ?? []) if (g.split('|').length !== 3) { console.error(`i18n: ${l}.ts "${k}" plural group ${g} needs 3 forms`); bad++; }
       if (ph(v) !== ph(ru[k])) { console.error(`i18n: ${l}.ts "${k}" placeholders differ from ru: ${ph(v)} vs ${ph(ru[k])}`); bad++; }
     }
   }

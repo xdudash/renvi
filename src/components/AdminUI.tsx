@@ -22,7 +22,7 @@ const NAV_GROUPS: { title: TranslationKey; items: NavItem[] }[] = [
   {
     title: 'adm.navGroup.system',
     items: [['/admin/config', 'adm.nav.config'], ['/admin/audit', 'adm.nav.audit'], ['/admin/errors', 'adm.nav.errors'],
-      ['/admin/admins', 'adm.nav.admins'], ['/admin/demo', 'adm.nav.demo']],
+      ['/admin/admins', 'adm.nav.admins'], ['/admin/demo', 'adm.nav.demo'], ['/admin/ads', 'adm.nav.ads']],
   },
 ];
 const NAV: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);

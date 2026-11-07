@@ -24,7 +24,7 @@ export default function ObCity() {
   );
   return (
     <Screen>
-      <OnbHeader step={4} kicker={t('screens.obCity.kicker')} heading={t('screens.obCity.heading')} sub={t('screens.obCity.sub')} />
+      <OnbHeader step={6} kicker={t('screens.obCity.kicker')} heading={t('screens.obCity.heading')} sub={t('screens.obCity.sub')} />
       <CountryPicker value={country} onChange={(c) => { setCountry(c); setCity(''); }} />
       <Eyebrow style={{ marginTop: 10 }}>{t('screens.obCity.city')}</Eyebrow>
       <Field value={city} onChangeText={setCity} placeholder={t('screens.obCity.placeholder')} />

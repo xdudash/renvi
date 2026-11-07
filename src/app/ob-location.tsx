@@ -17,7 +17,7 @@ export default function ObLocation() {
   };
   return (
     <Screen>
-      <OnbHeader step={8} kicker={t('screens.obLocation.kicker')} heading={t('screens.obLocation.heading')} sub={t('screens.obLocation.sub')} />
+      <OnbHeader step={10} kicker={t('screens.obLocation.kicker')} heading={t('screens.obLocation.heading')} sub={t('screens.obLocation.sub')} />
       <Card>
         <Row>
           <Text style={{ fontSize: 25, color: colors.red }}>⌖</Text>

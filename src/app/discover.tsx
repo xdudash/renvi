@@ -1,18 +1,23 @@
 import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { Redirect, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ActionSet, Between, Chip, Eyebrow, LinkBtn, Screen, Tiny, useToast } from '@/components/ui';
+import { ActionSet, Chip, LinkBtn, Screen, Tiny, useToast } from '@/components/ui';
 import { ProfileHero, ProfileMeta } from '@/components/Profile';
 import { SwipeCard, type SwipeCardHandle } from '@/components/SwipeCard';
 import { EmptyDiscover, ErrorRetryState, OfflineState } from '@/components/States';
 import { LoadingCards } from '@/components/LoadingCards';
+import { PeopleHead } from '@/components/PeopleHead';
+import { useModes } from '@/hooks/useModes';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useSparkLimit } from '@/lib/session';
+import { useSession } from '@/lib/session';
+import { useMyTier, useSparkLimit } from '@/lib/tier';
+import { usePeopleAd } from '@/hooks/usePeopleAd';
 import { useLang } from '@/lib/lang';
 import { interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
-import type { DiscoverCard } from '@/lib/api';
+import { api, type DiscoverCard } from '@/lib/api';
 
 // 25 · Главная карточка. The card fills one screen (photo, name, a line of chips, the buttons); everything else —
 // answers, more photos, details — is on the full profile ("Профиль" or a tap on the name).
@@ -23,12 +28,16 @@ export default function Discover() {
   const { profile } = useSession();
   const limit = useSparkLimit();
   const swipe = useRef<SwipeCardHandle>(null);
+  const { modes, reload: reloadModes } = useModes();
+  useReloadOnFocus(reloadModes);
   useEffect(() => { d.ensure(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const card = d.current;
   const mine: string[] = profile?.interests ?? [];
   const common = card ? card.interests.filter((x) => mine.includes(x)) : [];
-  const left = Math.max(0, limit - d.likesUsed);
+  const { tier } = useMyTier();
+  const left = tier && tier.sparks_left !== null ? Math.max(0, tier.sparks_left - d.likesUsed) : Infinity;
+  const maybeAd = usePeopleAd('discover');
 
   const openProfile = (c: DiscoverCard) => router.push({ pathname: '/profile', params: { id: c.profile_id } });
 
@@ -43,11 +52,12 @@ export default function Discover() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (r.status === 'match') router.push('/match');
       else toast(t('screens.discover.iskraOtpravlena'));
+      maybeAd();
     } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
   const doPass = async (flung: boolean) => {
     if (!flung) await swipe.current?.fling('left');
-    try { await d.pass(); } catch { swipe.current?.reset(); router.push('/error-retry'); }
+    try { await d.pass(); maybeAd(); } catch { swipe.current?.reset(); router.push('/error-retry'); }
   };
   // Undo of the last pass is available to everyone.
   const onUndo = async () => {
@@ -59,6 +69,9 @@ export default function Discover() {
     d.setTarget({ kind: 'profile', ref: null, label: t('screens.discover.fotoIzAnkety') });
     router.push('/like-note');
   };
+
+  // The server hides dating from people who are not single; say why instead of showing an empty feed.
+  if (modes && !modes.dating_open) return <Redirect href={modes.status === 'couple' ? '/couples' : '/company'} />;
 
   let body: React.ReactNode;
   if (d.pending && !card) body = <LoadingCards />;
@@ -93,17 +106,11 @@ export default function Discover() {
 
   return (
     <Screen tabs="discover" scroll={false}>
-      <Between style={{ marginTop: 1, marginBottom: 4, flexWrap: 'nowrap' }}>
-        <Eyebrow>{t('screens.discover.segodnyaVV', { city: (profile?.city ?? '').toUpperCase() })}</Eyebrow>
-        <View style={st.headerActions}>
-          {card ? (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} hitSlop={8} style={st.undo}>
-              <Text style={st.undoText}>↶</Text>
-            </Pressable>
-          ) : null}
-          <LinkBtn label={t('screens.discover.filtry')} icon="filter" onPress={() => router.push('/filters')} />
-        </View>
-      </Between>
+      <PeopleHead active="discover" extra={card ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={t('screens.discover.otmenitPosledniyPropusk')} onPress={onUndo} hitSlop={8} style={st.undo}>
+          <Text style={st.undoText}>↶</Text>
+        </Pressable>
+      ) : null} />
       {/* Only when it matters: the daily limit is close. */}
       {card && left <= 3 ? <Tiny>{t('screens.discover.vIzLimitLaykov', { left, limit })}</Tiny> : null}
       {body}

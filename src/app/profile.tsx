@@ -5,7 +5,8 @@ import { DetailsGrid, ProfileHero, ProfileMeta, StoryBody } from '@/components/P
 import { ErrorRetryState } from '@/components/States';
 import { useProfileCard } from '@/hooks/useProfileCard';
 import { useDiscover } from '@/lib/discover';
-import { useSession, useSparkLimit } from '@/lib/session';
+import { useSession } from '@/lib/session';
+import { useSparkLimit } from '@/lib/tier';
 import { intentChip, interestLabel } from '@/lib/catalog';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';

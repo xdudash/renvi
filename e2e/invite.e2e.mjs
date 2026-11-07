@@ -18,9 +18,10 @@ await step('invite link with a real code attaches the referral', async () => {
   const code = (await rpc(anna.access_token, 'my_referral')).code;
   const c = await mk(); const q = await c.newPage();
   await go(q, '/invite/' + code);
-  await q.getByText(/Приглашение от Анна/).waitFor();
+  await q.getByText(/Анна зовёт тебя в RENVI/).waitFor();
+  await q.getByText('Вам обоим — неделя Plus бесплатно').waitFor();
   await shot(q, 'invite-link');
-  await q.getByText('Продолжить регистрацию', { exact: true }).click();
+  await q.getByText('Создать аккаунт', { exact: true }).click();
   await q.getByPlaceholder('name@example.com').fill('friend@renvi.test');
   await q.getByPlaceholder('Не менее 8 символов').fill('renvi-test-1');
   await q.getByRole('checkbox', { name: /Мне исполнилось 18 лет/ }).click();
@@ -39,7 +40,7 @@ await step('invite link with a real code attaches the referral', async () => {
   await go(q, '/delete-confirm');
   await q.getByRole('checkbox', { name: /Я понимаю/ }).click();
   await q.getByText('Удалить аккаунт', { exact: true }).last().click();
-  await q.getByText('Начать знакомство').waitFor({ timeout: 15000 });
+  await q.getByText('Начать', { exact: true }).waitFor({ timeout: 15000 });
   if (psql(`select count(*) from auth.users where email='friend@renvi.test'`) !== '0') throw new Error('account still exists');
   await c.close();
 });
