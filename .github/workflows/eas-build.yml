@@ -6,7 +6,7 @@ on:
       job:
         description: What to run
         type: choice
-        options: [build, update]
+        options: [build, update, submit]
         default: build
       platform:
         description: Platform
@@ -146,3 +146,34 @@ jobs:
           BRANCH: ${{ inputs.channel }}
           MESSAGE: ${{ inputs.message || github.sha }}
         run: eas update --branch "$BRANCH" --platform "$PLATFORM" --message "$MESSAGE" --non-interactive
+
+  submit:
+    name: EAS submit (TestFlight)
+    if: inputs.job == 'submit'
+    runs-on: ubuntu-24.04
+    # Uploads the latest finished iOS production build to App Store Connect / TestFlight.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required config
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          [ -z "$EXPO_TOKEN" ] && { echo "::error::Secret EXPO_TOKEN is not set."; exit 1; }
+          exit 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 27.1.0
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Submit latest iOS production build
+        run: eas submit --platform ios --profile production --latest --non-interactive --no-wait
