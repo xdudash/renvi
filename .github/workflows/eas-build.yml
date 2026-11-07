@@ -203,6 +203,7 @@ jobs:
         with:
           eas-version: 27.1.0
           token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
       - name: Print build status and log tail
         env:
           BUILD_ID: ${{ inputs.build_id }}
