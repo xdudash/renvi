@@ -23,7 +23,7 @@ test('workflows pin tool versions instead of latest', () => {
 test('Supabase CLI is pinned to the same exact version everywhere', () => {
   const versions = new Set();
   for (const f of files) {
-    const text = fs.readFileSync(new URL(f, dir), 'utf8');
+    const text = fs.readFileSync(new URL(f, dir), 'utf8').replaceAll('\r\n', '\n');
     for (const m of text.matchAll(/supabase\/setup-cli@v\d+\s*\n\s*with:\s*\n(?:\s*#.*\n)*\s*version:\s*(\S+)/g)) versions.add(m[1]);
   }
   assert.equal(versions.size, 1, `expected one pinned Supabase CLI version, got ${[...versions].join(', ')}`);
