@@ -1410,7 +1410,7 @@ export const sk: Dictionary = {
   "doc.privacy.h3": "Čo vidia ostatní",
   "doc.privacy.b3": "Ostatní používatelia vidia to, čo máš vo svojom profile: meno, vek, mesto, fotky a odpovede. Presná poloha a dátum narodenia sa nezobrazujú, len vek a približná vzdialenosť.",
   "doc.privacy.h4": "Komu údaje odovzdávame",
-  "doc.privacy.b4": "Iba poskytovateľom infraštruktúry, ktorí ich spracúvajú na náš pokyn: ukladanie údajov a prihlasovanie, odosielanie e-mailov a push upozornení. Údaje nepredávame a nezobrazujeme reklamu.",
+  "doc.privacy.b4": "Iba poskytovateľom infraštruktúry, ktorí ich spracúvajú na náš pokyn: ukladanie údajov a prihlasovanie, odosielanie e-mailov a push upozornení. Údaje nepredávame. Partnerské reklamné karty v aplikácii umiestňujeme my sami; inzerenti od nás vaše údaje nedostanú.",
   "doc.privacy.h5": "Ako dlho ich uchovávame",
   "doc.privacy.b5": "Kým existuje tvoj účet. Po zmazaní účtu sa údaje vymažú, okrem záznamov, ktoré musíme uchovať podľa zákona, napríklad o nahláseniach a porušeniach. Údaje z analytiky uchovávame 180 dní.",
   "doc.privacy.h6": "Tvoje práva",

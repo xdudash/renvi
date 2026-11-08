@@ -1410,7 +1410,7 @@ export const en: Dictionary = {
   "doc.privacy.h3": "What others see",
   "doc.privacy.b3": "Other users see what you put in your profile: name, age, city, photos and answers. Your exact location and date of birth are not shown, only your age and approximate distance.",
   "doc.privacy.h4": "Who we share data with",
-  "doc.privacy.b4": "Only infrastructure providers that process it on our behalf: data storage and sign-in, sending email and push notifications. We don't sell data and we don't show ads.",
+  "doc.privacy.b4": "Only infrastructure providers that process it on our behalf: data storage and sign-in, sending email and push notifications. We don't sell data. Partner ad cards in the app are placed by RENVI itself; advertisers don't receive your data from us.",
   "doc.privacy.h5": "How long we keep it",
   "doc.privacy.b5": "As long as your account exists. After you delete your account, your data is deleted, except records we are required by law to keep, such as reports and violations. Analytics data is kept for 180 days.",
   "doc.privacy.h6": "Your rights",
