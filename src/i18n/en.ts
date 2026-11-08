@@ -568,6 +568,7 @@ export const en: Dictionary = {
   "components.states.emptyTitle": "No one nearby yet",
   "components.states.emptyCopy": "Increase the distance or try later. We only show profiles that match your settings.",
   "components.states.changeFilters": "Change filters",
+  "components.states.inviteFriends": "Invite friends",
   "components.states.approxLocation": "Location stays approximate. You can choose a city without GPS access.",
   "components.states.offlineTitle": "Looks like you're offline",
   "components.states.offlineCopy": "Screens you've already viewed stay available. You can resend messages once you're connected.",

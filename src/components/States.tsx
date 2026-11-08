@@ -7,6 +7,7 @@ export function EmptyDiscover() {
   return (
     <>
       <StateBlock icon="⌕" title={t('components.states.emptyTitle')} copy={t('components.states.emptyCopy')} label={t('components.states.changeFilters')} onPress={() => router.push('/filters')} />
+      <Btn kind="secondary" label={t('components.states.inviteFriends')} onPress={() => router.push('/referral')} />
       <SafeBanner>{t('components.states.approxLocation')}</SafeBanner>
     </>
   );

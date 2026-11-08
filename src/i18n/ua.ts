@@ -568,6 +568,7 @@ export const ua: Dictionary = {
   "components.states.emptyTitle": "Поки поруч нікого",
   "components.states.emptyCopy": "Збільш відстань або спробуй пізніше. Ми покажемо лише анкети, які підходять за твоїми налаштуваннями.",
   "components.states.changeFilters": "Змінити фільтри",
+  "components.states.inviteFriends": "Запросити друзів",
   "components.states.approxLocation": "Локація залишається приблизною. Можна обрати місто без доступу до GPS.",
   "components.states.offlineTitle": "Схоже, немає інтернету",
   "components.states.offlineCopy": "Уже переглянуті екрани залишаться доступними. Повідомлення можна буде повторити після підключення.",

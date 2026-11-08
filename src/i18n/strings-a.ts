@@ -549,6 +549,7 @@ export const ruA = {
   'components.states.emptyTitle': 'Пока рядом никого',
   'components.states.emptyCopy': 'Увеличьте расстояние или попробуйте позже. Мы покажем только анкеты, которые подходят по вашим настройкам.',
   'components.states.changeFilters': 'Изменить фильтры',
+  'components.states.inviteFriends': 'Пригласить друзей',
   'components.states.approxLocation': 'Локация остаётся приблизительной. Вы можете выбирать город без доступа к GPS.',
   'components.states.offlineTitle': 'Похоже, нет интернета',
   'components.states.offlineCopy': 'Уже просмотренные экраны останутся доступны. Сообщения можно будет повторить после подключения.',

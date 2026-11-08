@@ -568,6 +568,7 @@ export const sk: Dictionary = {
   "components.states.emptyTitle": "Zatiaľ nikto v okolí",
   "components.states.emptyCopy": "Zväčši vzdialenosť alebo skús neskôr. Ukážeme len profily, ktoré zodpovedajú tvojim nastaveniam.",
   "components.states.changeFilters": "Zmeniť filtre",
+  "components.states.inviteFriends": "Pozvať priateľov",
   "components.states.approxLocation": "Poloha zostáva približná. Mesto môžeš vybrať bez prístupu ku GPS.",
   "components.states.offlineTitle": "Vyzerá to, že nie si online",
   "components.states.offlineCopy": "Už otvorené obrazovky ostanú dostupné. Správy bude možné odoslať znova po pripojení.",
