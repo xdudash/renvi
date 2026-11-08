@@ -9,6 +9,8 @@ export const cs: Dictionary = {
   "common.back": "Zpět",
   "common.backLink": "‹ Zpět",
   "common.retry": "Zkusit znovu",
+  "common.showPassword": "Zobrazit heslo",
+  "common.hidePassword": "Skrýt heslo",
   "common.loading": "Načítáme…",
   "common.loadFailed": "Nepodařilo se načíst",
   "common.statusEyebrow": "RENVI · STAV",

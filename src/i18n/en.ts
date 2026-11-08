@@ -9,6 +9,8 @@ export const en: Dictionary = {
   "common.back": "Back",
   "common.backLink": "‹ Back",
   "common.retry": "Try again",
+  "common.showPassword": "Show password",
+  "common.hidePassword": "Hide password",
   "common.loading": "Loading…",
   "common.loadFailed": "Couldn't load",
   "common.statusEyebrow": "RENVI · STATUS",

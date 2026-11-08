@@ -81,6 +81,7 @@ export default function Me() {
       <Text style={{ fontSize: 24, fontWeight: '800', letterSpacing: -1, marginTop: 23, marginBottom: 8, color: colors.ink }}>{t('screens.me.settingsHelp')}</Text>
       <Card tight>
         {purchasesAvailable() ? <Row label={t('me.plusRow')} sub={tier?.plus && tier.expires_at ? t('me.plusSubOn', { date: formatDate(tier.expires_at) }) : t('me.plusSubFree')} onPress={() => router.push('/plans')} /> : null}
+        {!purchasesAvailable() && tier?.plus && tier.expires_at ? <Row label={t('me.plusRow')} sub={t('me.plusSubOn', { date: formatDate(tier.expires_at) })} right="✓" onPress={() => {}} /> : null}
         {purchasesAvailable() ? <Row label={t('me.guidesRow')} sub={t('me.guidesSub')} onPress={() => router.push('/guides')} /> : null}
         {ROWS.map(([a, b, c]) => <Row key={c} label={t(a)} sub={t(b)} onPress={() => router.push(c as never)} />)}
         <Row label={t(v[0])} sub={t('screens.me.selfieCheck')} onPress={() => router.push(v[1] as never)} />

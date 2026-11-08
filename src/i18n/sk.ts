@@ -9,6 +9,8 @@ export const sk: Dictionary = {
   "common.back": "Späť",
   "common.backLink": "‹ Späť",
   "common.retry": "Skúsiť znova",
+  "common.showPassword": "Zobraziť heslo",
+  "common.hidePassword": "Skryť heslo",
   "common.loading": "Načítavame…",
   "common.loadFailed": "Nepodarilo sa načítať",
   "common.statusEyebrow": "RENVI · STAV",

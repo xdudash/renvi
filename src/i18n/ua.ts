@@ -9,6 +9,8 @@ export const ua: Dictionary = {
   "common.back": "Назад",
   "common.backLink": "‹ Назад",
   "common.retry": "Повторити",
+  "common.showPassword": "Показати пароль",
+  "common.hidePassword": "Сховати пароль",
   "common.loading": "Завантажуємо…",
   "common.loadFailed": "Не вдалося завантажити",
   "common.statusEyebrow": "RENVI · СТАТУС",

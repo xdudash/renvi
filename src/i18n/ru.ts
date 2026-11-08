@@ -31,6 +31,8 @@ const ruBase = {
   'common.back': 'Назад',
   'common.backLink': '‹ Назад',
   'common.retry': 'Повторить',
+  'common.showPassword': 'Показать пароль',
+  'common.hidePassword': 'Скрыть пароль',
   'common.loading': 'Загружаем…',
   'common.loadFailed': 'Не удалось загрузить',
   'common.statusEyebrow': 'RENVI · СТАТУС',

@@ -333,16 +333,40 @@ export function CheckRow({ on, onPress, disabled, children, left }: { on: boolea
 }
 
 export function Field(props: TextInputProps & { label?: string }) {
-  const { label, style, ...rest } = props;
+  const { label, style, secureTextEntry, ...rest } = props;
+  const { t } = useLang();
+  const [shown, setShown] = useState(false);
+  const input = (
+    <TextInput
+      accessibilityLabel={label ?? props.placeholder}
+      placeholderTextColor="#aaa"
+      style={[styles.input, style, secureTextEntry ? { paddingRight: 52 } : null]}
+      secureTextEntry={secureTextEntry && !shown}
+      {...rest}
+    />
+  );
   return (
     <View>
       {label ? <Eyebrow style={{ marginTop: 10, marginBottom: 4 }}>{label}</Eyebrow> : null}
-      <TextInput
-        accessibilityLabel={label ?? props.placeholder}
-        placeholderTextColor="#aaa"
-        style={[styles.input, style]}
-        {...rest}
-      />
+      {secureTextEntry ? (
+        <View>
+          {input}
+          {/* Show / hide the typed password (web, iOS, Android). Sits over the right edge of the field. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={shown ? t('common.hidePassword') : t('common.showPassword')}
+            onPress={() => setShown((v) => !v)}
+            hitSlop={6}
+            style={{ position: 'absolute', right: 4, top: 0, bottom: 9, width: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={colors.ink} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+              <Circle cx={12} cy={12} r={3} />
+              {shown ? <Path d="M3 3l18 18" /> : null}
+            </Svg>
+          </Pressable>
+        </View>
+      ) : input}
     </View>
   );
 }
