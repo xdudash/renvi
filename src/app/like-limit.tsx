@@ -6,6 +6,9 @@ import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
 import { purchasesAvailable } from '@/lib/purchases';
 
+// Rewarded ads are off until an ad network (AdMob or similar) is connected: set EXPO_PUBLIC_ADS_ENABLED=1 then.
+const adsEnabled = process.env.EXPO_PUBLIC_ADS_ENABLED === '1';
+
 // like-limit · today's sparks are used up. Free: watch a partner ad for more (server-timed), or get Plus (no limit).
 export default function LikeLimit() {
   const { t } = useLang();
@@ -22,12 +25,12 @@ export default function LikeLimit() {
         copy={t('limit.copy', { n: tier?.spark_limit ?? tier?.free_sparks ?? 20 })}
         secondary={<Eyebrow>{t('limit.kicker')}</Eyebrow>}
       />
-      {left > 0 ? (
+      {adsEnabled && left > 0 ? (
         <>
           <Btn label={t('limit.watch', { n: tier?.ad_sparks ?? 5 })} onPress={() => router.push('/rewarded-ad')} />
           <Tiny center>{t('limit.watchLeft', { n: left })}</Tiny>
         </>
-      ) : <Text style={{ textAlign: 'center', fontSize: 11, color: colors.sub }}>{t('limit.noAds')}</Text>}
+      ) : adsEnabled ? <Text style={{ textAlign: 'center', fontSize: 11, color: colors.sub }}>{t('limit.noAds')}</Text> : null}
       {purchasesAvailable() ? <Btn kind="secondary" label={t('limit.plus')} onPress={() => router.push('/plans')} /> : null}
       <Btn kind="ghost" label={t('limit.plans')} onPress={() => router.replace('/feed')} />
     </Screen>
