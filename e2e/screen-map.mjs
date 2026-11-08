@@ -5,6 +5,11 @@ import { rest, rpc, signIn } from './api.mjs';
 // Screens whose redirect on a cold URL load is their intended behaviour. The inventory requires the row to land
 // exactly on `to`; anything else (or a redirect from a screen not listed here) fails the run.
 export const expectedRedirects = {
+  'plans': { to: '/me', why: 'Purchases are hidden in 1.0 (no in-app purchases yet); Gate sends purchase screens to /me.' },
+  'purchase-state': { to: '/me', why: 'Purchases are hidden in 1.0 (no in-app purchases yet); Gate sends purchase screens to /me.' },
+  'purchase-success': { to: '/me', why: 'Purchases are hidden in 1.0 (no in-app purchases yet); Gate sends purchase screens to /me.' },
+  'plan-boost': { to: '/me', why: 'Purchases are hidden in 1.0 (no in-app purchases yet); Gate sends purchase screens to /me.' },
+  'guides': { to: '/me', why: 'Purchases are hidden in 1.0 (no in-app purchases yet); Gate sends purchase screens to /me.' },
   match: { to: '/chats', why: 'The match celebration needs the in-memory result of the spark that just matched; a cold load has none and goes to the conversations list.' },
 };
 export const publicScreenMap = {
