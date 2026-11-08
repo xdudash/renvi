@@ -86,7 +86,8 @@ await step('Daniel hits the daily spark limit: neutral message, no upgrade offer
   await btn.hover(); await p.mouse.down(); await p.waitForTimeout(700); await p.mouse.up();
   await p.getByText('Искры закончились').waitFor({ timeout: 10000 });
   await p.getByText(/В Free — 1 искра в день/).waitFor();
-  await p.getByText('Без лимита с Plus').waitFor(); // Plus is offered on the limit screen (block M)
+  // Purchases are hidden wherever the store is not configured (web, and the first App Review build): no Plus offer here.
+  if (await p.getByText('Без лимита с Plus').count() !== 0) throw new Error('Plus offer must be hidden when purchases are unavailable');
   await shot(p, 'like-limit');
   await c.close();
 });
