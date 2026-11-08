@@ -8,7 +8,7 @@
 // --strict reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY from the environment or from .env.
 // Every failure is printed as "error: …" (scripts/ci-annotate.sh turns those into PR annotations); exit code 1.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -72,7 +72,7 @@ for (const o of ['supportsBackgroundPlayback', 'supportsPictureInPicture']) chec
 
 // Every permission the code actually asks for must have its purpose string.
 const SRC = listFiles(join(ROOT, 'src')).filter((f) => /\.(ts|tsx)$/.test(f));
-const srcText = new Map(SRC.map((f) => [relative(ROOT, f), readFileSync(f, 'utf8')]));
+const srcText = new Map(SRC.map((f) => [relative(ROOT, f).split(sep).join('/'), readFileSync(f, 'utf8')]));
 const anySrc = (re) => [...srcText.values()].some((t) => re.test(t));
 const NEEDS = [
   [/launchCameraAsync|requestCameraPermissionsAsync/, 'NSCameraUsageDescription', 'camera (selfie verification)'],
@@ -157,7 +157,7 @@ for (const [file, text] of srcText) {
   check(!/service_role|SUPABASE_SERVICE_ROLE|sk_live_|-----BEGIN [A-Z ]*PRIVATE KEY/.test(text), `error: ${file} contains a server secret or service-role reference`);
   check(!/process\.env\.EXPO_PUBLIC_\w*(SECRET|SERVICE|PRIVATE)/.test(text), `error: ${file} reads a secret through an EXPO_PUBLIC_ variable (public in the bundle)`);
 }
-const routes = listFiles(join(ROOT, 'src/app')).map((f) => relative(join(ROOT, 'src/app'), f));
+const routes = listFiles(join(ROOT, 'src/app')).map((f) => relative(join(ROOT, 'src/app'), f).split(sep).join('/'));
 for (const r of routes) check(!/(^|\/)(debug|dev|test|tests|playground|sandbox|storybook|_sitemap)[\w-]*\.(tsx|ts)$/i.test(r), `error: debug-only route src/app/${r} would ship in the release build`);
 for (const [file, text] of srcText) {
   if (file.startsWith('src/app/admin/') || /src\/components\/(Admin|admin\/)/.test(file) || !/^src\/(app|components)\//.test(file)) continue;
