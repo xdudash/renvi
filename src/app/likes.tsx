@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Photo } from '@/components/Photo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Card, Loading, Screen, Segmented, Tiny, Title, VerifiedBadge } from '@/components/ui';
+import { Btn, Card, Loading, Screen, Segmented, Tiny, Title, VerifiedBadge } from '@/components/ui';
 import { BrandMark } from '@/components/BrandMark';
 import { ChatRow } from '@/components/ChatRow';
 import { FadeIn } from '@/components/Motion';
@@ -34,10 +34,10 @@ export default function Likes() {
       <Title kicker={t('screens.likes.kicker')} heading={t('screens.likes.heading')} sub={t('screens.likes.sub')} />
       <Segmented items={[{ key: 'new', label: t('screens.likes.segNew', { count }) }, { key: 'matches', label: t('screens.likes.segMatches') }]} value={seg} onChange={setSeg} />
       {seg === 'new'
-        ? items.length ? <View style={st.grid}>{items.map((it, n) => <FadeIn key={it.profile_id} delay={Math.min(n, 8) * 50}><IncomingTile it={it} /></FadeIn>)}</View> : <Card><Tiny>{t('screens.likes.noNew')}</Tiny></Card>
+        ? items.length ? <View style={st.grid}>{items.map((it, n) => <FadeIn key={it.profile_id} delay={Math.min(n, 8) * 50}><IncomingTile it={it} /></FadeIn>)}</View> : <><Card><Tiny>{t('screens.likes.noNew')}</Tiny></Card><Btn label={t('components.emptyChats.label')} onPress={() => router.navigate('/discover')} /></>
         : (matches.data ?? []).length
           ? <Card style={{ paddingHorizontal: 6, paddingVertical: 6 }}>{(matches.data ?? []).map((m) => <ChatRow key={m.match_id} m={m} />)}</Card>
-          : <Card><Tiny>{t('chats.matchesEmpty')}</Tiny></Card>}
+          : <><Card><Tiny>{t('chats.matchesEmpty')}</Tiny></Card><Btn label={t('components.emptyChats.label')} onPress={() => router.navigate('/discover')} /></>}
     </Screen>
   );
 }
