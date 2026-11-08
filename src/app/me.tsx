@@ -18,6 +18,7 @@ import { LESSON_COUNT, nextLesson, usePlaybook } from '@/lib/playbook';
 import { playbookContent } from '@/playbook';
 import { useMyTier } from '@/lib/tier';
 import { formatDate } from '@/lib/plans';
+import { purchasesAvailable } from '@/lib/purchases';
 
 const ROWS = [
   ['modes.rowTitle', 'modes.rowSub', '/modes'],
@@ -71,7 +72,7 @@ export default function Me() {
           <LinkBtn label={t('details.profileNudgeCta')} onPress={() => router.push('/edit-details')} />
         </Card>
       )}
-      {profile?.gender === 'man' ? <PlaybookCard /> : null}
+      {profile?.gender === 'man' && purchasesAvailable() ? <PlaybookCard /> : null}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/likes')} style={tile}>
           <Text style={eyebrow}>{t('screens.me.newSparks')}</Text><Text style={metric}>{incoming.data?.count ?? 0}</Text><Text style={tiny}>{t('screens.me.view')}</Text>
@@ -79,8 +80,8 @@ export default function Me() {
       </View>
       <Text style={{ fontSize: 24, fontWeight: '800', letterSpacing: -1, marginTop: 23, marginBottom: 8, color: colors.ink }}>{t('screens.me.settingsHelp')}</Text>
       <Card tight>
-        <Row label={t('me.plusRow')} sub={tier?.plus && tier.expires_at ? t('me.plusSubOn', { date: formatDate(tier.expires_at) }) : t('me.plusSubFree')} onPress={() => router.push('/plans')} />
-        <Row label={t('me.guidesRow')} sub={t('me.guidesSub')} onPress={() => router.push('/guides')} />
+        {purchasesAvailable() ? <Row label={t('me.plusRow')} sub={tier?.plus && tier.expires_at ? t('me.plusSubOn', { date: formatDate(tier.expires_at) }) : t('me.plusSubFree')} onPress={() => router.push('/plans')} /> : null}
+        {purchasesAvailable() ? <Row label={t('me.guidesRow')} sub={t('me.guidesSub')} onPress={() => router.push('/guides')} /> : null}
         {ROWS.map(([a, b, c]) => <Row key={c} label={t(a)} sub={t(b)} onPress={() => router.push(c as never)} />)}
         <Row label={t(v[0])} sub={t('screens.me.selfieCheck')} onPress={() => router.push(v[1] as never)} />
         <Row label={t('screens.settings.signOut')} sub={t('screens.me.signOutSub')} right="⎋" onPress={async () => { await signOut(); router.replace('/'); }} />

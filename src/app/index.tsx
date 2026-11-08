@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { BrandMark } from '@/components/BrandMark';
 import { Mosaic, type TileSpec } from '@/components/Mosaic';
@@ -71,7 +71,9 @@ export default function Welcome() {
         <Btn kind="secondary" label={t('screens.index.uMenyaUzheEst')} onPress={() => router.push('/signin')} />
       </View>
       <LinkBtn center label={t('screens.index.vIzmenitYazyk', { language: LANGUAGE_NAMES[lang] })} onPress={() => router.push('/language')} />
-      <Tiny center>{t('screens.index.sozdavayaAkkauntVyOtdelno')}</Tiny>
+      <Pressable accessibilityRole="link" accessibilityLabel={t('screens.index.sozdavayaAkkauntVyOtdelno')} onPress={() => router.push('/legal')} style={{ paddingVertical: 8 }}>
+        <Tiny center>{t('screens.index.sozdavayaAkkauntVyOtdelno')}</Tiny>
+      </Pressable>
     </Screen>
   );
 }

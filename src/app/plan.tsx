@@ -8,6 +8,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { api } from '@/lib/api';
 import { formatDate, formatTime, type Plan } from '@/lib/plans';
+import { purchasesAvailable } from '@/lib/purchases';
 import { inviteUrl } from '@/lib/referral';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
@@ -83,7 +84,7 @@ export default function PlanScreen() {
         <>
           {plan.status === 'active' ? <Btn label={t('plans.req.h', { n: plan.pending ?? 0 })} onPress={() => router.push({ pathname: '/plan-requests', params: { id: plan.id } })} /> : null}
           <Btn kind="secondary" label={t('plans.d.openChat')} onPress={() => router.push({ pathname: '/plan-chat', params: { id: plan.id } })} />
-          {plan.status === 'active' && plan.open ? <Btn kind="ghost" label={t('boost.link')} onPress={() => router.push({ pathname: '/plan-boost', params: { id: plan.id } })} /> : null}
+          {plan.status === 'active' && plan.open && purchasesAvailable() ? <Btn kind="ghost" label={t('boost.link')} onPress={() => router.push({ pathname: '/plan-boost', params: { id: plan.id } })} /> : null}
         </>
       ) : mine === 'pending' ? (
         <>

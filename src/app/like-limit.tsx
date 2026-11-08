@@ -4,6 +4,7 @@ import { BackLink, Btn, Eyebrow, Loading, Screen, StateBlock, Tiny } from '@/com
 import { useMyTier } from '@/lib/tier';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
+import { purchasesAvailable } from '@/lib/purchases';
 
 // like-limit · today's sparks are used up. Free: watch a partner ad for more (server-timed), or get Plus (no limit).
 export default function LikeLimit() {
@@ -27,7 +28,7 @@ export default function LikeLimit() {
           <Tiny center>{t('limit.watchLeft', { n: left })}</Tiny>
         </>
       ) : <Text style={{ textAlign: 'center', fontSize: 11, color: colors.sub }}>{t('limit.noAds')}</Text>}
-      <Btn kind="secondary" label={t('limit.plus')} onPress={() => router.push('/plans')} />
+      {purchasesAvailable() ? <Btn kind="secondary" label={t('limit.plus')} onPress={() => router.push('/plans')} /> : null}
       <Btn kind="ghost" label={t('limit.plans')} onPress={() => router.replace('/feed')} />
     </Screen>
   );

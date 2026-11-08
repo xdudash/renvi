@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { inviteUrl } from '@/lib/referral';
 import { useLang } from '@/lib/lang';
 import type { Plan } from '@/lib/plans';
+import { purchasesAvailable } from '@/lib/purchases';
 
 // plan-created · the plan is published; the host can invite friends with a link or open the requests.
 export default function PlanCreated() {
@@ -21,7 +22,7 @@ export default function PlanCreated() {
       <StateBlock icon="✓" title={plan.title} copy={t('plans.created.copy')} />
       <View style={{ alignItems: 'center' }}><Eyebrow>{t('plans.created.kicker')}</Eyebrow></View>
       <Btn kind="secondary" label={t('plans.created.share')} onPress={() => Share.share({ message: t('plans.shareText', { title: plan.title, url }) }).catch(() => toast(t('plans.err.generic')))} />
-      <Btn kind="ghost" label={t('boost.link')} onPress={() => router.push({ pathname: '/plan-boost', params: { id: plan.id } })} />
+      {purchasesAvailable() ? <Btn kind="ghost" label={t('boost.link')} onPress={() => router.push({ pathname: '/plan-boost', params: { id: plan.id } })} /> : null}
       <Btn label={t('plans.created.open')} onPress={() => router.replace({ pathname: '/plan-requests', params: { id: plan.id } })} />
     </Screen>
   );

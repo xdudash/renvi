@@ -10,6 +10,7 @@ import { api, type AdCard as Ad } from '@/lib/api';
 import { AD_EVERY, takeAd } from '@/lib/adSlots';
 import { useLang } from '@/lib/lang';
 import { colors } from '@/theme/tokens';
+import { purchasesAvailable } from '@/lib/purchases';
 
 // people-ad · a partner card between people (every AD_EVERY-th card, Free only). Plus and "no ad booked" see no card.
 export default function PeopleAd() {
@@ -24,9 +25,9 @@ export default function PeopleAd() {
   else if (error) body = <ErrorRetryState onRetry={reload} />;
   else if (!data) body = <StateBlock icon="▷" title={t('ad.none')} copy={t('ad.noneCopy')} />;
   else body = (
-    <AdCard ad={data} label={t('ad.peopleOf', { n: AD_EVERY })} aside={
+    <AdCard ad={data} label={t('ad.peopleOf', { n: AD_EVERY })} aside={purchasesAvailable() ? (
       <Pressable accessibilityRole="link" onPress={() => router.push('/plans')}><Text style={{ fontSize: 10, fontWeight: '700', color: colors.redDark }}>{t('ad.noPlus')}</Text></Pressable>
-    } />
+    ) : undefined} />
   );
   return (
     <Screen tabs="discover">

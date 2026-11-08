@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { BackLink, Btn, Card, Screen, Title } from '@/components/ui';
 import { colors } from '@/theme/tokens';
 import { useLang } from '@/lib/lang';
+import { purchasesAvailable } from '@/lib/purchases';
 
 // 76 · Удалить аккаунт
 export default function DeleteAccount() {
@@ -14,7 +15,7 @@ export default function DeleteAccount() {
       <Card>
         <Text style={{ fontWeight: '700', fontSize: 13 }}>{t('screens.deleteAccount.priUdalenii')}</Text>
         <View style={{ marginTop: 6, gap: 4 }}>
-          {[t('screens.deleteAccount.anketaPerestanetPokazyvats'), t('screens.deleteAccount.srokiUdaleniyaDannyhUkazan'), t('screens.deleteAccount.subscription')].map((x) => (
+          {[t('screens.deleteAccount.anketaPerestanetPokazyvats'), t('screens.deleteAccount.srokiUdaleniyaDannyhUkazan'), ...(purchasesAvailable() ? [t('screens.deleteAccount.subscription')] : [])].map((x) => (
             <Text key={x} style={{ fontSize: 10, color: colors.muted }}>•  {x}</Text>
           ))}
         </View>

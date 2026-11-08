@@ -6,6 +6,7 @@ import { useSession } from '@/lib/session';
 import { gateTarget } from '@/lib/gateRoutes';
 import { supabase } from '@/lib/supabase';
 import { useLang } from '@/lib/lang';
+import { purchasesAvailable } from '@/lib/purchases';
 import { colors } from '@/theme/tokens';
 
 export { isBanned, isSuspended } from '@/lib/gateRoutes';
@@ -22,6 +23,8 @@ export function Gate() {
 
   useEffect(() => {
     if (!ready || !configured) return;
+    // Purchase screens exist only where the store is configured; elsewhere a direct link goes back to the app.
+    if (!purchasesAvailable() && /^\/(plans|guides|playbook|plan-boost|purchase-)/.test(path)) { router.replace((session ? '/me' : '/') as never); return; }
     const to = gateTarget(path, !!session, profile, loadError, new Date(), !!session?.user.email_confirmed_at);
     if (to) router.replace(to as never);
   }, [ready, configured, session, profile, loadError, path]);
