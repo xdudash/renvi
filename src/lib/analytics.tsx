@@ -77,13 +77,14 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
    if (Object.values(a).some(Boolean)) void supabase.rpc('analytics_capture_acquisition',{p_source:a.source,p_medium:a.medium,p_campaign:a.campaign,p_referral:a.referral}).then(() => {});
   }).catch(()=>{});
   const subscription = AppState.addEventListener('change',s => change(s==='active'));
-  const blur = AppState.addEventListener('blur',() => change(false));
-  const focus = AppState.addEventListener('focus',() => change(AppState.currentState==='active'));
+  // blur/focus exist only on Android; react-native-web throws on unknown AppState events.
+  const blur = Platform.OS==='android' ? AppState.addEventListener('blur',() => change(false)) : null;
+  const focus = Platform.OS==='android' ? AppState.addEventListener('focus',() => change(AppState.currentState==='active')) : null;
   const visibility = () => change(document.visibilityState==='visible' && AppState.currentState==='active');
   if (Platform.OS==='web' && typeof document!=='undefined') document.addEventListener('visibilitychange',visibility);
   const timer=setInterval(beat,30000);
   return () => {
-   stop(); clearInterval(timer); subscription.remove(); blur.remove(); focus.remove();
+   stop(); clearInterval(timer); subscription.remove(); blur?.remove(); focus?.remove();
    if (Platform.OS==='web' && typeof document!=='undefined') document.removeEventListener('visibilitychange',visibility);
    engine.current=null; recordScreen.current=null;
   };
