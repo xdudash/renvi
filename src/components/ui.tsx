@@ -89,10 +89,25 @@ export function Screen({ children, scroll = true, tabs, style }: {
     // With the tab bar, the bar itself pads for the home indicator (TabBar); otherwise the safe area adds it below
     // the bar too and the tabs float above an empty strip.
     <SafeAreaView style={styles.safe} edges={showTabs ? ['top'] : ['top', 'bottom']}>
-      <TopBar compact={compactBar} />
-      {body}
-      {showTabs ? <TabBar active={tabs ?? tabFor(path)} /> : null}
+      <WebFrame wide={path.startsWith('/admin')}>
+        <TopBar compact={compactBar} />
+        {body}
+        {showTabs ? <TabBar active={tabs ?? tabFor(path)} /> : null}
+      </WebFrame>
     </SafeAreaView>
+  );
+}
+
+// Browser only: on a wide window the phone layout is a centred column (admin gets a wider one) instead of being
+// stretched edge to edge. Native builds render the children untouched.
+function WebFrame({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
+  if (Platform.OS !== 'web') return <>{children}</>;
+  return (
+    <View style={{ flex: 1, alignItems: 'center', backgroundColor: '#ECE8E2' }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: wide ? 1040 : 520, backgroundColor: colors.paper, borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.line }}>
+        {children}
+      </View>
+    </View>
   );
 }
 
